@@ -1,0 +1,376 @@
+name: 'Performance Monitoring & Benchmarking'
+
+on:
+  schedule:
+    - cron: '0 4 * * 1,3,5' # Mon, Wed, Fri at 4 AM
+  workflow_dispatch:
+    inputs:
+      benchmark_type:
+        description: 'Type of benchmark to run'
+        required: true
+        default: 'full'
+        type: choice
+        options: ['full', 'startup', 'ui', 'memory']
+  push:
+    branches: [main]
+    paths:
+      - 'app/src/**'
+      - 'core-*/**'
+
+env:
+  BASELINE_BRANCH: 'main'
+  PERFORMANCE_THRESHOLD: '10' # 10% regression threshold
+
+jobs:
+  performance-benchmarks:
+    name: 'Performance Benchmarks'
+    runs-on: ubuntu-latest
+    timeout-minutes: 60
+
+    strategy:
+      matrix:
+        benchmark-type:
+          - startup
+          - ui-rendering
+          - pose-detection
+          - memory-usage
+
+    steps:
+      - name: Checkout Code
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Setup JDK
+        uses: actions/setup-java@v4
+        with:
+          java-version: '17'
+          distribution: 'temurin'
+
+      - name: Setup Android SDK
+        uses: android-actions/setup-android@v3
+
+      - name: Cache Gradle Dependencies
+        uses: actions/cache@v4
+        with:
+          path: |
+            ~/.gradle/caches
+            ~/.gradle/wrapper
+          key: gradle-${{ runner.os }}-${{ hashFiles('**/*.gradle*') }}
+
+      - name: Build Benchmark APK
+        run: |
+          ./gradlew :app:assembleBenchmark
+          ./gradlew :app:assembleAndroidTest
+
+      - name: Setup Performance Monitoring
+        run: |
+          # Install performance monitoring tools
+          sudo apt-get update
+          sudo apt-get install -y bc jq
+
+          # Create performance results directory
+          mkdir -p performance-results
+
+      - name: Run Startup Benchmarks
+        if: matrix.benchmark-type == 'startup' || github.event.inputs.benchmark_type == 'full'
+        uses: reactivecircus/android-emulator-runner@v2
+        with:
+          api-level: 34
+          arch: x86_64
+          emulator-options: -no-snapshot-save -no-window -gpu swiftshader_indirect -noaudio -no-boot-anim
+          disable-animations: true
+          script: |
+            adb install app/build/outputs/apk/benchmark/app-benchmark.apk
+            adb install app/build/outputs/apk/androidTest/benchmark/app-benchmark-androidTest.apk
+
+            # Run startup time benchmarks
+            adb shell am instrument -w \
+              -e class com.posecoach.benchmark.StartupBenchmark \
+              com.posecoach.android.benchmark.test/androidx.benchmark.junit4.AndroidBenchmarkRunner \
+              > performance-results/startup-benchmark.txt
+
+      - name: Run UI Rendering Benchmarks
+        if: matrix.benchmark-type == 'ui-rendering' || github.event.inputs.benchmark_type == 'full'
+        uses: reactivecircus/android-emulator-runner@v2
+        with:
+          api-level: 34
+          arch: x86_64
+          emulator-options: -no-snapshot-save -no-window -gpu swiftshader_indirect -noaudio -no-boot-anim
+          disable-animations: true
+          script: |
+            # Run UI rendering benchmarks
+            adb shell am instrument -w \
+              -e class com.posecoach.benchmark.UiRenderingBenchmark \
+              com.posecoach.android.benchmark.test/androidx.benchmark.junit4.AndroidBenchmarkRunner \
+              > performance-results/ui-rendering-benchmark.txt
+
+      - name: Run Pose Detection Benchmarks
+        if: matrix.benchmark-type == 'pose-detection' || github.event.inputs.benchmark_type == 'full'
+        uses: reactivecircus/android-emulator-runner@v2
+        with:
+          api-level: 34
+          arch: x86_64
+          emulator-options: -no-snapshot-save -no-window -gpu swiftshader_indirect -noaudio -no-boot-anim
+          disable-animations: true
+          script: |
+            # Run pose detection performance benchmarks
+            adb shell am instrument -w \
+              -e class com.posecoach.benchmark.PoseDetectionBenchmark \
+              com.posecoach.android.benchmark.test/androidx.benchmark.junit4.AndroidBenchmarkRunner \
+              > performance-results/pose-detection-benchmark.txt
+
+      - name: Run Memory Usage Benchmarks
+        if: matrix.benchmark-type == 'memory-usage' || github.event.inputs.benchmark_type == 'full'
+        uses: reactivecircus/android-emulator-runner@v2
+        with:
+          api-level: 34
+          arch: x86_64
+          emulator-options: -no-snapshot-save -no-window -gpu swiftshader_indirect -noaudio -no-boot-anim
+          disable-animations: true
+          script: |
+            # Run memory usage benchmarks
+            adb shell am instrument -w \
+              -e class com.posecoach.benchmark.MemoryUsageBenchmark \
+              com.posecoach.android.benchmark.test/androidx.benchmark.junit4.AndroidBenchmarkRunner \
+              > performance-results/memory-usage-benchmark.txt
+
+      - name: Extract Performance Metrics
+        run: |
+          echo "📊 Extracting Performance Metrics"
+          echo "=================================="
+
+          # Function to extract metrics from benchmark output
+          extract_metrics() {
+            local file=$1
+            local metric_type=$2
+
+            if [ -f "$file" ]; then
+              # Extract key metrics (timing, memory, etc.)
+              grep -E "median|min|max|mean" "$file" | while read line; do
+                echo "$metric_type: $line"
+              done >> performance-results/metrics-summary.txt
+            fi
+          }
+
+          # Extract metrics from all benchmark files
+          extract_metrics "performance-results/startup-benchmark.txt" "Startup"
+          extract_metrics "performance-results/ui-rendering-benchmark.txt" "UI Rendering"
+          extract_metrics "performance-results/pose-detection-benchmark.txt" "Pose Detection"
+          extract_metrics "performance-results/memory-usage-benchmark.txt" "Memory Usage"
+
+          # Generate performance summary
+          cat > performance-results/performance-summary.md << EOF
+          # Performance Benchmark Results
+
+          ## Test Environment
+          - **API Level**: 34
+          - **Architecture**: x86_64
+          - **Benchmark Type**: ${{ matrix.benchmark-type }}
+          - **Date**: $(date)
+          - **Commit**: ${{ github.sha }}
+
+          ## Results Summary
+          \`\`\`
+          $(cat performance-results/metrics-summary.txt 2>/dev/null || echo "No metrics available")
+          \`\`\`
+
+          ## Benchmark Files
+          - Startup: $([ -f "performance-results/startup-benchmark.txt" ] && echo "✅ Available" || echo "❌ Not run")
+          - UI Rendering: $([ -f "performance-results/ui-rendering-benchmark.txt" ] && echo "✅ Available" || echo "❌ Not run")
+          - Pose Detection: $([ -f "performance-results/pose-detection-benchmark.txt" ] && echo "✅ Available" || echo "❌ Not run")
+          - Memory Usage: $([ -f "performance-results/memory-usage-benchmark.txt" ] && echo "✅ Available" || echo "❌ Not run")
+          EOF
+
+      - name: Compare with Baseline (if available)
+        run: |
+          # Try to download baseline performance data
+          if gh run list --workflow="performance-monitoring.yml" --branch="$BASELINE_BRANCH" --status="success" --limit=1 --json=conclusion,databaseId | jq -r '.[0].databaseId' > /dev/null 2>&1; then
+            BASELINE_RUN_ID=$(gh run list --workflow="performance-monitoring.yml" --branch="$BASELINE_BRANCH" --status="success" --limit=1 --json=conclusion,databaseId | jq -r '.[0].databaseId')
+
+            echo "📈 Comparing with baseline run: $BASELINE_RUN_ID"
+
+            # Download baseline artifacts for comparison
+            gh run download "$BASELINE_RUN_ID" --name "performance-results-${{ matrix.benchmark-type }}" --dir baseline/ 2>/dev/null || true
+
+            if [ -d "baseline/" ]; then
+              echo "✅ Baseline data available for comparison"
+
+              # Simple comparison logic (can be enhanced)
+              cat > performance-results/regression-analysis.md << EOF
+          # Performance Regression Analysis
+
+          ## Comparison with Baseline
+          - **Baseline Run**: $BASELINE_RUN_ID
+          - **Current Run**: ${{ github.run_id }}
+
+          ## Analysis
+          Detailed regression analysis requires manual review of benchmark outputs.
+
+          ⚠️ **Note**: Automated regression detection is not implemented yet.
+          Please manually compare the metrics between runs.
+          EOF
+            else
+              echo "ℹ️ No baseline data available for comparison"
+            fi
+          else
+            echo "ℹ️ No previous successful runs found for baseline comparison"
+          fi
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        continue-on-error: true
+
+      - name: Upload Performance Results
+        uses: actions/upload-artifact@v4
+        with:
+          name: performance-results-${{ matrix.benchmark-type }}
+          path: performance-results/
+          retention-days: 90
+
+  aggregate-results:
+    name: 'Aggregate Performance Results'
+    runs-on: ubuntu-latest
+    needs: performance-benchmarks
+    if: always()
+    timeout-minutes: 10
+
+    steps:
+      - name: Checkout Code
+        uses: actions/checkout@v4
+
+      - name: Download All Performance Results
+        uses: actions/download-artifact@v4
+        with:
+          pattern: performance-results-*
+          path: all-results/
+          merge-multiple: true
+
+      - name: Generate Comprehensive Report
+        run: |
+          mkdir -p final-report
+
+          cat > final-report/comprehensive-performance-report.md << EOF
+          # Comprehensive Performance Report
+
+          ## Executive Summary
+          - **Test Date**: $(date)
+          - **Commit**: ${{ github.sha }}
+          - **Branch**: ${{ github.ref_name }}
+          - **Trigger**: ${{ github.event_name }}
+
+          ## Performance Categories Tested
+          $(ls all-results/ | grep -E "\\.md$" | while read file; do
+            echo "- $(basename "$file" .md | sed 's/-/ /g' | sed 's/\b\w/\U&/g')"
+          done)
+
+          ## Detailed Results
+          $(for file in all-results/*.md; do
+            if [ -f "$file" ]; then
+              echo "### $(basename "$file" .md | sed 's/-/ /g' | sed 's/\b\w/\U&/g')"
+              echo ""
+              cat "$file"
+              echo ""
+              echo "---"
+              echo ""
+            fi
+          done)
+
+          ## Performance Metrics Archive
+          All raw benchmark data is available in the workflow artifacts.
+
+          ## Recommendations
+          1. Monitor trends over time for performance regressions
+          2. Set up alerting for significant performance degradations
+          3. Implement automated baseline comparisons
+          4. Consider A/B testing for performance-critical changes
+
+          Generated by: GitHub Actions Performance Monitoring
+          EOF
+
+      - name: Check for Performance Regressions
+        run: |
+          echo "🔍 Checking for Performance Regressions"
+          echo "======================================="
+
+          # Simple heuristic for detecting potential issues
+          POTENTIAL_ISSUES=0
+
+          # Check for any benchmark failures
+          if find all-results/ -name "*.txt" -exec grep -l "FAILURE\|ERROR\|Exception" {} \; | head -1; then
+            echo "❌ Benchmark failures detected"
+            POTENTIAL_ISSUES=$((POTENTIAL_ISSUES + 1))
+          fi
+
+          # Check for extremely long execution times (basic heuristic)
+          if find all-results/ -name "*.txt" -exec grep -l "timeout\|Timeout" {} \; | head -1; then
+            echo "⚠️ Potential timeout issues detected"
+            POTENTIAL_ISSUES=$((POTENTIAL_ISSUES + 1))
+          fi
+
+          if [ $POTENTIAL_ISSUES -eq 0 ]; then
+            echo "✅ No obvious performance issues detected"
+          else
+            echo "⚠️ $POTENTIAL_ISSUES potential performance issues detected"
+            echo "Please review the detailed benchmark results"
+          fi
+
+          echo "POTENTIAL_ISSUES=$POTENTIAL_ISSUES" >> $GITHUB_ENV
+
+      - name: Upload Comprehensive Report
+        uses: actions/upload-artifact@v4
+        with:
+          name: comprehensive-performance-report
+          path: final-report/
+          retention-days: 180
+
+      - name: Comment on PR (if applicable)
+        if: github.event_name == 'pull_request'
+        uses: actions/github-script@v7
+        with:
+          script: |
+            const fs = require('fs');
+            try {
+              const report = fs.readFileSync('final-report/comprehensive-performance-report.md', 'utf8');
+              const summary = report.split('## Detailed Results')[0] + '\n\n📊 Full performance report available in workflow artifacts.';
+
+              github.rest.issues.createComment({
+                issue_number: context.issue.number,
+                owner: context.repo.owner,
+                repo: context.repo.repo,
+                body: `## 📈 Performance Benchmark Results\n\n${summary}`
+              });
+            } catch (error) {
+              console.log('Could not post performance report:', error.message);
+            }
+
+      - name: Notify on Performance Issues
+        if: env.POTENTIAL_ISSUES != '0'
+        uses: actions/github-script@v7
+        with:
+          script: |
+            github.rest.issues.create({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              title: `⚠️ Performance Issues Detected - ${context.sha.substring(0, 7)}`,
+              body: `
+              ## Performance Alert
+
+              The performance monitoring workflow has detected potential issues:
+
+              - **Commit**: ${context.sha}
+              - **Branch**: ${context.ref}
+              - **Issues Detected**: ${process.env.POTENTIAL_ISSUES}
+
+              Please review the performance benchmark results and investigate any regressions.
+
+              **Action Items:**
+              1. Review benchmark artifacts from run #${context.runNumber}
+              2. Compare with baseline performance metrics
+              3. Investigate any significant regressions
+              4. Consider optimization if needed
+
+              ---
+              *Auto-generated by Performance Monitoring Workflow*
+              `,
+              labels: ['performance', 'investigation-needed']
+            });

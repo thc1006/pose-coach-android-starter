@@ -1,0 +1,436 @@
+# Production Environment Configuration
+# Pose Coach Android - Production Settings
+
+environment:
+  name: production
+  stage: prod
+  region: us-central1
+  debug_mode: false
+
+# Application Configuration
+app:
+  version_suffix: ""
+  build_type: release
+  minify_enabled: true
+  shrink_resources: true
+  proguard_enabled: true
+
+  # Debug flags (all disabled in production)
+  enable_logging: false
+  log_level: ERROR
+  enable_strict_mode: false
+  enable_leak_canary: false
+  enable_flipper: false
+
+# API Configuration
+api:
+  base_url: "https://api.posecoach.app"
+  timeout_seconds: 30
+  retry_attempts: 3
+  enable_mock_responses: false
+
+  # Gemini AI Configuration
+  gemini:
+    api_url: "https://generativelanguage.googleapis.com/v1"
+    model: "gemini-pro-vision"
+    api_key_ref: "GEMINI_API_KEY_PROD"
+    enable_caching: true
+    request_timeout: 30
+    max_tokens: 4096
+
+# Database Configuration
+database:
+  name: "pose_coach.db"
+  version: 1
+  enable_wal: true
+  enable_foreign_keys: true
+
+  # Production settings
+  enable_logging: false
+  allow_main_thread_queries: false
+  fallback_to_destructive_migration: false
+
+# Firebase Configuration
+firebase:
+  project_id: "pose-coach-prod"
+  app_id: "1:123456789:android:prod123"
+  analytics_enabled: true
+  crashlytics_enabled: true
+  performance_monitoring: true
+
+  # Remote Config
+  remote_config:
+    cache_expiration: 43200  # 12 hours
+    fetch_timeout: 60
+
+  # Cloud Messaging
+  messaging:
+    auto_init_enabled: true
+    default_notification_channel: "notifications"
+
+# Security Configuration
+security:
+  certificate_pinning: true
+  network_security_config: "network_security_config_prod.xml"
+  enable_root_detection: true
+  enable_debug_detection: true
+
+  # Enhanced security for production
+  tamper_detection: true
+  emulator_detection: true
+  hook_detection: true
+
+  # Biometric Authentication
+  biometric:
+    enabled: true
+    allow_device_credential: true
+    require_confirmation: true
+
+# Feature Flags
+features:
+  # Core Features (all stable features enabled)
+  pose_detection: true
+  real_time_coaching: true
+  ai_feedback: true
+  voice_commands: true
+
+  # Beta Features (controlled rollout)
+  advanced_analytics: true
+  beta_ui: false
+  experimental_models: false
+  developer_menu: false
+  debug_overlay: false
+
+  # Social Features (production ready)
+  social_sharing: true
+  leaderboards: true
+  challenges: true
+
+# Performance Configuration
+performance:
+  # Memory Management
+  max_memory_cache_size: 100MB
+  max_disk_cache_size: 500MB
+
+  # Network
+  connection_timeout: 15s
+  read_timeout: 30s
+  write_timeout: 30s
+
+  # AI Model Performance (optimized for production)
+  pose_detection:
+    max_inference_time: 150ms
+    confidence_threshold: 0.85
+    enable_gpu_acceleration: true
+    model_cache_size: 100MB
+
+# Testing Configuration (disabled in production)
+testing:
+  enable_test_mode: false
+  mock_api_responses: false
+  fake_data_generation: false
+  automated_screenshots: false
+
+# Monitoring & Analytics
+monitoring:
+  enable_detailed_logging: false
+  log_network_requests: false
+  log_database_queries: false
+  log_performance_metrics: true
+
+  # Crash Reporting
+  crashlytics:
+    collect_user_identifiers: false
+    collect_custom_logs: false
+    send_unhandled_exceptions: true
+
+  # Performance Monitoring
+  performance:
+    trace_all_activities: false
+    trace_network_requests: false
+    custom_traces: true
+
+  # User Analytics
+  analytics:
+    collect_demographics: false
+    collect_interests: false
+    personalization_signals: true
+
+# Development Tools (all disabled in production)
+dev_tools:
+  flipper:
+    enabled: false
+  stetho:
+    enabled: false
+  leak_canary:
+    enabled: false
+
+# Build Configuration
+build:
+  compile_sdk: 34
+  min_sdk: 24
+  target_sdk: 34
+
+  # Build optimizations (all enabled for production)
+  r8_optimization: true
+  resource_shrinking: true
+  code_shrinking: true
+
+  # Signing (production key)
+  signing:
+    store_file: "production.keystore"
+    store_password: "PRODUCTION_KEYSTORE_PASSWORD"
+    key_alias: "production"
+    key_password: "PRODUCTION_KEY_PASSWORD"
+
+# Network Configuration
+network:
+  use_cleartext_traffic: false
+  bypass_certificate_validation: false
+  trust_user_certs: false
+
+  # Production network security
+  certificate_transparency: true
+  hsts_preload: true
+
+# Privacy & Compliance (full compliance in production)
+privacy:
+  data_collection_consent: true
+  analytics_opt_out: true
+  crash_reporting_opt_out: true
+
+  # GDPR
+  gdpr:
+    enabled: true
+    consent_required: true
+    right_to_be_forgotten: true
+    data_portability: true
+
+  # CCPA
+  ccpa:
+    enabled: true
+    do_not_sell: true
+
+  # COPPA
+  coppa:
+    enabled: true
+    age_verification: true
+
+  # Data Retention (production standards)
+  data_retention:
+    user_data: 2555_days  # 7 years
+    analytics_data: 1095_days  # 3 years
+    crash_reports: 90_days
+
+# Notification Configuration
+notifications:
+  default_channel: "notifications"
+  show_debug_notifications: false
+
+  channels:
+    - id: "notifications"
+      name: "Notifications"
+      importance: "default"
+      show_badge: true
+    - id: "coaching_reminders"
+      name: "Coaching Reminders"
+      importance: "high"
+      show_badge: true
+    - id: "achievements"
+      name: "Achievements"
+      importance: "default"
+      show_badge: true
+    - id: "social"
+      name: "Social Updates"
+      importance: "low"
+      show_badge: false
+
+# Content Configuration
+content:
+  # Exercise Library
+  exercises:
+    cache_duration: 86400s  # 24 hours
+    preload_count: 20
+
+  # AI Models
+  models:
+    pose_detection_model: "pose_detection_v1.tflite"
+    coaching_model: "coaching_v1.tflite"
+    auto_update: true
+    fallback_models: true
+
+    # Model validation
+    checksum_validation: true
+    signature_verification: true
+
+# Error Handling
+error_handling:
+  show_detailed_errors: false
+  crash_on_error: false
+  error_reporting: true
+
+  # Retry Configuration
+  network_retry:
+    max_attempts: 3
+    initial_delay: 2s
+    max_delay: 60s
+    backoff_multiplier: 2
+
+# A/B Testing Configuration
+ab_testing:
+  enabled: true
+  provider: "firebase_remote_config"
+  user_bucketing: "production"
+
+  experiments:
+    - name: "coaching_ai_model"
+      variants: ["standard", "enhanced"]
+      allocation: [80, 20]
+    - name: "notification_timing"
+      variants: ["morning", "evening", "adaptive"]
+      allocation: [30, 30, 40]
+
+# Progressive Rollout Configuration
+rollout:
+  strategy: "staged"
+  stages:
+    - percentage: 1
+      duration: "2h"
+      gates: ["crash_rate", "error_rate"]
+    - percentage: 5
+      duration: "8h"
+      gates: ["crash_rate", "error_rate", "performance"]
+    - percentage: 25
+      duration: "24h"
+      gates: ["crash_rate", "error_rate", "performance", "user_feedback"]
+    - percentage: 50
+      duration: "48h"
+      gates: ["crash_rate", "error_rate", "performance", "user_feedback"]
+    - percentage: 100
+      duration: "168h"  # 1 week
+      gates: ["crash_rate", "error_rate", "performance", "user_feedback"]
+
+  # Rollback criteria (strict for production)
+  rollback_triggers:
+    error_rate_threshold: 1.0   # 1%
+    crash_rate_threshold: 0.5   # 0.5%
+    performance_degradation: 10.0  # 10%
+    user_rating_drop: 0.5       # 0.5 stars
+
+# User Feedback
+feedback:
+  in_app_feedback: true
+  rating_prompts: true
+  beta_feedback_collection: false
+
+  # Feedback channels
+  channels:
+    - type: "email"
+      address: "feedback@posecoach.app"
+    - type: "in_app"
+      collection_rate: 0.1  # 10% of users
+
+# Quality Gates (production standards)
+quality_gates:
+  deployment:
+    - name: "crash_rate"
+      threshold: 0.1  # 0.1%
+      required: true
+    - name: "anr_rate"
+      threshold: 0.05  # 0.05%
+      required: true
+    - name: "performance_score"
+      threshold: 90
+      required: true
+    - name: "security_score"
+      threshold: 95
+      required: true
+
+# Resource Configuration
+resources:
+  # Image Loading
+  image_cache_size: 100MB
+  image_quality: "high"
+
+  # Video
+  video_cache_size: 500MB
+  video_quality: "adaptive"  # Based on network
+
+  # Fonts
+  custom_fonts: true
+  font_preloading: true
+
+# Compliance Controls
+compliance:
+  gdpr_controls: true
+  ccpa_controls: true
+  coppa_controls: true
+  accessibility_compliance: true
+
+  # Privacy Controls
+  privacy_controls:
+    data_export: true
+    data_deletion: true
+    consent_management: true
+    opt_out_mechanisms: true
+    privacy_dashboard: true
+
+# Business Intelligence
+business_intelligence:
+  user_behavior_analytics: true
+  conversion_tracking: true
+  retention_analysis: true
+  revenue_analytics: true
+
+  # Custom Events
+  custom_events:
+    - "pose_session_started"
+    - "pose_session_completed"
+    - "ai_feedback_received"
+    - "coaching_goal_achieved"
+    - "subscription_converted"
+
+# Performance Monitoring
+performance_monitoring:
+  apm_enabled: true
+  real_user_monitoring: true
+  synthetic_monitoring: true
+
+  # SLA Targets
+  sla_targets:
+    app_start_time: "2s"
+    pose_detection_latency: "150ms"
+    api_response_time: "500ms"
+    crash_rate: "0.1%"
+    availability: "99.9%"
+
+# Internationalization
+i18n:
+  default_locale: "en_US"
+  supported_locales:
+    - "en_US"
+    - "es_ES"
+    - "fr_FR"
+    - "de_DE"
+    - "ja_JP"
+    - "ko_KR"
+    - "zh_CN"
+
+  # Localization
+  rtl_support: true
+  locale_switching: true
+  fallback_locale: "en_US"
+
+# Content Delivery
+cdn:
+  enabled: true
+  provider: "cloudflare"
+  regions: ["us", "eu", "asia"]
+  cache_policy: "aggressive"
+
+  # Content types
+  cacheable_content:
+    - "images"
+    - "videos"
+    - "static_assets"
+    - "exercise_data"

@@ -1,0 +1,96 @@
+name: 'Setup Android Environment'
+description: 'Composite action to setup Android development environment with caching'
+inputs:
+  java-version:
+    description: 'Java version to use'
+    required: false
+    default: '17'
+  android-api-level:
+    description: 'Android API level'
+    required: false
+    default: '34'
+  ndk-version:
+    description: 'Android NDK version'
+    required: false
+    default: '25.1.8937393'
+  cache-key-suffix:
+    description: 'Additional suffix for cache key'
+    required: false
+    default: ''
+
+runs:
+  using: 'composite'
+  steps:
+    - name: Setup JDK
+      uses: actions/setup-java@v4
+      with:
+        java-version: ${{ inputs.java-version }}
+        distribution: 'temurin'
+
+    - name: Setup Android SDK
+      uses: android-actions/setup-android@v3
+      with:
+        api-level: ${{ inputs.android-api-level }}
+        ndk-version: ${{ inputs.ndk-version }}
+
+    - name: Generate Cache Keys
+      id: cache-keys
+      shell: bash
+      run: |
+        GRADLE_KEY="gradle-${{ runner.os }}-${{ hashFiles('**/*.gradle*', '**/gradle-wrapper.properties') }}"
+        if [ -n "${{ inputs.cache-key-suffix }}" ]; then
+          GRADLE_KEY="${GRADLE_KEY}-${{ inputs.cache-key-suffix }}"
+        fi
+        echo "gradle-key=$GRADLE_KEY" >> $GITHUB_OUTPUT
+        echo "android-key=android-${{ runner.os }}-${{ inputs.android-api-level }}-${{ inputs.ndk-version }}" >> $GITHUB_OUTPUT
+
+    - name: Cache Gradle Dependencies
+      uses: actions/cache@v4
+      with:
+        path: |
+          ~/.gradle/caches
+          ~/.gradle/wrapper
+        key: ${{ steps.cache-keys.outputs.gradle-key }}
+        restore-keys: |
+          gradle-${{ runner.os }}-
+
+    - name: Cache Android Dependencies
+      uses: actions/cache@v4
+      with:
+        path: |
+          ~/.android/build-cache
+          ~/.android/avd/*
+          ~/.android/adb*
+        key: ${{ steps.cache-keys.outputs.android-key }}
+        restore-keys: |
+          android-${{ runner.os }}-
+
+    - name: Validate Gradle Wrapper
+      uses: gradle/wrapper-validation-action@v2
+
+    - name: Setup Gradle Daemon
+      shell: bash
+      run: |
+        # Create gradle.properties if it doesn't exist
+        mkdir -p ~/.gradle
+        cat >> ~/.gradle/gradle.properties << EOF
+        org.gradle.daemon=true
+        org.gradle.parallel=true
+        org.gradle.workers.max=2
+        org.gradle.configureondemand=true
+        org.gradle.jvmargs=-Xmx4g -XX:+HeapDumpOnOutOfMemoryError -Dfile.encoding=UTF-8
+        android.useAndroidX=true
+        android.enableJetifier=true
+        EOF
+
+    - name: Output Environment Info
+      shell: bash
+      run: |
+        echo "🔧 Android Environment Setup Complete"
+        echo "===================================="
+        echo "Java Version: ${{ inputs.java-version }}"
+        echo "Android API Level: ${{ inputs.android-api-level }}"
+        echo "NDK Version: ${{ inputs.ndk-version }}"
+        echo "Cache Key: ${{ steps.cache-keys.outputs.gradle-key }}"
+        echo "Runner OS: ${{ runner.os }}"
+        echo "===================================="

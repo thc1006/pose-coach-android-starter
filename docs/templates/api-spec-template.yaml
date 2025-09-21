@@ -1,0 +1,472 @@
+openapi: 3.0.0
+info:
+  title: "{API_NAME} API"
+  version: "1.0.0"
+  description: |
+    {Brief description of the API purpose and functionality}
+
+    ## Authentication
+    {Describe authentication method - API keys, OAuth, etc.}
+
+    ## Rate Limiting
+    {Describe rate limiting policies}
+
+    ## Error Handling
+    {Describe common error response format and codes}
+
+  contact:
+    name: "API Support"
+    url: "https://example.com/support"
+    email: "api-support@example.com"
+  license:
+    name: "MIT"
+    url: "https://opensource.org/licenses/MIT"
+
+servers:
+  - url: "https://api.example.com/v1"
+    description: "Production server"
+  - url: "https://staging-api.example.com/v1"
+    description: "Staging server"
+  - url: "http://localhost:8080/v1"
+    description: "Local development server"
+
+# Security schemes
+security:
+  - ApiKeyAuth: []
+  - BearerAuth: []
+
+components:
+  securitySchemes:
+    ApiKeyAuth:
+      type: apiKey
+      in: header
+      name: X-API-Key
+      description: "API key for authentication"
+
+    BearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
+      description: "JWT token authentication"
+
+  # Reusable schemas
+  schemas:
+    # Error response schema
+    ErrorResponse:
+      type: object
+      required:
+        - error
+        - message
+        - timestamp
+      properties:
+        error:
+          type: string
+          description: "Error code"
+          example: "INVALID_REQUEST"
+        message:
+          type: string
+          description: "Human-readable error message"
+          example: "The request is missing required parameters"
+        timestamp:
+          type: string
+          format: date-time
+          description: "Error timestamp"
+          example: "2025-01-21T10:30:00Z"
+        details:
+          type: object
+          description: "Additional error details"
+          additionalProperties: true
+
+    # Pagination schema
+    PaginationMeta:
+      type: object
+      properties:
+        page:
+          type: integer
+          minimum: 1
+          description: "Current page number"
+          example: 1
+        limit:
+          type: integer
+          minimum: 1
+          maximum: 100
+          description: "Items per page"
+          example: 20
+        total:
+          type: integer
+          minimum: 0
+          description: "Total number of items"
+          example: 150
+        pages:
+          type: integer
+          minimum: 0
+          description: "Total number of pages"
+          example: 8
+
+    # Example domain model - replace with your actual models
+    ExampleModel:
+      type: object
+      required:
+        - id
+        - name
+        - createdAt
+      properties:
+        id:
+          type: string
+          format: uuid
+          description: "Unique identifier"
+          example: "123e4567-e89b-12d3-a456-426614174000"
+        name:
+          type: string
+          minLength: 1
+          maxLength: 255
+          description: "Display name"
+          example: "Example Item"
+        description:
+          type: string
+          maxLength: 1000
+          description: "Optional description"
+          example: "This is an example item description"
+        status:
+          type: string
+          enum: ["active", "inactive", "pending"]
+          description: "Current status"
+          example: "active"
+        tags:
+          type: array
+          items:
+            type: string
+          description: "Associated tags"
+          example: ["tag1", "tag2"]
+        metadata:
+          type: object
+          additionalProperties: true
+          description: "Additional metadata"
+        createdAt:
+          type: string
+          format: date-time
+          description: "Creation timestamp"
+          example: "2025-01-21T10:30:00Z"
+        updatedAt:
+          type: string
+          format: date-time
+          description: "Last update timestamp"
+          example: "2025-01-21T10:35:00Z"
+
+    # Create/Update request schema
+    ExampleCreateRequest:
+      type: object
+      required:
+        - name
+      properties:
+        name:
+          type: string
+          minLength: 1
+          maxLength: 255
+          description: "Display name"
+          example: "New Example Item"
+        description:
+          type: string
+          maxLength: 1000
+          description: "Optional description"
+          example: "Description for the new item"
+        status:
+          type: string
+          enum: ["active", "inactive"]
+          default: "active"
+          description: "Initial status"
+        tags:
+          type: array
+          items:
+            type: string
+          description: "Associated tags"
+          example: ["tag1", "tag2"]
+
+    # List response schema
+    ExampleListResponse:
+      type: object
+      required:
+        - data
+        - meta
+      properties:
+        data:
+          type: array
+          items:
+            $ref: '#/components/schemas/ExampleModel'
+        meta:
+          $ref: '#/components/schemas/PaginationMeta'
+
+  # Reusable parameters
+  parameters:
+    PageParam:
+      name: page
+      in: query
+      description: "Page number (1-based)"
+      required: false
+      schema:
+        type: integer
+        minimum: 1
+        default: 1
+
+    LimitParam:
+      name: limit
+      in: query
+      description: "Number of items per page"
+      required: false
+      schema:
+        type: integer
+        minimum: 1
+        maximum: 100
+        default: 20
+
+    SearchParam:
+      name: search
+      in: query
+      description: "Search query string"
+      required: false
+      schema:
+        type: string
+        maxLength: 255
+
+    SortParam:
+      name: sort
+      in: query
+      description: "Sort field and direction (e.g., 'name:asc', 'createdAt:desc')"
+      required: false
+      schema:
+        type: string
+        pattern: '^[a-zA-Z_][a-zA-Z0-9_]*:(asc|desc)$'
+        example: "name:asc"
+
+  # Reusable responses
+  responses:
+    NotFound:
+      description: "Resource not found"
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/ErrorResponse'
+          example:
+            error: "NOT_FOUND"
+            message: "The requested resource was not found"
+            timestamp: "2025-01-21T10:30:00Z"
+
+    BadRequest:
+      description: "Invalid request"
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/ErrorResponse'
+          example:
+            error: "INVALID_REQUEST"
+            message: "The request is invalid"
+            timestamp: "2025-01-21T10:30:00Z"
+
+    Unauthorized:
+      description: "Authentication required"
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/ErrorResponse'
+          example:
+            error: "UNAUTHORIZED"
+            message: "Authentication is required"
+            timestamp: "2025-01-21T10:30:00Z"
+
+    Forbidden:
+      description: "Access denied"
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/ErrorResponse'
+          example:
+            error: "FORBIDDEN"
+            message: "Access to this resource is forbidden"
+            timestamp: "2025-01-21T10:30:00Z"
+
+    InternalServerError:
+      description: "Internal server error"
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/ErrorResponse'
+          example:
+            error: "INTERNAL_ERROR"
+            message: "An internal server error occurred"
+            timestamp: "2025-01-21T10:30:00Z"
+
+# API Paths
+paths:
+  # Health check endpoint
+  /health:
+    get:
+      summary: "Health check"
+      description: "Check API health status"
+      operationId: "healthCheck"
+      tags:
+        - "System"
+      security: []  # No authentication required
+      responses:
+        '200':
+          description: "API is healthy"
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  status:
+                    type: string
+                    example: "ok"
+                  timestamp:
+                    type: string
+                    format: date-time
+                    example: "2025-01-21T10:30:00Z"
+                  version:
+                    type: string
+                    example: "1.0.0"
+
+  # Example CRUD endpoints
+  /examples:
+    get:
+      summary: "List examples"
+      description: "Retrieve a paginated list of examples"
+      operationId: "listExamples"
+      tags:
+        - "Examples"
+      parameters:
+        - $ref: '#/components/parameters/PageParam'
+        - $ref: '#/components/parameters/LimitParam'
+        - $ref: '#/components/parameters/SearchParam'
+        - $ref: '#/components/parameters/SortParam'
+        - name: status
+          in: query
+          description: "Filter by status"
+          required: false
+          schema:
+            type: string
+            enum: ["active", "inactive", "pending"]
+      responses:
+        '200':
+          description: "List of examples"
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ExampleListResponse'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '500':
+          $ref: '#/components/responses/InternalServerError'
+
+    post:
+      summary: "Create example"
+      description: "Create a new example"
+      operationId: "createExample"
+      tags:
+        - "Examples"
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ExampleCreateRequest'
+      responses:
+        '201':
+          description: "Example created successfully"
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ExampleModel'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '500':
+          $ref: '#/components/responses/InternalServerError'
+
+  /examples/{id}:
+    parameters:
+      - name: id
+        in: path
+        required: true
+        description: "Example ID"
+        schema:
+          type: string
+          format: uuid
+
+    get:
+      summary: "Get example"
+      description: "Retrieve a specific example by ID"
+      operationId: "getExample"
+      tags:
+        - "Examples"
+      responses:
+        '200':
+          description: "Example details"
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ExampleModel'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '500':
+          $ref: '#/components/responses/InternalServerError'
+
+    put:
+      summary: "Update example"
+      description: "Update an existing example"
+      operationId: "updateExample"
+      tags:
+        - "Examples"
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ExampleCreateRequest'
+      responses:
+        '200':
+          description: "Example updated successfully"
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ExampleModel'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '500':
+          $ref: '#/components/responses/InternalServerError'
+
+    delete:
+      summary: "Delete example"
+      description: "Delete an example"
+      operationId: "deleteExample"
+      tags:
+        - "Examples"
+      responses:
+        '204':
+          description: "Example deleted successfully"
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '500':
+          $ref: '#/components/responses/InternalServerError'
+
+# Tags for grouping operations
+tags:
+  - name: "System"
+    description: "System operations"
+  - name: "Examples"
+    description: "Example resource operations"
+
+# External documentation
+externalDocs:
+  description: "Find more info here"
+  url: "https://example.com/docs"

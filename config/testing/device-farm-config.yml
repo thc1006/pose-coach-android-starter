@@ -1,0 +1,515 @@
+# Device Farm Configuration for Pose Coach Android Testing
+# Comprehensive multi-device testing infrastructure
+
+# ==========================================
+# DEVICE FARM CONFIGURATION
+# ==========================================
+device_farm:
+  name: "Pose Coach Device Farm"
+  version: "1.0.0"
+
+  # Global test configuration
+  global_config:
+    test_timeout: 30 # minutes
+    install_timeout: 10 # minutes
+    parallel_devices: 8
+    retry_attempts: 2
+    video_recording: true
+    screenshot_on_failure: true
+
+  # Test data and artifacts
+  test_artifacts:
+    app_package: "app/build/outputs/apk/debug/app-debug.apk"
+    test_package: "tests/build/outputs/apk/androidTest/debug/tests-debug-androidTest.apk"
+    additional_data:
+      - "tests/datasets/pose_validation.zip"
+      - "tests/assets/test_videos/"
+      - "config/testing/test-config.json"
+
+# ==========================================
+# DEVICE MATRIX CONFIGURATION
+# ==========================================
+device_matrix:
+
+  # Android API Level Matrix
+  api_levels:
+    - api: 24
+      codename: "Nougat"
+      usage_percentage: 5.2
+      test_priority: "medium"
+
+    - api: 26
+      codename: "Oreo"
+      usage_percentage: 8.1
+      test_priority: "medium"
+
+    - api: 28
+      codename: "Pie"
+      usage_percentage: 12.3
+      test_priority: "high"
+
+    - api: 29
+      codename: "Android 10"
+      usage_percentage: 15.8
+      test_priority: "high"
+
+    - api: 30
+      codename: "Android 11"
+      usage_percentage: 18.7
+      test_priority: "critical"
+
+    - api: 31
+      codename: "Android 12"
+      usage_percentage: 16.2
+      test_priority: "critical"
+
+    - api: 33
+      codename: "Android 13"
+      usage_percentage: 14.5
+      test_priority: "critical"
+
+    - api: 34
+      codename: "Android 14"
+      usage_percentage: 9.2
+      test_priority: "high"
+
+  # Physical Device Categories
+  device_categories:
+
+    # Flagship Devices (High Performance)
+    flagship:
+      - name: "Samsung Galaxy S23 Ultra"
+        model: "SM-S918B"
+        api_levels: [33, 34]
+        screen_size: "6.8"
+        resolution: "3088x1440"
+        ram_gb: 12
+        capabilities: ["camera", "accelerometer", "gyroscope", "high_performance"]
+        test_priority: "critical"
+
+      - name: "Google Pixel 8 Pro"
+        model: "GP8P"
+        api_levels: [34]
+        screen_size: "6.7"
+        resolution: "2992x1344"
+        ram_gb: 12
+        capabilities: ["camera", "accelerometer", "gyroscope", "ai_acceleration"]
+        test_priority: "critical"
+
+      - name: "iPhone 15 Pro Max" # For comparative testing
+        model: "iPhone15,5"
+        ios_version: "17.0"
+        screen_size: "6.7"
+        resolution: "2796x1290"
+        ram_gb: 8
+        capabilities: ["camera", "lidar", "accelerometer", "gyroscope"]
+        test_priority: "medium"
+        cross_platform: true
+
+    # Mid-range Devices (Moderate Performance)
+    midrange:
+      - name: "Samsung Galaxy A54"
+        model: "SM-A546B"
+        api_levels: [33, 34]
+        screen_size: "6.4"
+        resolution: "2340x1080"
+        ram_gb: 6
+        capabilities: ["camera", "accelerometer", "gyroscope"]
+        test_priority: "high"
+
+      - name: "Google Pixel 7a"
+        model: "GHL1X"
+        api_levels: [33, 34]
+        screen_size: "6.1"
+        resolution: "2400x1080"
+        ram_gb: 8
+        capabilities: ["camera", "accelerometer", "gyroscope"]
+        test_priority: "high"
+
+      - name: "OnePlus Nord 3"
+        model: "CPH2493"
+        api_levels: [33]
+        screen_size: "6.74"
+        resolution: "2772x1240"
+        ram_gb: 8
+        capabilities: ["camera", "accelerometer", "gyroscope", "fast_charging"]
+        test_priority: "medium"
+
+    # Budget Devices (Lower Performance)
+    budget:
+      - name: "Samsung Galaxy A34"
+        model: "SM-A346B"
+        api_levels: [33]
+        screen_size: "6.6"
+        resolution: "2340x1080"
+        ram_gb: 6
+        capabilities: ["camera", "accelerometer"]
+        test_priority: "high"
+
+      - name: "Xiaomi Redmi Note 12"
+        model: "22101316G"
+        api_levels: [33]
+        screen_size: "6.67"
+        resolution: "2400x1080"
+        ram_gb: 4
+        capabilities: ["camera", "accelerometer"]
+        test_priority: "medium"
+
+      - name: "Motorola Moto G Power"
+        model: "XT2041-4"
+        api_levels: [30, 31]
+        screen_size: "6.6"
+        resolution: "2400x1080"
+        ram_gb: 4
+        capabilities: ["camera", "accelerometer", "large_battery"]
+        test_priority: "medium"
+
+    # Legacy Devices (Minimum Requirements)
+    legacy:
+      - name: "Samsung Galaxy S9"
+        model: "SM-G960F"
+        api_levels: [28, 29]
+        screen_size: "5.8"
+        resolution: "2960x1440"
+        ram_gb: 4
+        capabilities: ["camera", "accelerometer", "gyroscope"]
+        test_priority: "low"
+
+      - name: "Google Pixel 3"
+        model: "blueline"
+        api_levels: [28, 29, 30]
+        screen_size: "5.5"
+        resolution: "2160x1080"
+        ram_gb: 4
+        capabilities: ["camera", "accelerometer", "gyroscope"]
+        test_priority: "low"
+
+    # Specialized Form Factors
+    specialized:
+      - name: "Samsung Galaxy Z Fold 5"
+        model: "SM-F946B"
+        api_levels: [33, 34]
+        screen_size: "7.6" # Unfolded
+        resolution: "2176x1812"
+        ram_gb: 12
+        capabilities: ["camera", "accelerometer", "gyroscope", "foldable", "multi_screen"]
+        test_priority: "medium"
+        special_config:
+          foldable: true
+          test_both_screens: true
+
+      - name: "Samsung Galaxy Z Flip 5"
+        model: "SM-F731B"
+        api_levels: [33, 34]
+        screen_size: "6.7"
+        resolution: "2640x1080"
+        ram_gb: 8
+        capabilities: ["camera", "accelerometer", "gyroscope", "foldable", "compact"]
+        test_priority: "low"
+        special_config:
+          foldable: true
+          flip_phone: true
+
+# ==========================================
+# TEST SUITE CONFIGURATION
+# ==========================================
+test_suites:
+
+  # Critical Path Tests (Must pass on all devices)
+  critical_path:
+    description: "Essential functionality that must work on all supported devices"
+    timeout: 15 # minutes
+    required_devices: "all"
+    test_classes:
+      - "com.posecoach.testing.AutomatedTestingFramework"
+      - "com.posecoach.testing.integration.IntegrationTestingFramework"
+    test_methods:
+      - "testEndToEndCoachingFlow"
+      - "testPoseDetectionAccuracy"
+      - "testRealTimeCoaching"
+      - "testDataEncryptionValidation"
+      - "testPrivacyComplianceCheck"
+    success_criteria:
+      pass_rate: 100%
+      max_failures: 0
+
+  # Performance Tests (Device-specific thresholds)
+  performance:
+    description: "Performance validation across different device tiers"
+    timeout: 25 # minutes
+    device_selection: "representative"
+    test_classes:
+      - "com.posecoach.testing.performance.PerformanceTestingAutomation"
+    performance_thresholds:
+      flagship:
+        min_fps: 30
+        max_memory_mb: 512
+        max_cpu_percent: 60
+        max_battery_drain_percent_per_hour: 15
+      midrange:
+        min_fps: 25
+        max_memory_mb: 384
+        max_cpu_percent: 70
+        max_battery_drain_percent_per_hour: 20
+      budget:
+        min_fps: 20
+        max_memory_mb: 256
+        max_cpu_percent: 80
+        max_battery_drain_percent_per_hour: 25
+      legacy:
+        min_fps: 15
+        max_memory_mb: 192
+        max_cpu_percent: 85
+        max_battery_drain_percent_per_hour: 30
+
+  # Compatibility Tests
+  compatibility:
+    description: "Cross-device and cross-version compatibility"
+    timeout: 20 # minutes
+    device_selection: "matrix"
+    test_classes:
+      - "com.posecoach.testing.integration.IntegrationTestingFramework"
+    test_scenarios:
+      - screen_orientations: ["portrait", "landscape"]
+      - screen_densities: ["mdpi", "hdpi", "xhdpi", "xxhdpi", "xxxhdpi"]
+      - camera_configurations: ["front", "back", "multiple"]
+      - network_conditions: ["wifi", "4g", "3g", "offline"]
+      - accessibility: ["talkback", "high_contrast", "large_text"]
+
+  # Security Tests
+  security:
+    description: "Security and privacy validation"
+    timeout: 20 # minutes
+    device_selection: "representative"
+    test_classes:
+      - "com.posecoach.testing.security.SecurityPrivacyTestingSuite"
+    security_checks:
+      - data_encryption
+      - privacy_compliance
+      - vulnerability_scanning
+      - penetration_testing
+      - biometric_security
+
+  # AI Model Tests
+  ai_validation:
+    description: "AI model accuracy and performance validation"
+    timeout: 30 # minutes
+    device_selection: "ai_capable"
+    test_classes:
+      - "com.posecoach.testing.ai.AIModelTestingInfrastructure"
+    model_requirements:
+      pose_detection_accuracy: 85%
+      coaching_effectiveness: 80%
+      inference_time_ms: 100
+      model_size_mb: 50
+
+# ==========================================
+# EXECUTION STRATEGIES
+# ==========================================
+execution_strategies:
+
+  # Pull Request Testing
+  pull_request:
+    description: "Fast feedback for pull requests"
+    max_duration: 45 # minutes
+    device_selection:
+      strategy: "representative_sample"
+      devices:
+        - "Samsung Galaxy S23 Ultra" # Flagship
+        - "Google Pixel 7a" # Midrange
+        - "Samsung Galaxy A34" # Budget
+        - "Google Pixel 3" # Legacy
+    test_suites: ["critical_path", "security"]
+    parallel_execution: true
+    fail_fast: true
+
+  # Nightly Testing
+  nightly:
+    description: "Comprehensive testing overnight"
+    max_duration: 480 # minutes (8 hours)
+    device_selection:
+      strategy: "full_matrix"
+      include_specialized: true
+    test_suites: ["critical_path", "performance", "compatibility", "security", "ai_validation"]
+    parallel_execution: true
+    generate_reports: true
+    store_artifacts: true
+
+  # Release Testing
+  release:
+    description: "Full validation before release"
+    max_duration: 720 # minutes (12 hours)
+    device_selection:
+      strategy: "comprehensive"
+      include_all_categories: true
+      include_cross_platform: true
+    test_suites: ["critical_path", "performance", "compatibility", "security", "ai_validation"]
+    additional_validations:
+      - accessibility_testing
+      - internationalization_testing
+      - stress_testing
+      - long_running_tests
+    parallel_execution: true
+    generate_detailed_reports: true
+    performance_benchmarking: true
+
+# ==========================================
+# CLOUD TESTING INTEGRATION
+# ==========================================
+cloud_providers:
+
+  # Firebase Test Lab
+  firebase:
+    enabled: true
+    project_id: "pose-coach-testing"
+    region: "us-central1"
+    device_selection: "optimization_driven"
+    features:
+      - video_recording
+      - performance_monitoring
+      - crash_reporting
+      - robo_testing
+    cost_optimization:
+      max_concurrent_devices: 10
+      prefer_virtual_devices: true
+      use_device_minutes_efficiently: true
+
+  # AWS Device Farm
+  aws:
+    enabled: true
+    project_arn: "arn:aws:devicefarm:us-west-2:123456789012:project:pose-coach"
+    device_pool: "pose-coach-devices"
+    features:
+      - remote_debugging
+      - performance_analysis
+      - network_simulation
+      - location_simulation
+    cost_optimization:
+      max_session_duration: 60 # minutes
+      cleanup_after_test: true
+
+  # Browser Stack
+  browserstack:
+    enabled: false # Optional for additional coverage
+    username: "${BROWSERSTACK_USERNAME}"
+    access_key: "${BROWSERSTACK_ACCESS_KEY}"
+    features:
+      - real_device_testing
+      - network_throttling
+      - geolocation_testing
+
+# ==========================================
+# REPORTING AND ANALYTICS
+# ==========================================
+reporting:
+
+  # Test Results
+  test_results:
+    format: ["junit", "html", "json"]
+    include_screenshots: true
+    include_videos: true
+    include_logs: true
+    retention_days: 90
+
+  # Performance Metrics
+  performance_metrics:
+    collect_system_metrics: true
+    collect_app_metrics: true
+    benchmark_against_baseline: true
+    generate_trend_analysis: true
+
+  # Device Analytics
+  device_analytics:
+    track_device_usage: true
+    analyze_failure_patterns: true
+    device_performance_correlation: true
+    generate_device_recommendations: true
+
+  # Quality Dashboard
+  dashboard:
+    real_time_updates: true
+    device_matrix_view: true
+    test_trend_analysis: true
+    failure_analysis: true
+    performance_benchmarks: true
+
+# ==========================================
+# OPTIMIZATION SETTINGS
+# ==========================================
+optimization:
+
+  # Test Parallelization
+  parallelization:
+    max_parallel_devices: 8
+    test_sharding: true
+    smart_scheduling: true
+    load_balancing: true
+
+  # Resource Management
+  resource_management:
+    memory_optimization: true
+    storage_cleanup: true
+    bandwidth_optimization: true
+    cost_monitoring: true
+
+  # Intelligent Testing
+  intelligent_testing:
+    risk_based_testing: true
+    test_impact_analysis: true
+    predictive_test_selection: true
+    adaptive_test_execution: true
+
+# ==========================================
+# MAINTENANCE AND MONITORING
+# ==========================================
+maintenance:
+
+  # Device Health Monitoring
+  device_monitoring:
+    check_interval: 30 # minutes
+    health_metrics:
+      - battery_level
+      - storage_space
+      - memory_usage
+      - temperature
+      - network_connectivity
+
+  # Automated Maintenance
+  automated_maintenance:
+    clean_device_storage: true
+    reset_device_state: true
+    update_system_apps: false # Keep stable versions
+    restart_devices_periodically: true
+
+  # Alerting
+  alerting:
+    device_offline_alert: true
+    test_failure_threshold: 20% # Alert if >20% tests fail
+    performance_degradation_alert: true
+    cost_threshold_alert: true
+
+# ==========================================
+# SECURITY AND COMPLIANCE
+# ==========================================
+security:
+
+  # Data Protection
+  data_protection:
+    encrypt_test_data: true
+    secure_artifact_storage: true
+    data_retention_policy: 90 # days
+    pii_data_handling: "anonymize"
+
+  # Access Control
+  access_control:
+    role_based_access: true
+    audit_logging: true
+    secure_api_access: true
+    device_isolation: true
+
+  # Compliance
+  compliance:
+    gdpr_compliance: true
+    data_residency: "eu-west-1"
+    audit_trail: true
+    privacy_by_design: true

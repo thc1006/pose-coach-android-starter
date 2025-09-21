@@ -1,0 +1,588 @@
+name: 'Release Management & Deployment - DoD Compliant'
+
+on:
+  push:
+    tags:
+      - 'v*.*.*'
+      - 'release/*'
+  workflow_dispatch:
+    inputs:
+      release_type:
+        description: 'Release Type'
+        required: true
+        default: 'patch'
+        type: choice
+        options:
+        - patch
+        - minor
+        - major
+        - prerelease
+      environment:
+        description: 'Target Environment'
+        required: true
+        default: 'staging'
+        type: choice
+        options:
+        - staging
+        - production
+        - beta
+      rollout_strategy:
+        description: 'Rollout Strategy'
+        required: true
+        default: 'gradual'
+        type: choice
+        options:
+        - immediate
+        - gradual
+        - canary
+        - blue-green
+      feature_flags:
+        description: 'Feature flags configuration (JSON)'
+        required: false
+        default: '{}'
+
+env:
+  GRADLE_OPTS: '-Dorg.gradle.jvmargs="-Xmx4g -XX:+HeapDumpOnOutOfMemoryError"'
+  FIREBASE_TOKEN: ${{ secrets.FIREBASE_TOKEN }}
+  PLAY_STORE_KEY: ${{ secrets.PLAY_STORE_SERVICE_ACCOUNT_KEY }}
+  SLACK_WEBHOOK: ${{ secrets.SLACK_WEBHOOK }}
+
+jobs:
+  # ============================================================================
+  # RELEASE PLANNING & VALIDATION
+  # ============================================================================
+
+  release-planning:
+    name: 📋 Release Planning
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    outputs:
+      release_version: ${{ steps.version.outputs.version }}
+      release_notes: ${{ steps.notes.outputs.notes }}
+      rollout_config: ${{ steps.rollout.outputs.config }}
+      feature_flags: ${{ steps.features.outputs.flags }}
+      deployment_strategy: ${{ steps.strategy.outputs.strategy }}
+
+    steps:
+      - name: 📥 Checkout
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: 🔢 Generate Version
+        id: version
+        run: |
+          if [[ "${{ github.event_name }}" == "push" && "${{ github.ref }}" =~ refs/tags/ ]]; then
+            # Extract version from tag
+            version="${{ github.ref_name }}"
+            version="${version#v}"  # Remove 'v' prefix if present
+          else
+            # Generate semantic version
+            python3 scripts/ci/generate-version.py \
+              --type "${{ github.event.inputs.release_type || 'patch' }}" \
+              --output version.txt
+            version=$(cat version.txt)
+          fi
+
+          echo "version=$version" >> $GITHUB_OUTPUT
+          echo "Generated version: $version"
+
+      - name: 📝 Generate Release Notes
+        id: notes
+        run: |
+          python3 scripts/ci/generate-release-notes.py \
+            --version "${{ steps.version.outputs.version }}" \
+            --since-tag "$(git describe --tags --abbrev=0 HEAD^ 2>/dev/null || echo 'HEAD~20')" \
+            --output release-notes.md
+
+          # Convert to JSON for GitHub output
+          notes=$(python3 -c "import json; print(json.dumps(open('release-notes.md').read()))")
+          echo "notes=$notes" >> $GITHUB_OUTPUT
+
+      - name: 🎯 Configure Rollout Strategy
+        id: rollout
+        run: |
+          strategy="${{ github.event.inputs.rollout_strategy || 'gradual' }}"
+          environment="${{ github.event.inputs.environment || 'staging' }}"
+
+          python3 scripts/ci/configure-rollout.py \
+            --strategy "$strategy" \
+            --environment "$environment" \
+            --version "${{ steps.version.outputs.version }}" \
+            --output rollout-config.json
+
+          config=$(cat rollout-config.json)
+          echo "config=$config" >> $GITHUB_OUTPUT
+
+      - name: 🚩 Configure Feature Flags
+        id: features
+        run: |
+          flags_input="${{ github.event.inputs.feature_flags || '{}' }}"
+
+          python3 scripts/ci/configure-feature-flags.py \
+            --input-flags "$flags_input" \
+            --environment "${{ github.event.inputs.environment || 'staging' }}" \
+            --version "${{ steps.version.outputs.version }}" \
+            --output feature-flags.json
+
+          flags=$(cat feature-flags.json)
+          echo "flags=$flags" >> $GITHUB_OUTPUT
+
+      - name: 📊 Deployment Strategy
+        id: strategy
+        run: |
+          python3 scripts/ci/deployment-strategy.py \
+            --rollout-strategy "${{ github.event.inputs.rollout_strategy || 'gradual' }}" \
+            --environment "${{ github.event.inputs.environment || 'staging' }}" \
+            --version "${{ steps.version.outputs.version }}" \
+            --output deployment-strategy.json
+
+          strategy=$(cat deployment-strategy.json)
+          echo "strategy=$strategy" >> $GITHUB_OUTPUT
+
+      - name: 📤 Upload Release Artifacts
+        uses: actions/upload-artifact@v3
+        with:
+          name: release-config
+          path: |
+            version.txt
+            release-notes.md
+            rollout-config.json
+            feature-flags.json
+            deployment-strategy.json
+
+  # ============================================================================
+  # PRE-RELEASE VALIDATION
+  # ============================================================================
+
+  pre-release-validation:
+    name: ✅ Pre-Release Validation
+    runs-on: ubuntu-latest
+    needs: [release-planning]
+    timeout-minutes: 30
+
+    steps:
+      - name: 📥 Checkout
+        uses: actions/checkout@v4
+
+      - name: 📥 Download Release Config
+        uses: actions/download-artifact@v3
+        with:
+          name: release-config
+
+      - name: ☕ Setup JDK
+        uses: actions/setup-java@v4
+        with:
+          java-version: '17'
+          distribution: 'temurin'
+
+      - name: 🤖 Setup Android SDK
+        uses: android-actions/setup-android@v3
+
+      - name: 📦 Cache Dependencies
+        uses: actions/cache@v3
+        with:
+          path: |
+            ~/.gradle/caches
+            ~/.gradle/wrapper
+            ~/.android/build-cache
+          key: ${{ runner.os }}-gradle-release-${{ hashFiles('**/*.gradle.kts') }}
+
+      - name: 🏗️ Build Release APK
+        run: |
+          echo "VERSION_NAME=${{ needs.release-planning.outputs.release_version }}" >> gradle.properties
+          echo "VERSION_CODE=${{ github.run_number }}" >> gradle.properties
+
+          ./gradlew assembleRelease \
+            --parallel \
+            --daemon \
+            --build-cache
+
+      - name: 🧪 Release Smoke Tests
+        run: |
+          python3 scripts/ci/release-smoke-tests.py \
+            --apk app/build/outputs/apk/release/app-release.apk \
+            --version "${{ needs.release-planning.outputs.release_version }}"
+
+      - name: 🔍 Security Validation
+        run: |
+          python3 scripts/ci/release-security-check.py \
+            --apk app/build/outputs/apk/release/app-release.apk \
+            --version "${{ needs.release-planning.outputs.release_version }}"
+
+      - name: 📊 Performance Baseline
+        run: |
+          python3 scripts/ci/performance-baseline.py \
+            --apk app/build/outputs/apk/release/app-release.apk \
+            --version "${{ needs.release-planning.outputs.release_version }}" \
+            --output performance-baseline.json
+
+      - name: 📤 Upload Release APK
+        uses: actions/upload-artifact@v3
+        with:
+          name: release-apk-${{ needs.release-planning.outputs.release_version }}
+          path: |
+            app/build/outputs/apk/release/*.apk
+            app/build/outputs/mapping/release/mapping.txt
+            app/build/outputs/bundle/release/*.aab
+
+  # ============================================================================
+  # STAGED DEPLOYMENT
+  # ============================================================================
+
+  deploy-beta:
+    name: 🧪 Deploy to Beta
+    runs-on: ubuntu-latest
+    needs: [release-planning, pre-release-validation]
+    if: contains(fromJSON(needs.release-planning.outputs.deployment_strategy).stages, 'beta')
+    environment: beta
+    timeout-minutes: 20
+
+    steps:
+      - name: 📥 Checkout
+        uses: actions/checkout@v4
+
+      - name: 📥 Download Artifacts
+        uses: actions/download-artifact@v3
+        with:
+          name: release-apk-${{ needs.release-planning.outputs.release_version }}
+          path: artifacts/
+
+      - name: 🚀 Deploy to Firebase App Distribution (Beta)
+        uses: wzieba/Firebase-Distribution-Github-Action@v1
+        with:
+          appId: ${{ secrets.FIREBASE_BETA_APP_ID }}
+          serviceCredentialsFileContent: ${{ secrets.FIREBASE_SERVICE_ACCOUNT }}
+          groups: beta-testers
+          file: artifacts/app-release.apk
+          releaseNotes: |
+            🧪 Beta Release ${{ needs.release-planning.outputs.release_version }}
+
+            ${{ fromJSON(needs.release-planning.outputs.release_notes) }}
+
+      - name: 📊 Beta Deployment Metrics
+        run: |
+          python3 scripts/ci/deployment-metrics.py \
+            --environment beta \
+            --version "${{ needs.release-planning.outputs.release_version }}" \
+            --strategy "$(echo '${{ needs.release-planning.outputs.deployment_strategy }}' | jq -r '.type')"
+
+      - name: ⏱️ Beta Soak Period
+        run: |
+          soak_time=$(echo '${{ needs.release-planning.outputs.rollout_config }}' | jq -r '.beta_soak_minutes // 30')
+          echo "Beta soak period: ${soak_time} minutes"
+          sleep $((soak_time * 60))
+
+      - name: 📈 Beta Health Check
+        run: |
+          python3 scripts/ci/health-check.py \
+            --environment beta \
+            --version "${{ needs.release-planning.outputs.release_version }}" \
+            --timeout 300
+
+  deploy-staging:
+    name: 🚀 Deploy to Staging
+    runs-on: ubuntu-latest
+    needs: [release-planning, pre-release-validation, deploy-beta]
+    if: always() && (success() || needs.deploy-beta.result == 'skipped')
+    environment: staging
+    timeout-minutes: 25
+
+    steps:
+      - name: 📥 Checkout
+        uses: actions/checkout@v4
+
+      - name: 📥 Download Artifacts
+        uses: actions/download-artifact@v3
+        with:
+          name: release-apk-${{ needs.release-planning.outputs.release_version }}
+          path: artifacts/
+
+      - name: 🔧 Configure Staging Environment
+        run: |
+          echo '${{ needs.release-planning.outputs.feature_flags }}' > feature-flags.json
+          python3 scripts/ci/configure-environment.py \
+            --environment staging \
+            --feature-flags feature-flags.json \
+            --version "${{ needs.release-planning.outputs.release_version }}"
+
+      - name: 🚀 Deploy to Staging
+        run: |
+          python3 scripts/ci/deploy-staging.py \
+            --apk artifacts/app-release.apk \
+            --version "${{ needs.release-planning.outputs.release_version }}" \
+            --strategy "$(echo '${{ needs.release-planning.outputs.deployment_strategy }}' | jq -r '.type')"
+
+      - name: 🧪 Staging Integration Tests
+        run: |
+          python3 scripts/ci/staging-tests.py \
+            --environment staging \
+            --version "${{ needs.release-planning.outputs.release_version }}"
+
+      - name: 📊 Staging Performance Tests
+        run: |
+          python3 scripts/ci/performance-tests.py \
+            --environment staging \
+            --version "${{ needs.release-planning.outputs.release_version }}" \
+            --baseline performance-baseline.json
+
+  deploy-production:
+    name: 🌟 Deploy to Production
+    runs-on: ubuntu-latest
+    needs: [release-planning, pre-release-validation, deploy-staging]
+    if: |
+      always() &&
+      success() &&
+      (github.event.inputs.environment == 'production' || github.event_name == 'push')
+    environment: production
+    timeout-minutes: 45
+
+    steps:
+      - name: 📥 Checkout
+        uses: actions/checkout@v4
+
+      - name: 📥 Download Artifacts
+        uses: actions/download-artifact@v3
+        with:
+          name: release-apk-${{ needs.release-planning.outputs.release_version }}
+          path: artifacts/
+
+      - name: 🔧 Configure Production Environment
+        run: |
+          echo '${{ needs.release-planning.outputs.feature_flags }}' > feature-flags.json
+          python3 scripts/ci/configure-environment.py \
+            --environment production \
+            --feature-flags feature-flags.json \
+            --version "${{ needs.release-planning.outputs.release_version }}"
+
+      - name: 🎯 Canary Deployment
+        if: contains(fromJSON(needs.release-planning.outputs.deployment_strategy).type, 'canary')
+        run: |
+          python3 scripts/ci/canary-deployment.py \
+            --apk artifacts/app-release.apk \
+            --version "${{ needs.release-planning.outputs.release_version }}" \
+            --percentage "$(echo '${{ needs.release-planning.outputs.rollout_config }}' | jq -r '.canary_percentage // 5')"
+
+      - name: ⏱️ Canary Monitoring
+        if: contains(fromJSON(needs.release-planning.outputs.deployment_strategy).type, 'canary')
+        run: |
+          python3 scripts/ci/canary-monitoring.py \
+            --environment production \
+            --version "${{ needs.release-planning.outputs.release_version }}" \
+            --duration 900  # 15 minutes
+
+      - name: 📱 Play Store Deployment
+        if: |
+          !contains(fromJSON(needs.release-planning.outputs.deployment_strategy).type, 'canary') ||
+          steps.canary-monitoring.outcome == 'success'
+        uses: r0adkll/upload-google-play@v1
+        with:
+          serviceAccountJsonPlainText: ${{ secrets.PLAY_STORE_SERVICE_ACCOUNT_KEY }}
+          packageName: com.posecoach.camera
+          releaseFiles: artifacts/app-release.aab
+          track: |
+            ${{
+              fromJSON(needs.release-planning.outputs.rollout_config).track == 'production' && 'production' ||
+              fromJSON(needs.release-planning.outputs.rollout_config).track == 'beta' && 'beta' ||
+              'internal'
+            }}
+          status: completed
+          inAppUpdatePriority: 3
+          userFraction: ${{ fromJSON(needs.release-planning.outputs.rollout_config).user_fraction || 1.0 }}
+          whatsNewDirectory: fastlane/metadata/android/en-US/changelogs
+          mappingFile: artifacts/mapping.txt
+
+      - name: 📊 Production Deployment Metrics
+        run: |
+          python3 scripts/ci/deployment-metrics.py \
+            --environment production \
+            --version "${{ needs.release-planning.outputs.release_version }}" \
+            --strategy "$(echo '${{ needs.release-planning.outputs.deployment_strategy }}' | jq -r '.type')"
+
+  # ============================================================================
+  # POST-DEPLOYMENT MONITORING & GRADUAL ROLLOUT
+  # ============================================================================
+
+  post-deployment-monitoring:
+    name: 📊 Post-Deployment Monitoring
+    runs-on: ubuntu-latest
+    needs: [release-planning, deploy-production]
+    if: success()
+    timeout-minutes: 60
+
+    steps:
+      - name: 📥 Checkout
+        uses: actions/checkout@v4
+
+      - name: 🔍 Real-time Monitoring Setup
+        run: |
+          python3 scripts/ci/setup-monitoring.py \
+            --environment production \
+            --version "${{ needs.release-planning.outputs.release_version }}" \
+            --duration 3600  # 1 hour
+
+      - name: 📈 Performance Monitoring
+        run: |
+          python3 scripts/ci/performance-monitoring.py \
+            --environment production \
+            --version "${{ needs.release-planning.outputs.release_version }}" \
+            --baseline performance-baseline.json \
+            --duration 1800  # 30 minutes
+
+      - name: 🚨 Error Rate Monitoring
+        run: |
+          python3 scripts/ci/error-monitoring.py \
+            --environment production \
+            --version "${{ needs.release-planning.outputs.release_version }}" \
+            --threshold 0.01  # 1% error rate threshold
+
+      - name: 👥 User Experience Monitoring
+        run: |
+          python3 scripts/ci/ux-monitoring.py \
+            --environment production \
+            --version "${{ needs.release-planning.outputs.release_version }}" \
+            --metrics "app_start_time,frame_rate,crash_rate"
+
+  gradual-rollout:
+    name: 📈 Gradual Rollout
+    runs-on: ubuntu-latest
+    needs: [release-planning, deploy-production, post-deployment-monitoring]
+    if: |
+      success() &&
+      contains(fromJSON(needs.release-planning.outputs.deployment_strategy).type, 'gradual')
+    timeout-minutes: 240  # 4 hours max
+
+    strategy:
+      matrix:
+        rollout_stage: [10, 25, 50, 100]
+
+    steps:
+      - name: 📥 Checkout
+        uses: actions/checkout@v4
+
+      - name: ⏱️ Wait for Rollout Stage
+        run: |
+          stage_delay=$(echo '${{ needs.release-planning.outputs.rollout_config }}' | jq -r '.stage_delay_minutes // 30')
+          if [[ "${{ matrix.rollout_stage }}" != "10" ]]; then
+            echo "Waiting ${stage_delay} minutes before rollout to ${{ matrix.rollout_stage }}%"
+            sleep $((stage_delay * 60))
+          fi
+
+      - name: 📊 Health Check Before Rollout
+        run: |
+          python3 scripts/ci/pre-rollout-health-check.py \
+            --environment production \
+            --version "${{ needs.release-planning.outputs.release_version }}" \
+            --current-percentage "$(python3 -c "
+              stages = [10, 25, 50, 100]
+              current = ${{ matrix.rollout_stage }}
+              prev_idx = stages.index(current) - 1
+              print(stages[prev_idx] if prev_idx >= 0 else 0)
+            ")"
+
+      - name: 🎯 Update Rollout Percentage
+        run: |
+          python3 scripts/ci/update-rollout.py \
+            --environment production \
+            --version "${{ needs.release-planning.outputs.release_version }}" \
+            --percentage ${{ matrix.rollout_stage }}
+
+      - name: 📈 Monitor Rollout Stage
+        run: |
+          python3 scripts/ci/monitor-rollout-stage.py \
+            --environment production \
+            --version "${{ needs.release-planning.outputs.release_version }}" \
+            --percentage ${{ matrix.rollout_stage }} \
+            --duration 1800  # 30 minutes monitoring
+
+  # ============================================================================
+  # RELEASE COMPLETION & NOTIFICATIONS
+  # ============================================================================
+
+  release-completion:
+    name: 🎉 Release Completion
+    runs-on: ubuntu-latest
+    needs: [release-planning, deploy-production, post-deployment-monitoring, gradual-rollout]
+    if: always()
+    timeout-minutes: 10
+
+    steps:
+      - name: 📥 Checkout
+        uses: actions/checkout@v4
+
+      - name: 📊 Generate Release Report
+        run: |
+          python3 scripts/ci/release-report.py \
+            --version "${{ needs.release-planning.outputs.release_version }}" \
+            --production-status "${{ needs.deploy-production.result }}" \
+            --monitoring-status "${{ needs.post-deployment-monitoring.result }}" \
+            --rollout-status "${{ needs.gradual-rollout.result }}" \
+            --output release-report.json
+
+      - name: 🏷️ Create GitHub Release
+        if: success()
+        uses: actions/create-release@v1
+        with:
+          tag_name: v${{ needs.release-planning.outputs.release_version }}
+          release_name: Release ${{ needs.release-planning.outputs.release_version }}
+          body: ${{ fromJSON(needs.release-planning.outputs.release_notes) }}
+          draft: false
+          prerelease: ${{ contains(needs.release-planning.outputs.release_version, 'alpha') || contains(needs.release-planning.outputs.release_version, 'beta') }}
+
+      - name: 📢 Success Notification
+        if: success()
+        run: |
+          python3 scripts/ci/notifications.py \
+            --type release-success \
+            --version "${{ needs.release-planning.outputs.release_version }}" \
+            --environment production \
+            --webhook "${{ env.SLACK_WEBHOOK }}"
+
+      - name: 🚨 Failure Notification
+        if: failure()
+        run: |
+          python3 scripts/ci/notifications.py \
+            --type release-failure \
+            --version "${{ needs.release-planning.outputs.release_version }}" \
+            --environment production \
+            --webhook "${{ env.SLACK_WEBHOOK }}" \
+            --details "Release pipeline failed"
+
+  # ============================================================================
+  # ROLLBACK AUTOMATION
+  # ============================================================================
+
+  auto-rollback:
+    name: 🔄 Auto Rollback
+    runs-on: ubuntu-latest
+    needs: [release-planning, deploy-production, post-deployment-monitoring]
+    if: |
+      always() &&
+      (needs.post-deployment-monitoring.result == 'failure' ||
+       needs.deploy-production.result == 'failure')
+    timeout-minutes: 15
+
+    steps:
+      - name: 📥 Checkout
+        uses: actions/checkout@v4
+
+      - name: 🔄 Execute Rollback
+        run: |
+          python3 scripts/ci/auto-rollback.py \
+            --environment production \
+            --current-version "${{ needs.release-planning.outputs.release_version }}" \
+            --rollback-reason "Automated rollback due to deployment failure"
+
+      - name: 📊 Rollback Verification
+        run: |
+          python3 scripts/ci/rollback-verification.py \
+            --environment production \
+            --rolled-back-version "${{ needs.release-planning.outputs.release_version }}"
+
+      - name: 🚨 Rollback Notification
+        run: |
+          python3 scripts/ci/notifications.py \
+            --type rollback-executed \
+            --version "${{ needs.release-planning.outputs.release_version }}" \
+            --environment production \
+            --webhook "${{ env.SLACK_WEBHOOK }}"

@@ -1,0 +1,61 @@
+{
+  "name": "pose-coach-sprint-p1-automation",
+  "version": "1.0.0",
+  "description": "Sprint P1 Task Board Automation System for Pose Coach Android",
+  "main": "task-automation.js",
+  "scripts": {
+    "task:pr-merge": "node task-automation.js pr-merge",
+    "task:validate": "node task-automation.js validate-task",
+    "task:status": "node task-automation.js status-report",
+    "dod:validate": "node dod-checklist.js validate",
+    "dod:summary": "node dod-checklist.js summary",
+    "agent:init": "node agent-coordinator.js init",
+    "agent:matrix": "node agent-coordinator.js matrix",
+    "agent:execute-testing": "node agent-coordinator.js execute-column testing",
+    "agent:execute-implementation": "node agent-coordinator.js execute-column implementation",
+    "agent:execute-refactoring": "node agent-coordinator.js execute-column refactoring",
+    "agent:execute-documentation": "node agent-coordinator.js execute-column documentation",
+    "agent:execute-sprint": "node agent-coordinator.js execute-sprint",
+    "sparc:init": "node sparc-integration.js init",
+    "sparc:validate": "node sparc-integration.js validate",
+    "sparc:report": "node sparc-integration.js report",
+    "workflow:setup": "node workflow-automation.js setup",
+    "workflow:validate": "node workflow-automation.js validate-pr",
+    "system:setup": "node setup-system.js setup",
+    "system:validate": "node setup-system.js validate",
+    "system:status": "node setup-system.js status",
+    "install:deps": "npm install && npm run system:setup",
+    "test:automation": "npm run dod:summary && npm run task:status",
+    "sprint:start": "npm run agent:init && npm run sparc:init",
+    "sprint:status": "npm run task:status && npm run dod:summary && npm run agent:matrix",
+    "sprint:validate": "npm run system:validate && npm run sparc:validate && npm run dod:summary"
+  },
+  "keywords": [
+    "android",
+    "pose-detection",
+    "sprint",
+    "automation",
+    "tdd",
+    "claude-code",
+    "sparc"
+  ],
+  "author": "Pose Coach Development Team",
+  "license": "MIT",
+  "dependencies": {
+    "js-yaml": "^4.1.0"
+  },
+  "devDependencies": {
+    "jest": "^29.7.0"
+  },
+  "engines": {
+    "node": ">=16.0.0"
+  },
+  "repository": {
+    "type": "git",
+    "url": "pose-coach-android-starter"
+  },
+  "bugs": {
+    "url": "https://github.com/pose-coach/android/issues"
+  },
+  "homepage": "https://github.com/pose-coach/android#readme"
+}

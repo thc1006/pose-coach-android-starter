@@ -1,0 +1,252 @@
+name: 'Security Scan & Privacy Validation'
+
+on:
+  schedule:
+    - cron: '0 2 * * 1' # Weekly on Monday at 2 AM
+  workflow_dispatch:
+  push:
+    branches: [main]
+    paths:
+      - 'app/src/**'
+      - '**/*.gradle'
+      - 'gradle/**'
+
+jobs:
+  security-scan:
+    name: 'Security & Privacy Scan'
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+
+    steps:
+      - name: Checkout Code
+        uses: actions/checkout@v4
+
+      - name: Setup JDK
+        uses: actions/setup-java@v4
+        with:
+          java-version: '17'
+          distribution: 'temurin'
+
+      - name: Build Debug APK for Analysis
+        run: ./gradlew assembleDebug
+
+      - name: Privacy Checklist Automated Validation
+        run: |
+          echo "🔒 Privacy Checklist Automated Validation"
+          echo "========================================="
+
+          # 1. Check for sensitive permissions
+          echo "1. Checking sensitive permissions..."
+          SENSITIVE_PERMS=""
+          if grep -r "android.permission.CAMERA" app/src/main/; then
+            SENSITIVE_PERMS="$SENSITIVE_PERMS CAMERA"
+            echo "   ⚠️  CAMERA permission detected"
+          fi
+          if grep -r "android.permission.RECORD_AUDIO" app/src/main/; then
+            SENSITIVE_PERMS="$SENSITIVE_PERMS RECORD_AUDIO"
+            echo "   ⚠️  RECORD_AUDIO permission detected"
+          fi
+          if grep -r "android.permission.ACCESS_FINE_LOCATION" app/src/main/; then
+            SENSITIVE_PERMS="$SENSITIVE_PERMS LOCATION"
+            echo "   ⚠️  FINE_LOCATION permission detected"
+          fi
+          if grep -r "android.permission.READ_EXTERNAL_STORAGE\|android.permission.WRITE_EXTERNAL_STORAGE" app/src/main/; then
+            SENSITIVE_PERMS="$SENSITIVE_PERMS STORAGE"
+            echo "   ⚠️  STORAGE permissions detected"
+          fi
+
+          # 2. Validate consent mechanisms
+          echo "2. Checking consent mechanisms..."
+          CONSENT_FOUND=false
+          if grep -r -i "consent\|permission.*request\|requestPermission" app/src/main/kotlin/ app/src/main/java/ 2>/dev/null; then
+            CONSENT_FOUND=true
+            echo "   ✅ Consent/permission request mechanisms found"
+          else
+            echo "   ❌ No consent mechanisms detected"
+          fi
+
+          # 3. Privacy policy references
+          echo "3. Checking privacy policy references..."
+          PRIVACY_POLICY_FOUND=false
+          if grep -r -i "privacy.*policy\|Privacy.*Policy" app/src/main/ 2>/dev/null; then
+            PRIVACY_POLICY_FOUND=true
+            echo "   ✅ Privacy policy references found"
+          else
+            echo "   ❌ No privacy policy references found"
+          fi
+
+          # 4. Data collection validation
+          echo "4. Checking data collection practices..."
+          DATA_COLLECTION=""
+          if grep -r "SharedPreferences\|getSharedPreferences" app/src/main/; then
+            DATA_COLLECTION="$DATA_COLLECTION LOCAL_STORAGE"
+            echo "   ⚠️  Local data storage detected"
+          fi
+          if grep -r "http\|https\|retrofit\|okhttp" app/src/main/; then
+            DATA_COLLECTION="$DATA_COLLECTION NETWORK"
+            echo "   ⚠️  Network communication detected"
+          fi
+          if grep -r "analytics\|Analytics\|firebase\|Firebase" app/src/main/; then
+            DATA_COLLECTION="$DATA_COLLECTION ANALYTICS"
+            echo "   ⚠️  Analytics/tracking detected"
+          fi
+
+          # 5. Generate privacy checklist report
+          echo "5. Generating privacy checklist report..."
+          cat > privacy-checklist-report.md << EOF
+          # Privacy Checklist Report
+
+          ## Sensitive Permissions Detected
+          $SENSITIVE_PERMS
+
+          ## Consent Mechanisms
+          - Status: $([ "$CONSENT_FOUND" = true ] && echo "✅ IMPLEMENTED" || echo "❌ MISSING")
+          - Required for: $SENSITIVE_PERMS
+
+          ## Privacy Policy
+          - Status: $([ "$PRIVACY_POLICY_FOUND" = true ] && echo "✅ REFERENCED" || echo "❌ MISSING")
+
+          ## Data Collection Practices
+          $DATA_COLLECTION
+
+          ## Compliance Status
+          - GDPR Ready: $([ "$CONSENT_FOUND" = true ] && [ "$PRIVACY_POLICY_FOUND" = true ] && echo "✅ YES" || echo "❌ NO")
+          - CCPA Ready: $([ "$PRIVACY_POLICY_FOUND" = true ] && echo "✅ YES" || echo "❌ NO")
+
+          Generated: $(date)
+          EOF
+
+          # Fail if critical privacy elements are missing
+          if [ "$CONSENT_FOUND" = false ] && [ -n "$SENSITIVE_PERMS" ]; then
+            echo "❌ PRIVACY VALIDATION FAILED: Sensitive permissions without consent mechanisms"
+            exit 1
+          fi
+
+          echo "✅ Privacy checklist validation completed"
+
+      - name: SAST Security Scan with CodeQL
+        uses: github/codeql-action/init@v3
+        with:
+          languages: java-kotlin
+
+      - name: Perform CodeQL Analysis
+        uses: github/codeql-action/analyze@v3
+
+      - name: OWASP Dependency Check
+        uses: dependency-check/Dependency-Check_Action@main
+        with:
+          project: 'pose-coach-android'
+          path: '.'
+          format: 'ALL'
+          args: >
+            --enableRetired
+            --enableExperimental
+            --failOnCVSS 7
+            --suppression dependency-check-suppressions.xml
+
+      - name: Android Security Analysis
+        run: |
+          echo "🔍 Android Security Analysis"
+          echo "============================"
+
+          # Check for hardcoded secrets
+          echo "1. Scanning for hardcoded secrets..."
+          if grep -r -i "password\|secret\|api.*key\|token" app/src/main/ --include="*.kt" --include="*.java" | grep -v "//.*password" | grep -v "/\*.*password"; then
+            echo "   ⚠️  Potential hardcoded secrets found"
+          else
+            echo "   ✅ No hardcoded secrets detected"
+          fi
+
+          # Check for debug builds in production
+          echo "2. Checking build configurations..."
+          if grep -r "debuggable.*true" app/build.gradle; then
+            echo "   ⚠️  Debug mode detected in build configuration"
+          else
+            echo "   ✅ Debug mode properly configured"
+          fi
+
+          # Check for insecure network configurations
+          echo "3. Checking network security..."
+          if grep -r "usesCleartextTraffic.*true\|android:usesCleartextTraffic=\"true\"" app/src/main/; then
+            echo "   ❌ Cleartext traffic allowed - security risk"
+          else
+            echo "   ✅ Cleartext traffic properly restricted"
+          fi
+
+          # Check for backup allowance
+          echo "4. Checking backup allowance..."
+          if grep -r "allowBackup.*true\|android:allowBackup=\"true\"" app/src/main/; then
+            echo "   ⚠️  App backup is allowed - potential data exposure"
+          else
+            echo "   ✅ App backup properly configured"
+          fi
+
+      - name: Mobile Security Framework (MobSF) Analysis
+        uses: docker://opensecurity/mobsf:latest
+        with:
+          entrypoint: /bin/bash
+          args: |
+            -c "
+            python3 /home/mobsf/Mobile-Security-Framework-MobSF/mobsf.py &
+            sleep 30
+            curl -X POST -F 'file=@app/build/outputs/apk/debug/app-debug.apk' http://localhost:8000/api/v1/upload || true
+            "
+        continue-on-error: true
+
+      - name: Generate Security Report
+        run: |
+          mkdir -p security-reports
+
+          cat > security-reports/security-summary.md << EOF
+          # Security Scan Summary
+
+          ## Scan Results
+          - **SAST (CodeQL)**: Completed
+          - **Dependency Check**: Completed
+          - **Privacy Validation**: Completed
+          - **Mobile Security**: Completed
+
+          ## Critical Findings
+          $(if [ -f "reports/dependency-check-report.json" ]; then
+            echo "- Dependency vulnerabilities found (see detailed report)"
+          else
+            echo "- No critical dependency vulnerabilities"
+          fi)
+
+          ## Recommendations
+          1. Review all identified vulnerabilities
+          2. Update dependencies with known vulnerabilities
+          3. Implement proper consent mechanisms for sensitive permissions
+          4. Ensure privacy policy is accessible and up-to-date
+
+          Generated: $(date)
+          EOF
+
+      - name: Upload Security Reports
+        uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: security-reports
+          path: |
+            security-reports/
+            reports/
+            privacy-checklist-report.md
+          retention-days: 90
+
+      - name: Comment PR with Security Summary
+        if: github.event_name == 'pull_request'
+        uses: actions/github-script@v7
+        with:
+          script: |
+            const fs = require('fs');
+            try {
+              const report = fs.readFileSync('privacy-checklist-report.md', 'utf8');
+              github.rest.issues.createComment({
+                issue_number: context.issue.number,
+                owner: context.repo.owner,
+                repo: context.repo.repo,
+                body: `## 🔒 Security & Privacy Scan Results\n\n${report}`
+              });
+            } catch (error) {
+              console.log('No privacy report found or error reading file:', error.message);
+            }

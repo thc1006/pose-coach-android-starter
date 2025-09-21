@@ -1,0 +1,446 @@
+# Specification Agent Coordinator Configuration
+# This file defines the Claude Code agent coordination strategy for specification management
+
+version: "1.0"
+project: "pose-coach-android"
+coordinator_type: "specification-steering"
+
+# Agent Roles and Responsibilities
+agents:
+  primary_specification_agents:
+    specification:
+      role: "Requirements Analysis and Documentation"
+      responsibilities:
+        - "Analyze stakeholder requirements"
+        - "Create detailed functional specifications"
+        - "Develop user stories and acceptance criteria"
+        - "Maintain requirement traceability"
+      outputs:
+        - "requirements.yaml"
+        - "user-stories.md"
+        - "acceptance-criteria.md"
+      coordination_priority: "high"
+
+    system-architect:
+      role: "Technical Architecture and Design"
+      responsibilities:
+        - "Define technical architecture specifications"
+        - "Create architecture decision records (ADRs)"
+        - "Design system component interfaces"
+        - "Assess technical feasibility"
+      outputs:
+        - "architecture-specifications.md"
+        - "adr-documents/"
+        - "component-designs.yaml"
+      coordination_priority: "high"
+
+    api-docs:
+      role: "API Specification and Documentation"
+      responsibilities:
+        - "Create OpenAPI specifications"
+        - "Define request/response schemas"
+        - "Document API endpoints and contracts"
+        - "Validate API consistency"
+      outputs:
+        - "api-specifications.yaml"
+        - "api-documentation.md"
+        - "schema-definitions.json"
+      coordination_priority: "high"
+
+  supporting_specification_agents:
+    researcher:
+      role: "Market and Technical Research"
+      responsibilities:
+        - "Research industry best practices"
+        - "Analyze competitive landscape"
+        - "Investigate technical constraints"
+        - "Validate business requirements"
+      outputs:
+        - "research-findings.md"
+        - "market-analysis.md"
+        - "technical-research.md"
+      coordination_priority: "medium"
+
+    tester:
+      role: "Test Specification and Validation"
+      responsibilities:
+        - "Create test specifications"
+        - "Define test acceptance criteria"
+        - "Design test strategy"
+        - "Validate specification testability"
+      outputs:
+        - "test-specifications.md"
+        - "test-strategy.yaml"
+        - "validation-criteria.md"
+      coordination_priority: "high"
+
+    reviewer:
+      role: "Quality Assurance and Review"
+      responsibilities:
+        - "Review specification quality"
+        - "Validate specification completeness"
+        - "Ensure consistency across documents"
+        - "Conduct peer reviews"
+      outputs:
+        - "review-reports.md"
+        - "quality-assessments.yaml"
+        - "consistency-checks.md"
+      coordination_priority: "medium"
+
+  specialized_agents:
+    perf-analyzer:
+      role: "Performance Specification"
+      responsibilities:
+        - "Define performance requirements"
+        - "Specify performance benchmarks"
+        - "Create performance test criteria"
+        - "Analyze performance constraints"
+      outputs:
+        - "performance-requirements.yaml"
+        - "benchmarks.md"
+        - "performance-tests.md"
+      coordination_priority: "medium"
+
+    security-manager:
+      role: "Security Specification"
+      responsibilities:
+        - "Define security requirements"
+        - "Specify security controls"
+        - "Create security test criteria"
+        - "Validate compliance requirements"
+      outputs:
+        - "security-requirements.yaml"
+        - "security-controls.md"
+        - "compliance-specifications.md"
+      coordination_priority: "medium"
+
+    planner:
+      role: "Implementation Planning"
+      responsibilities:
+        - "Break down specifications into tasks"
+        - "Estimate implementation effort"
+        - "Plan sprint allocations"
+        - "Coordinate resource requirements"
+      outputs:
+        - "implementation-plan.yaml"
+        - "effort-estimates.md"
+        - "sprint-planning.md"
+      coordination_priority: "medium"
+
+# Coordination Workflows
+workflows:
+  specification_development:
+    name: "Comprehensive Specification Development"
+    trigger: "new_feature_request"
+    phases:
+      phase_1_analysis:
+        name: "Requirement Analysis and Research"
+        mode: "parallel"
+        agents:
+          - agent: "specification"
+            task: "Analyze requirements and create initial specifications"
+            dependencies: []
+            estimated_duration: "2 days"
+
+          - agent: "researcher"
+            task: "Research technical constraints and best practices"
+            dependencies: []
+            estimated_duration: "1 day"
+
+          - agent: "system-architect"
+            task: "Assess technical feasibility and architecture impact"
+            dependencies: []
+            estimated_duration: "1 day"
+
+        success_criteria:
+          - "All requirements documented with acceptance criteria"
+          - "Technical feasibility confirmed"
+          - "Research findings documented"
+
+      phase_2_detailed_specification:
+        name: "Detailed Specification Creation"
+        mode: "sequential"
+        agents:
+          - agent: "system-architect"
+            task: "Create detailed architecture specifications"
+            dependencies: ["phase_1_analysis"]
+            estimated_duration: "2 days"
+
+          - agent: "api-docs"
+            task: "Create comprehensive API specifications"
+            dependencies: ["system-architect"]
+            estimated_duration: "1 day"
+
+          - agent: "tester"
+            task: "Create test specifications and strategy"
+            dependencies: ["api-docs"]
+            estimated_duration: "1 day"
+
+          - agent: "perf-analyzer"
+            task: "Define performance requirements and benchmarks"
+            dependencies: ["system-architect"]
+            estimated_duration: "1 day"
+
+        success_criteria:
+          - "Architecture specifications complete"
+          - "API specifications documented"
+          - "Test strategy defined"
+          - "Performance requirements specified"
+
+      phase_3_validation:
+        name: "Specification Validation and Review"
+        mode: "parallel"
+        agents:
+          - agent: "reviewer"
+            task: "Conduct comprehensive specification review"
+            dependencies: ["phase_2_detailed_specification"]
+            estimated_duration: "1 day"
+
+          - agent: "security-manager"
+            task: "Review security implications and requirements"
+            dependencies: ["phase_2_detailed_specification"]
+            estimated_duration: "1 day"
+
+          - agent: "planner"
+            task: "Create implementation plan and effort estimates"
+            dependencies: ["phase_2_detailed_specification"]
+            estimated_duration: "1 day"
+
+        success_criteria:
+          - "All specifications reviewed and approved"
+          - "Security requirements validated"
+          - "Implementation plan created"
+
+  specification_review:
+    name: "Specification Review Process"
+    trigger: "specification_complete"
+    phases:
+      technical_review:
+        name: "Technical Review"
+        mode: "parallel"
+        agents:
+          - agent: "system-architect"
+            task: "Review architecture consistency and scalability"
+            focus: "technical_architecture"
+
+          - agent: "perf-analyzer"
+            task: "Review performance requirements and feasibility"
+            focus: "performance_analysis"
+
+          - agent: "security-manager"
+            task: "Review security implications"
+            focus: "security_validation"
+
+      business_review:
+        name: "Business Review"
+        mode: "parallel"
+        agents:
+          - agent: "specification"
+            task: "Validate business requirement alignment"
+            focus: "business_alignment"
+
+          - agent: "researcher"
+            task: "Validate market research and user needs"
+            focus: "market_validation"
+
+          - agent: "planner"
+            task: "Validate resource and timeline feasibility"
+            focus: "feasibility_assessment"
+
+  change_impact_analysis:
+    name: "Specification Change Impact Analysis"
+    trigger: "specification_change_request"
+    phases:
+      impact_assessment:
+        name: "Impact Assessment"
+        mode: "sequential"
+        agents:
+          - agent: "system-architect"
+            task: "Analyze architectural impact of changes"
+            output: "architecture-impact.md"
+
+          - agent: "tester"
+            task: "Assess test impact and coverage changes"
+            output: "test-impact.md"
+
+          - agent: "planner"
+            task: "Estimate effort and timeline impact"
+            output: "effort-impact.md"
+
+      risk_evaluation:
+        name: "Risk Evaluation"
+        mode: "parallel"
+        agents:
+          - agent: "reviewer"
+            task: "Evaluate quality and consistency risks"
+            focus: "quality_risk"
+
+          - agent: "security-manager"
+            task: "Evaluate security risks"
+            focus: "security_risk"
+
+          - agent: "perf-analyzer"
+            task: "Evaluate performance risks"
+            focus: "performance_risk"
+
+# Coordination Rules
+coordination_rules:
+  dependency_management:
+    - rule: "Architecture specifications must precede API specifications"
+      type: "hard_dependency"
+
+    - rule: "Test specifications require functional specifications"
+      type: "hard_dependency"
+
+    - rule: "Performance analysis should follow architecture design"
+      type: "soft_dependency"
+
+  quality_gates:
+    - gate: "specification_completeness"
+      criteria:
+        - "All required fields in specification template filled"
+        - "Acceptance criteria defined for all requirements"
+        - "Dependencies identified and documented"
+      blocking: true
+
+    - gate: "technical_feasibility"
+      criteria:
+        - "Architecture review approved"
+        - "Performance requirements validated"
+        - "Security requirements confirmed"
+      blocking: true
+
+    - gate: "stakeholder_approval"
+      criteria:
+        - "Business requirements validated"
+        - "Resource allocation approved"
+        - "Timeline approved"
+      blocking: true
+
+  escalation_procedures:
+    - trigger: "specification_conflict"
+      escalation_path:
+        - level_1: "reviewer"
+        - level_2: "system-architect"
+        - level_3: "planner"
+
+    - trigger: "timeline_risk"
+      escalation_path:
+        - level_1: "planner"
+        - level_2: "project_manager"
+        - level_3: "executive_team"
+
+# Agent Communication Protocols
+communication:
+  coordination_methods:
+    - method: "claude_code_task_spawning"
+      description: "Primary coordination via Claude Code Task tool"
+      usage: "Spawn multiple agents concurrently for parallel work"
+
+    - method: "memory_coordination"
+      description: "Shared context via Claude Flow memory"
+      usage: "Store and retrieve specification context across agents"
+
+    - method: "hook_integration"
+      description: "Coordination hooks for status updates"
+      usage: "Pre/post task hooks for coordination"
+
+  status_reporting:
+    frequency: "real_time"
+    format: "structured_yaml"
+    distribution:
+      - "specification_dashboard"
+      - "project_stakeholders"
+      - "development_team"
+
+  notification_rules:
+    critical_issues:
+      - "Specification conflicts detected"
+      - "Quality gates failed"
+      - "Timeline risks identified"
+    immediate_notification: true
+
+    status_updates:
+      - "Phase completion"
+      - "Agent task completion"
+      - "Review approval/rejection"
+    batch_notification: true
+
+# Integration with SPARC Workflow
+sparc_integration:
+  specification_phase:
+    enhanced_activities:
+      - "Multi-agent requirement analysis"
+      - "Automated specification generation"
+      - "Parallel review coordination"
+      - "Traceability matrix creation"
+
+  hooks:
+    pre_specification:
+      - command: "npx claude-flow@alpha hooks pre-task --phase specification"
+        purpose: "Initialize coordination context"
+
+    post_specification:
+      - command: "npx claude-flow@alpha hooks post-task --phase specification"
+        purpose: "Update traceability and metrics"
+
+  handoff_to_next_phase:
+    deliverables:
+      - "Complete specification package"
+      - "Traceability matrix"
+      - "Implementation plan"
+      - "Test strategy"
+    validation:
+      - "All quality gates passed"
+      - "Stakeholder approvals obtained"
+      - "Dependencies resolved"
+
+# Metrics and Monitoring
+metrics:
+  process_metrics:
+    - "Specification development cycle time"
+    - "Review iteration count"
+    - "Agent coordination efficiency"
+    - "Quality gate pass rate"
+
+  quality_metrics:
+    - "Specification completeness score"
+    - "Requirements coverage percentage"
+    - "Defect rate in specifications"
+    - "Post-implementation change rate"
+
+  collaboration_metrics:
+    - "Agent utilization rate"
+    - "Cross-agent coordination success"
+    - "Stakeholder satisfaction score"
+    - "Communication effectiveness"
+
+monitoring:
+  dashboards:
+    - "Real-time specification progress"
+    - "Agent coordination status"
+    - "Quality metrics trending"
+    - "Resource utilization"
+
+  alerts:
+    - "Quality gate failures"
+    - "Timeline deviations"
+    - "Agent coordination issues"
+    - "Stakeholder approval delays"
+
+# Configuration Management
+configuration:
+  version_control:
+    coordinator_config: "Git-based versioning"
+    specification_templates: "Version controlled templates"
+    workflow_definitions: "Versioned workflow configs"
+
+  customization:
+    project_specific:
+      - "Agent role customization"
+      - "Workflow adaptation"
+      - "Quality gate modification"
+    feature_specific:
+      - "Specialized agent coordination"
+      - "Custom validation rules"
+      - "Tailored communication protocols"

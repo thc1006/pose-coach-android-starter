@@ -1,0 +1,283 @@
+# Development Environment Configuration
+# Pose Coach Android - Development Settings
+
+environment:
+  name: development
+  stage: dev
+  region: us-central1
+  debug_mode: true
+
+# Application Configuration
+app:
+  version_suffix: "-dev"
+  build_type: debug
+  minify_enabled: false
+  shrink_resources: false
+  proguard_enabled: false
+
+  # Debug flags
+  enable_logging: true
+  log_level: DEBUG
+  enable_strict_mode: true
+  enable_leak_canary: true
+  enable_flipper: true
+
+# API Configuration
+api:
+  base_url: "https://api-dev.posecoach.app"
+  timeout_seconds: 30
+  retry_attempts: 3
+  enable_mock_responses: true
+
+  # Gemini AI Configuration
+  gemini:
+    api_url: "https://generativelanguage.googleapis.com/v1"
+    model: "gemini-pro-vision"
+    api_key_ref: "GEMINI_API_KEY_DEV"
+    enable_caching: false
+    request_timeout: 30
+    max_tokens: 4096
+
+# Database Configuration
+database:
+  name: "pose_coach_dev.db"
+  version: 1
+  enable_wal: true
+  enable_foreign_keys: true
+
+  # Development-specific settings
+  enable_logging: true
+  allow_main_thread_queries: true
+  fallback_to_destructive_migration: true
+
+# Firebase Configuration
+firebase:
+  project_id: "pose-coach-dev"
+  app_id: "1:123456789:android:dev123"
+  analytics_enabled: true
+  crashlytics_enabled: true
+  performance_monitoring: true
+
+  # Remote Config
+  remote_config:
+    cache_expiration: 0  # No caching in development
+    fetch_timeout: 60
+
+  # Cloud Messaging
+  messaging:
+    auto_init_enabled: true
+    default_notification_channel: "dev_notifications"
+
+# Security Configuration
+security:
+  certificate_pinning: false
+  network_security_config: "network_security_config_dev.xml"
+  enable_root_detection: false
+  enable_debug_detection: false
+
+  # Biometric Authentication
+  biometric:
+    enabled: true
+    allow_device_credential: true
+    require_confirmation: false
+
+# Feature Flags
+features:
+  # Core Features
+  pose_detection: true
+  real_time_coaching: true
+  ai_feedback: true
+  voice_commands: true
+
+  # Experimental Features (enabled in dev)
+  advanced_analytics: true
+  beta_ui: true
+  experimental_models: true
+  developer_menu: true
+  debug_overlay: true
+
+  # Social Features
+  social_sharing: false
+  leaderboards: false
+  challenges: false
+
+# Performance Configuration
+performance:
+  # Memory Management
+  max_memory_cache_size: 50MB
+  max_disk_cache_size: 100MB
+
+  # Network
+  connection_timeout: 15s
+  read_timeout: 30s
+  write_timeout: 30s
+
+  # AI Model Performance
+  pose_detection:
+    max_inference_time: 500ms
+    confidence_threshold: 0.5
+    enable_gpu_acceleration: true
+    model_cache_size: 25MB
+
+# Testing Configuration
+testing:
+  enable_test_mode: true
+  mock_api_responses: true
+  fake_data_generation: true
+  automated_screenshots: true
+
+  # Test Users
+  test_users:
+    - email: "test1@posecoach.dev"
+      role: "tester"
+    - email: "test2@posecoach.dev"
+      role: "developer"
+
+# Monitoring & Analytics
+monitoring:
+  enable_detailed_logging: true
+  log_network_requests: true
+  log_database_queries: true
+  log_performance_metrics: true
+
+  # Crash Reporting
+  crashlytics:
+    collect_user_identifiers: false
+    collect_custom_logs: true
+    send_unhandled_exceptions: true
+
+  # Performance Monitoring
+  performance:
+    trace_all_activities: true
+    trace_network_requests: true
+    custom_traces: true
+
+# Development Tools
+dev_tools:
+  flipper:
+    enabled: true
+    network_plugin: true
+    databases_plugin: true
+    shared_preferences_plugin: true
+    crash_reporter_plugin: true
+
+  stetho:
+    enabled: true
+    network_inspection: true
+    database_inspection: true
+
+  leak_canary:
+    enabled: true
+    heap_dump_auto_analysis: true
+
+# Build Configuration
+build:
+  compile_sdk: 34
+  min_sdk: 24
+  target_sdk: 34
+
+  # Build optimizations (disabled for dev)
+  r8_optimization: false
+  resource_shrinking: false
+  code_shrinking: false
+
+  # Signing (debug key)
+  signing:
+    store_file: "debug.keystore"
+    store_password: "android"
+    key_alias: "androiddebugkey"
+    key_password: "android"
+
+# Network Configuration
+network:
+  use_cleartext_traffic: true
+  bypass_certificate_validation: true  # Only for development!
+  trust_user_certs: true
+
+  # Proxy settings for development
+  proxy:
+    enabled: false
+    host: "localhost"
+    port: 8888
+
+# Privacy & Compliance (relaxed for development)
+privacy:
+  data_collection_consent: false  # Skip consent in dev
+  analytics_opt_out: false
+  crash_reporting_opt_out: false
+
+  # GDPR (development mode)
+  gdpr:
+    enabled: false
+    consent_required: false
+
+  # Data Retention (short for development)
+  data_retention:
+    user_data: 30_days
+    analytics_data: 7_days
+    crash_reports: 7_days
+
+# Notification Configuration
+notifications:
+  default_channel: "dev_notifications"
+  show_debug_notifications: true
+
+  channels:
+    - id: "dev_notifications"
+      name: "Development Notifications"
+      importance: "high"
+      show_badge: true
+
+# Content Configuration
+content:
+  # Exercise Library
+  exercises:
+    cache_duration: 300s  # 5 minutes for quick iteration
+    preload_count: 5
+
+  # AI Models
+  models:
+    pose_detection_model: "pose_detection_v1_dev.tflite"
+    coaching_model: "coaching_v1_dev.tflite"
+    auto_update: true
+    fallback_models: true
+
+# Error Handling
+error_handling:
+  show_detailed_errors: true
+  crash_on_error: false  # For better debugging
+  error_reporting: true
+
+  # Retry Configuration
+  network_retry:
+    max_attempts: 5
+    initial_delay: 1s
+    max_delay: 10s
+    backoff_multiplier: 2
+
+# Experimental Features
+experimental:
+  new_ui_components: true
+  ar_pose_overlay: false  # Disabled until AR setup
+  voice_coaching: true
+  gesture_controls: true
+
+  # A/B Testing (development values)
+  ab_testing:
+    enabled: true
+    user_bucketing: "development"
+    force_variant: null
+
+# Resource Configuration
+resources:
+  # Image Loading
+  image_cache_size: 50MB
+  image_quality: "medium"  # Faster loading in dev
+
+  # Video
+  video_cache_size: 100MB
+  video_quality: "720p"
+
+  # Fonts
+  custom_fonts: true
+  font_preloading: false

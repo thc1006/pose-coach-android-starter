@@ -1,0 +1,725 @@
+openapi: 3.0.0
+info:
+  title: Pose Coach Android API
+  version: 1.0.0
+  description: |
+    Comprehensive API for the Pose Coach Android application, providing
+    pose detection, analysis, and AI-powered coaching suggestions with
+    privacy-first architecture and real-time performance optimization.
+
+    ## Features
+    - Real-time pose detection using MediaPipe
+    - AI-powered coaching suggestions via Gemini API
+    - Privacy-preserving analytics and processing
+    - CameraX integration for optimal performance
+    - Biomechanical analysis and movement patterns
+
+  contact:
+    name: Pose Coach Development Team
+    email: dev@posecoach.com
+    url: https://github.com/posecoach/android
+
+  license:
+    name: MIT
+    url: https://opensource.org/licenses/MIT
+
+  termsOfService: https://posecoach.com/terms
+
+servers:
+  - url: https://api.posecoach.com/v1
+    description: Production server
+  - url: https://staging-api.posecoach.com/v1
+    description: Staging server
+  - url: http://localhost:8080/v1
+    description: Local development server
+
+tags:
+  - name: poses
+    description: Pose detection and landmark analysis
+  - name: suggestions
+    description: AI-powered coaching suggestions
+  - name: privacy
+    description: Privacy controls and consent management
+  - name: analytics
+    description: Performance analytics and metrics
+  - name: geometry
+    description: Geometric utilities and calculations
+  - name: camera
+    description: Camera integration and management
+
+paths:
+  /poses/detect:
+    post:
+      tags:
+        - poses
+      summary: Detect pose landmarks from image
+      description: |
+        Analyzes an image to detect human pose landmarks using MediaPipe.
+        Returns 33 3D landmarks with visibility and presence scores.
+
+      operationId: detectPose
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/PoseDetectionRequest'
+            example:
+              imageData: "base64-encoded-image-data"
+              rotationDegrees: 0
+              performanceMode: "accurate"
+
+      responses:
+        '200':
+          description: Pose detection successful
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PoseDetectionResponse'
+              example:
+                landmarks:
+                  - index: 0
+                    x: 0.5
+                    y: 0.3
+                    z: -0.1
+                    visibility: 0.95
+                    presence: 0.98
+                confidence: 0.92
+                processingTimeMs: 45
+        '400':
+          description: Invalid image data or parameters
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '500':
+          description: Internal server error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+
+  /poses/analyze:
+    post:
+      tags:
+        - poses
+      summary: Analyze pose biomechanics
+      description: |
+        Performs biomechanical analysis on pose landmarks to calculate
+        joint angles, movement patterns, and postural assessments.
+
+      operationId: analyzePose
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/BiomechanicalAnalysisRequest'
+
+      responses:
+        '200':
+          description: Analysis completed successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/BiomechanicalAnalysisResponse'
+
+  /suggestions:
+    post:
+      tags:
+        - suggestions
+      summary: Get AI coaching suggestions
+      description: |
+        Generates personalized coaching suggestions based on pose landmarks
+        using Gemini AI with structured output schemas.
+
+      operationId: getSuggestions
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/SuggestionsRequest'
+            example:
+              landmarks:
+                - index: 0
+                  x: 0.5
+                  y: 0.3
+                  z: -0.1
+                  visibility: 0.95
+              privacySettings:
+                allowApiCalls: true
+                anonymizeLandmarks: false
+
+      responses:
+        '200':
+          description: Suggestions generated successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/SuggestionsResponse'
+              example:
+                suggestions:
+                  - title: "Straighten Your Back"
+                    instruction: "Keep your spine aligned by engaging your core muscles"
+                    targetLandmarks: ["nose", "left_shoulder", "right_shoulder"]
+                    confidence: 0.87
+        '403':
+          description: Privacy settings prevent API call
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PrivacyBlockedResponse'
+
+  /privacy/consent:
+    post:
+      tags:
+        - privacy
+      summary: Update user consent preferences
+      description: |
+        Updates user privacy consent settings for data processing,
+        API calls, and analytics collection.
+
+      operationId: updateConsent
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ConsentRequest'
+
+      responses:
+        '200':
+          description: Consent updated successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ConsentResponse'
+
+  /privacy/settings:
+    get:
+      tags:
+        - privacy
+      summary: Get current privacy settings
+      description: |
+        Retrieves the current privacy configuration including
+        consent status and data processing preferences.
+
+      operationId: getPrivacySettings
+      responses:
+        '200':
+          description: Privacy settings retrieved
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PrivacySettingsResponse'
+
+  /analytics/performance:
+    get:
+      tags:
+        - analytics
+      summary: Get performance metrics
+      description: |
+        Retrieves current performance metrics including processing times,
+        memory usage, and system resource utilization.
+
+      operationId: getPerformanceMetrics
+      parameters:
+        - name: timeRange
+          in: query
+          description: Time range for metrics (1h, 24h, 7d, 30d)
+          schema:
+            type: string
+            enum: [1h, 24h, 7d, 30d]
+            default: 1h
+
+      responses:
+        '200':
+          description: Performance metrics retrieved
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PerformanceMetricsResponse'
+
+  /geometry/angle:
+    post:
+      tags:
+        - geometry
+      summary: Calculate angle between points
+      description: |
+        Calculates the angle at vertex B formed by points A-B-C.
+        Handles edge cases including collinear and perpendicular vectors.
+
+      operationId: calculateAngle
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/AngleCalculationRequest'
+
+      responses:
+        '200':
+          description: Angle calculated successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AngleCalculationResponse'
+
+components:
+  schemas:
+    PoseDetectionRequest:
+      type: object
+      required:
+        - imageData
+      properties:
+        imageData:
+          type: string
+          format: base64
+          description: Base64-encoded image data
+        rotationDegrees:
+          type: integer
+          minimum: 0
+          maximum: 360
+          default: 0
+          description: Image rotation in degrees
+        performanceMode:
+          type: string
+          enum: [fast, accurate, balanced]
+          default: balanced
+          description: Performance vs accuracy trade-off
+
+    PoseDetectionResponse:
+      type: object
+      properties:
+        landmarks:
+          type: array
+          items:
+            $ref: '#/components/schemas/PoseLandmark'
+          minItems: 33
+          maxItems: 33
+          description: Array of 33 pose landmarks
+        confidence:
+          type: number
+          minimum: 0
+          maximum: 1
+          description: Overall detection confidence
+        processingTimeMs:
+          type: integer
+          minimum: 0
+          description: Processing time in milliseconds
+        metadata:
+          $ref: '#/components/schemas/DetectionMetadata'
+
+    PoseLandmark:
+      type: object
+      required:
+        - index
+        - x
+        - y
+        - z
+        - visibility
+        - presence
+      properties:
+        index:
+          type: integer
+          minimum: 0
+          maximum: 32
+          description: Landmark index (0-32)
+        x:
+          type: number
+          minimum: 0
+          maximum: 1
+          description: Normalized x coordinate
+        y:
+          type: number
+          minimum: 0
+          maximum: 1
+          description: Normalized y coordinate
+        z:
+          type: number
+          description: Relative z coordinate
+        visibility:
+          type: number
+          minimum: 0
+          maximum: 1
+          description: Landmark visibility score
+        presence:
+          type: number
+          minimum: 0
+          maximum: 1
+          description: Landmark presence score
+
+    SuggestionsRequest:
+      type: object
+      required:
+        - landmarks
+      properties:
+        landmarks:
+          type: array
+          items:
+            $ref: '#/components/schemas/PoseLandmark'
+          description: Pose landmarks for analysis
+        privacySettings:
+          $ref: '#/components/schemas/PrivacySettings'
+        context:
+          type: object
+          properties:
+            activity:
+              type: string
+              enum: [yoga, workout, posture_check, general]
+            difficulty:
+              type: string
+              enum: [beginner, intermediate, advanced]
+
+    SuggestionsResponse:
+      type: object
+      properties:
+        suggestions:
+          type: array
+          items:
+            $ref: '#/components/schemas/PoseSuggestion'
+          minItems: 1
+          maxItems: 3
+          description: List of coaching suggestions
+        processingMode:
+          type: string
+          enum: [api, local, hybrid]
+          description: How suggestions were generated
+        confidence:
+          type: number
+          minimum: 0
+          maximum: 1
+          description: Overall suggestion confidence
+
+    PoseSuggestion:
+      type: object
+      required:
+        - title
+        - instruction
+        - targetLandmarks
+      properties:
+        title:
+          type: string
+          minLength: 5
+          maxLength: 50
+          description: Concise suggestion title
+        instruction:
+          type: string
+          minLength: 10
+          maxLength: 200
+          description: Detailed improvement instruction
+        targetLandmarks:
+          type: array
+          items:
+            type: string
+          description: List of relevant landmark names
+        confidence:
+          type: number
+          minimum: 0
+          maximum: 1
+          description: Suggestion confidence score
+        priority:
+          type: string
+          enum: [low, medium, high, critical]
+          default: medium
+          description: Suggestion priority level
+
+    PrivacySettings:
+      type: object
+      properties:
+        allowApiCalls:
+          type: boolean
+          default: true
+          description: Allow external API calls
+        allowDataTransmission:
+          type: boolean
+          default: true
+          description: Allow data transmission to servers
+        anonymizeLandmarks:
+          type: boolean
+          default: false
+          description: Anonymize landmark data
+        limitDataPrecision:
+          type: boolean
+          default: false
+          description: Reduce data precision for privacy
+        requireExplicitConsent:
+          type: boolean
+          default: false
+          description: Require explicit consent for each operation
+        localProcessingOnly:
+          type: boolean
+          default: false
+          description: Use only local processing
+
+    BiomechanicalAnalysisRequest:
+      type: object
+      required:
+        - landmarks
+      properties:
+        landmarks:
+          type: array
+          items:
+            $ref: '#/components/schemas/PoseLandmark'
+        analysisType:
+          type: string
+          enum: [joint_angles, movement_pattern, postural_assessment, asymmetry]
+          default: joint_angles
+
+    BiomechanicalAnalysisResponse:
+      type: object
+      properties:
+        jointAngles:
+          type: object
+          description: Calculated joint angles in degrees
+          properties:
+            leftElbow:
+              type: number
+            rightElbow:
+              type: number
+            leftKnee:
+              type: number
+            rightKnee:
+              type: number
+            leftShoulder:
+              type: number
+            rightShoulder:
+              type: number
+        movementPattern:
+          type: object
+          properties:
+            quality:
+              type: string
+              enum: [excellent, good, fair, poor]
+            deviations:
+              type: array
+              items:
+                type: string
+        posturalAssessment:
+          type: object
+          properties:
+            spinalAlignment:
+              type: number
+              minimum: 0
+              maximum: 100
+            shoulderLevel:
+              type: number
+              minimum: 0
+              maximum: 100
+            hipLevel:
+              type: number
+              minimum: 0
+              maximum: 100
+
+    ConsentRequest:
+      type: object
+      required:
+        - consentGiven
+        - consentType
+      properties:
+        consentGiven:
+          type: boolean
+          description: Whether consent is granted
+        consentType:
+          type: string
+          enum: [data_processing, analytics, ai_suggestions, performance_monitoring]
+        timestamp:
+          type: string
+          format: date-time
+          description: Consent timestamp
+
+    ConsentResponse:
+      type: object
+      properties:
+        status:
+          type: string
+          enum: [accepted, rejected, updated]
+        effectiveDate:
+          type: string
+          format: date-time
+        expirationDate:
+          type: string
+          format: date-time
+
+    PrivacySettingsResponse:
+      type: object
+      properties:
+        settings:
+          $ref: '#/components/schemas/PrivacySettings'
+        consentStatus:
+          type: object
+          properties:
+            dataProcessing:
+              type: boolean
+            analytics:
+              type: boolean
+            aiSuggestions:
+              type: boolean
+        lastUpdated:
+          type: string
+          format: date-time
+
+    PerformanceMetricsResponse:
+      type: object
+      properties:
+        processingTimes:
+          type: object
+          properties:
+            averagePoseDetection:
+              type: number
+              description: Average pose detection time in ms
+            averageSuggestionGeneration:
+              type: number
+              description: Average suggestion generation time in ms
+            p95PoseDetection:
+              type: number
+              description: 95th percentile pose detection time
+        resourceUtilization:
+          type: object
+          properties:
+            cpuUsage:
+              type: number
+              minimum: 0
+              maximum: 100
+            memoryUsage:
+              type: number
+              minimum: 0
+              maximum: 100
+            gpuUsage:
+              type: number
+              minimum: 0
+              maximum: 100
+        throughput:
+          type: object
+          properties:
+            framesPerSecond:
+              type: number
+            suggestionsPerMinute:
+              type: number
+
+    AngleCalculationRequest:
+      type: object
+      required:
+        - pointA
+        - pointB
+        - pointC
+      properties:
+        pointA:
+          $ref: '#/components/schemas/Point3D'
+        pointB:
+          $ref: '#/components/schemas/Point3D'
+        pointC:
+          $ref: '#/components/schemas/Point3D'
+
+    AngleCalculationResponse:
+      type: object
+      properties:
+        angleDegrees:
+          type: number
+          description: Calculated angle in degrees
+        angleRadians:
+          type: number
+          description: Calculated angle in radians
+        isValid:
+          type: boolean
+          description: Whether the calculation is valid
+        warnings:
+          type: array
+          items:
+            type: string
+          description: Any warnings about the calculation
+
+    Point3D:
+      type: object
+      required:
+        - x
+        - y
+        - z
+      properties:
+        x:
+          type: number
+          description: X coordinate
+        y:
+          type: number
+          description: Y coordinate
+        z:
+          type: number
+          description: Z coordinate
+
+    DetectionMetadata:
+      type: object
+      properties:
+        modelVersion:
+          type: string
+          description: MediaPipe model version used
+        deviceInfo:
+          type: object
+          properties:
+            platform:
+              type: string
+            osVersion:
+              type: string
+            deviceModel:
+              type: string
+        processingSettings:
+          type: object
+          properties:
+            performanceMode:
+              type: string
+            useGpu:
+              type: boolean
+
+    PrivacyBlockedResponse:
+      type: object
+      properties:
+        error:
+          type: string
+          example: "Privacy settings prevent this operation"
+        blockedBy:
+          type: string
+          enum: [user_consent, privacy_settings, local_only_mode]
+        alternativeOptions:
+          type: array
+          items:
+            type: string
+          description: Available alternative processing options
+
+    ErrorResponse:
+      type: object
+      required:
+        - error
+        - message
+      properties:
+        error:
+          type: string
+          description: Error code
+        message:
+          type: string
+          description: Human-readable error message
+        details:
+          type: object
+          description: Additional error details
+        timestamp:
+          type: string
+          format: date-time
+        requestId:
+          type: string
+          description: Unique request identifier for debugging
+
+  securitySchemes:
+    ApiKeyAuth:
+      type: apiKey
+      in: header
+      name: X-API-Key
+      description: API key for authentication
+
+    BearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
+      description: JWT token for user authentication
+
+security:
+  - ApiKeyAuth: []
+  - BearerAuth: []

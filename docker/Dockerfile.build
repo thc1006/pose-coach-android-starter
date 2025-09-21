@@ -1,0 +1,281 @@
+# Multi-stage Android Build Dockerfile
+# Optimized for CI/CD pipeline with caching and parallel builds
+
+# ============================================================================
+# Stage 1: Base Android Development Environment
+# ============================================================================
+FROM openjdk:17-jdk-slim as android-base
+
+# Install system dependencies
+RUN apt-get update && apt-get install -y \
+    wget \
+    unzip \
+    git \
+    curl \
+    python3 \
+    python3-pip \
+    && rm -rf /var/lib/apt/lists/*
+
+# Set environment variables
+ENV ANDROID_HOME=/opt/android-sdk
+ENV ANDROID_SDK_ROOT=$ANDROID_HOME
+ENV PATH=$PATH:$ANDROID_HOME/cmdline-tools/latest/bin:$ANDROID_HOME/platform-tools:$ANDROID_HOME/build-tools
+
+# Create android user
+RUN useradd -m -s /bin/bash android
+USER android
+WORKDIR /home/android
+
+# Download and install Android SDK
+RUN mkdir -p $ANDROID_HOME && \
+    wget -q https://dl.google.com/android/repository/commandlinetools-linux-9477386_latest.zip -O cmdtools.zip && \
+    unzip -q cmdtools.zip -d $ANDROID_HOME && \
+    rm cmdtools.zip && \
+    mv $ANDROID_HOME/cmdline-tools $ANDROID_HOME/cmdline-tools-temp && \
+    mkdir -p $ANDROID_HOME/cmdline-tools/latest && \
+    mv $ANDROID_HOME/cmdline-tools-temp/* $ANDROID_HOME/cmdline-tools/latest/ && \
+    rmdir $ANDROID_HOME/cmdline-tools-temp
+
+# Accept licenses and install SDK components
+RUN yes | sdkmanager --licenses && \
+    sdkmanager "platform-tools" "build-tools;34.0.0" "platforms;android-34" \
+               "platforms;android-33" "platforms;android-28" "platforms;android-24" \
+               "extras;android;m2repository" "extras;google;m2repository" \
+               "system-images;android-34;google_apis_playstore;x86_64" \
+               "system-images;android-33;google_apis_playstore;x86_64" \
+               "emulator"
+
+# ============================================================================
+# Stage 2: Dependency Cache Layer
+# ============================================================================
+FROM android-base as deps-cache
+
+USER android
+WORKDIR /app
+
+# Copy gradle wrapper and build files for dependency resolution
+COPY --chown=android:android gradle/ gradle/
+COPY --chown=android:android gradlew gradlew.bat ./
+COPY --chown=android:android *.gradle.kts ./
+COPY --chown=android:android app/build.gradle.kts app/
+COPY --chown=android:android core-*/build.gradle.kts core-*/
+COPY --chown=android:android suggestions-api/build.gradle.kts suggestions-api/
+
+# Download dependencies
+RUN ./gradlew dependencies --parallel --daemon
+
+# ============================================================================
+# Stage 3: Build Environment
+# ============================================================================
+FROM deps-cache as build-env
+
+# Install additional build tools
+USER root
+RUN apt-get update && apt-get install -y \
+    build-essential \
+    cmake \
+    ninja-build \
+    && rm -rf /var/lib/apt/lists/*
+
+USER android
+
+# Install Python dependencies for CI scripts
+COPY --chown=android:android scripts/ci/requirements.txt /tmp/requirements.txt
+RUN pip3 install --user -r /tmp/requirements.txt
+
+# ============================================================================
+# Stage 4: Application Builder
+# ============================================================================
+FROM build-env as app-builder
+
+# Copy source code
+COPY --chown=android:android . .
+
+# Build configuration
+ARG BUILD_TYPE=release
+ARG TARGET_ARCH=arm64-v8a
+ARG VERSION_NAME=1.0.0
+ARG VERSION_CODE=1
+ARG ENABLE_MINIFICATION=true
+
+ENV BUILD_TYPE=$BUILD_TYPE
+ENV TARGET_ARCH=$TARGET_ARCH
+ENV VERSION_NAME=$VERSION_NAME
+ENV VERSION_CODE=$VERSION_CODE
+ENV ENABLE_MINIFICATION=$ENABLE_MINIFICATION
+
+# Configure build properties
+RUN echo "VERSION_NAME=$VERSION_NAME" >> gradle.properties && \
+    echo "VERSION_CODE=$VERSION_CODE" >> gradle.properties && \
+    echo "BUILD_TYPE=$BUILD_TYPE" >> gradle.properties && \
+    echo "TARGET_ARCH=$TARGET_ARCH" >> gradle.properties && \
+    echo "ENABLE_MINIFICATION=$ENABLE_MINIFICATION" >> gradle.properties
+
+# Build the application
+RUN ./gradlew clean assemble${BUILD_TYPE^} \
+    -PtargetArch=$TARGET_ARCH \
+    -PenableMinification=$ENABLE_MINIFICATION \
+    --parallel \
+    --daemon \
+    --build-cache \
+    --no-watch-fs
+
+# ============================================================================
+# Stage 5: Test Runner
+# ============================================================================
+FROM build-env as test-runner
+
+# Copy source code
+COPY --chown=android:android . .
+
+# Install additional test dependencies
+USER root
+RUN apt-get update && apt-get install -y \
+    xvfb \
+    libgl1-mesa-glx \
+    libpulse0 \
+    && rm -rf /var/lib/apt/lists/*
+
+USER android
+
+# Run tests
+RUN ./gradlew test \
+    --parallel \
+    --continue \
+    -PtestMode=unit
+
+# Generate test reports
+RUN ./gradlew jacocoTestReport
+
+# ============================================================================
+# Stage 6: Security Scanner
+# ============================================================================
+FROM build-env as security-scanner
+
+# Install security scanning tools
+USER root
+RUN apt-get update && apt-get install -y \
+    wget \
+    && rm -rf /var/lib/apt/lists/*
+
+# Install OWASP Dependency Check
+RUN wget https://github.com/jeremylong/DependencyCheck/releases/download/v8.4.0/dependency-check-8.4.0-release.zip && \
+    unzip dependency-check-8.4.0-release.zip && \
+    mv dependency-check /opt/ && \
+    ln -s /opt/dependency-check/bin/dependency-check.sh /usr/local/bin/dependency-check
+
+USER android
+
+# Copy source code
+COPY --chown=android:android . .
+
+# Run security scans
+RUN dependency-check --project "Pose Coach Android" \
+    --scan . \
+    --format ALL \
+    --out reports/security \
+    --enableExperimental
+
+# ============================================================================
+# Stage 7: Performance Analyzer
+# ============================================================================
+FROM build-env as performance-analyzer
+
+# Copy built artifacts
+COPY --from=app-builder --chown=android:android /app/app/build/outputs outputs/
+
+# Install performance analysis tools
+USER root
+RUN apt-get update && apt-get install -y \
+    aapt \
+    && rm -rf /var/lib/apt/lists/*
+
+USER android
+
+# Analyze APK performance
+RUN python3 scripts/ci/performance-analysis.py \
+    --apk outputs/apk/release/app-release.apk \
+    --output reports/performance.json
+
+# ============================================================================
+# Stage 8: Final Artifacts
+# ============================================================================
+FROM scratch as artifacts
+
+# Copy build outputs
+COPY --from=app-builder /app/app/build/outputs/apk/ /apk/
+COPY --from=app-builder /app/app/build/outputs/mapping/ /mapping/
+COPY --from=app-builder /app/app/build/outputs/bundle/ /aab/
+
+# Copy test reports
+COPY --from=test-runner /app/*/build/test-results/ /test-results/
+COPY --from=test-runner /app/*/build/reports/ /test-reports/
+
+# Copy security reports
+COPY --from=security-scanner /app/reports/security/ /security-reports/
+
+# Copy performance reports
+COPY --from=performance-analyzer /app/reports/performance.json /performance-reports/
+
+# ============================================================================
+# Stage 9: Development Environment
+# ============================================================================
+FROM build-env as development
+
+# Install development tools
+USER root
+RUN apt-get update && apt-get install -y \
+    vim \
+    nano \
+    htop \
+    git-flow \
+    && rm -rf /var/lib/apt/lists/*
+
+USER android
+WORKDIR /workspace
+
+# Set up development environment
+RUN echo 'alias ll="ls -la"' >> ~/.bashrc && \
+    echo 'alias grep="grep --color=auto"' >> ~/.bashrc && \
+    echo 'export PS1="\u@\h:\w\$ "' >> ~/.bashrc
+
+# Install Git hooks for development
+COPY --chown=android:android scripts/git-hooks/ .git/hooks/
+RUN chmod +x .git/hooks/*
+
+EXPOSE 8080 5005
+
+CMD ["/bin/bash"]
+
+# ============================================================================
+# Stage 10: CI/CD Runner
+# ============================================================================
+FROM build-env as ci-runner
+
+# Install CI/CD specific tools
+USER root
+RUN apt-get update && apt-get install -y \
+    jq \
+    curl \
+    git \
+    ssh-client \
+    rsync \
+    && rm -rf /var/lib/apt/lists/*
+
+# Install Google Cloud SDK for Firebase
+RUN echo "deb [signed-by=/usr/share/keyrings/cloud.google.gpg] https://packages.cloud.google.com/apt cloud-sdk main" | tee -a /etc/apt/sources.list.d/google-cloud-sdk.list && \
+    curl https://packages.cloud.google.com/apt/doc/apt-key.gpg | apt-key --keyring /usr/share/keyrings/cloud.google.gpg add - && \
+    apt-get update && apt-get install -y google-cloud-sdk && \
+    rm -rf /var/lib/apt/lists/*
+
+USER android
+
+# Copy CI/CD scripts
+COPY --chown=android:android scripts/ci/ scripts/ci/
+
+# Set up CI/CD environment
+ENV CI=true
+ENV GRADLE_OPTS="-Xmx4g -XX:+HeapDumpOnOutOfMemoryError"
+
+# Default command for CI/CD
+CMD ["./scripts/ci/run-pipeline.sh"]

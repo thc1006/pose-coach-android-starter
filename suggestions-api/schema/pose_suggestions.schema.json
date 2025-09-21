@@ -1,0 +1,33 @@
+{
+  "type": "object",
+  "properties": {
+    "suggestions": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "properties": {
+          "title": {
+            "type": "string"
+          },
+          "instruction": {
+            "type": "string"
+          },
+          "target_landmarks": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          }
+        },
+        "required": [
+          "title",
+          "instruction",
+          "target_landmarks"
+        ]
+      }
+    }
+  },
+  "required": [
+    "suggestions"
+  ]
+}

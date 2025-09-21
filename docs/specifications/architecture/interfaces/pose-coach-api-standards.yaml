@@ -1,0 +1,761 @@
+# Pose Coach Android API Specification Standards
+# OpenAPI 3.0 Standards and Guidelines for the Pose Coach Project
+
+openapi: 3.0.0
+info:
+  title: "Pose Coach API Standards"
+  version: "1.0.0"
+  description: |
+    API specification standards for the Pose Coach Android application.
+    This document defines the standards, conventions, and guidelines for all APIs
+    within the Pose Coach ecosystem, including:
+
+    - Live coaching APIs (Gemini 2.5 Live integration)
+    - Pose detection and analysis APIs
+    - Performance monitoring APIs
+    - Privacy and settings management APIs
+    - Multi-person detection APIs
+
+    ## Design Principles
+    - **Privacy by Design**: All APIs respect user privacy settings
+    - **Performance First**: Optimized for real-time pose analysis
+    - **Scalability**: Designed to handle multi-person scenarios
+    - **Security**: Enterprise-grade security for sensitive data
+
+  contact:
+    name: "Pose Coach API Team"
+    url: "https://github.com/pose-coach/android"
+    email: "api-team@posecoach.com"
+  license:
+    name: "MIT"
+    url: "https://opensource.org/licenses/MIT"
+
+servers:
+  - url: "https://api.posecoach.com/v1"
+    description: "Production server"
+  - url: "https://staging-api.posecoach.com/v1"
+    description: "Staging server"
+  - url: "http://localhost:8080/v1"
+    description: "Local development server"
+
+# Standard Security Schemes
+security:
+  - ApiKeyAuth: []
+  - BearerAuth: []
+
+components:
+  securitySchemes:
+    ApiKeyAuth:
+      type: apiKey
+      in: header
+      name: X-API-Key
+      description: "API key for client authentication"
+
+    BearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
+      description: "JWT token for user session authentication"
+
+  # Core Data Models for Pose Coach
+  schemas:
+    # Pose Detection Models
+    PoseLandmark:
+      type: object
+      required: [id, x, y, visibility]
+      properties:
+        id:
+          type: integer
+          minimum: 0
+          maximum: 32
+          description: "MediaPipe pose landmark ID (0-32)"
+          example: 11
+        name:
+          type: string
+          description: "Landmark name (e.g., 'LEFT_SHOULDER')"
+          example: "LEFT_SHOULDER"
+        x:
+          type: number
+          format: float
+          minimum: 0.0
+          maximum: 1.0
+          description: "Normalized x coordinate (0.0-1.0)"
+          example: 0.425
+        y:
+          type: number
+          format: float
+          minimum: 0.0
+          maximum: 1.0
+          description: "Normalized y coordinate (0.0-1.0)"
+          example: 0.315
+        z:
+          type: number
+          format: float
+          description: "Depth coordinate (relative to hip)"
+          example: -0.123
+        visibility:
+          type: number
+          format: float
+          minimum: 0.0
+          maximum: 1.0
+          description: "Visibility confidence (0.0-1.0)"
+          example: 0.95
+
+    PoseDetectionResult:
+      type: object
+      required: [personId, landmarks, confidence, timestamp]
+      properties:
+        personId:
+          type: string
+          description: "Unique identifier for detected person"
+          example: "person_1"
+        landmarks:
+          type: array
+          items:
+            $ref: '#/components/schemas/PoseLandmark'
+          minItems: 33
+          maxItems: 33
+          description: "Array of 33 pose landmarks"
+        confidence:
+          type: number
+          format: float
+          minimum: 0.0
+          maximum: 1.0
+          description: "Overall pose detection confidence"
+          example: 0.92
+        boundingBox:
+          $ref: '#/components/schemas/BoundingBox'
+        timestamp:
+          type: string
+          format: date-time
+          description: "Detection timestamp"
+          example: "2025-01-21T10:30:00.123Z"
+
+    BoundingBox:
+      type: object
+      required: [x, y, width, height]
+      properties:
+        x:
+          type: number
+          format: float
+          description: "Normalized x coordinate of top-left corner"
+          example: 0.2
+        y:
+          type: number
+          format: float
+          description: "Normalized y coordinate of top-left corner"
+          example: 0.1
+        width:
+          type: number
+          format: float
+          description: "Normalized width"
+          example: 0.6
+        height:
+          type: number
+          format: float
+          description: "Normalized height"
+          example: 0.8
+
+    MultiPersonPoseResult:
+      type: object
+      required: [totalDetected, detectedPoses, primaryPerson]
+      properties:
+        totalDetected:
+          type: integer
+          minimum: 0
+          maximum: 5
+          description: "Number of people detected"
+          example: 2
+        detectedPoses:
+          type: array
+          items:
+            $ref: '#/components/schemas/PoseDetectionResult'
+          description: "All detected poses"
+        primaryPerson:
+          $ref: '#/components/schemas/PoseDetectionResult'
+          description: "Selected primary person for coaching"
+        selectionMethod:
+          type: string
+          enum: ["closest_to_camera", "largest_bounding_box", "center_screen", "highest_confidence", "manual"]
+          description: "Method used to select primary person"
+          example: "highest_confidence"
+
+    # Live Coaching Models
+    LiveCoachingSession:
+      type: object
+      required: [sessionId, status, startTime]
+      properties:
+        sessionId:
+          type: string
+          format: uuid
+          description: "Unique session identifier"
+          example: "123e4567-e89b-12d3-a456-426614174000"
+        status:
+          type: string
+          enum: ["disconnected", "connecting", "connected", "recording", "error"]
+          description: "Current session status"
+          example: "connected"
+        startTime:
+          type: string
+          format: date-time
+          description: "Session start timestamp"
+          example: "2025-01-21T10:30:00Z"
+        endTime:
+          type: string
+          format: date-time
+          description: "Session end timestamp (if ended)"
+          example: "2025-01-21T10:45:00Z"
+        participantCount:
+          type: integer
+          minimum: 1
+          description: "Number of participants in session"
+          example: 1
+
+    CoachingResponse:
+      type: object
+      required: [type, content, timestamp]
+      properties:
+        type:
+          type: string
+          enum: ["text", "audio", "suggestion", "correction"]
+          description: "Type of coaching response"
+          example: "suggestion"
+        content:
+          type: string
+          description: "Coaching content"
+          example: "Try to keep your back straighter during this movement"
+        audioUrl:
+          type: string
+          format: uri
+          description: "URL to audio response (if type is audio)"
+        confidence:
+          type: number
+          format: float
+          minimum: 0.0
+          maximum: 1.0
+          description: "AI confidence in the response"
+          example: 0.87
+        timestamp:
+          type: string
+          format: date-time
+          description: "Response timestamp"
+          example: "2025-01-21T10:30:15Z"
+
+    # Performance Monitoring Models
+    PerformanceMetrics:
+      type: object
+      required: [frameIndex, timestamp]
+      properties:
+        frameIndex:
+          type: integer
+          minimum: 0
+          description: "Frame sequence number"
+          example: 1024
+        timestamp:
+          type: string
+          format: date-time
+          description: "Metrics collection timestamp"
+          example: "2025-01-21T10:30:00.123Z"
+        inferenceTimeMs:
+          type: number
+          format: float
+          minimum: 0.0
+          description: "Pose inference time in milliseconds"
+          example: 28.5
+        endToEndTimeMs:
+          type: number
+          format: float
+          minimum: 0.0
+          description: "End-to-end processing time in milliseconds"
+          example: 45.2
+        inputResolution:
+          $ref: '#/components/schemas/Resolution'
+        detectedPersons:
+          type: integer
+          minimum: 0
+          maximum: 5
+          description: "Number of persons detected in frame"
+          example: 2
+        memoryUsageMB:
+          type: number
+          format: float
+          minimum: 0.0
+          description: "Memory usage in megabytes"
+          example: 156.7
+
+    Resolution:
+      type: object
+      required: [width, height]
+      properties:
+        width:
+          type: integer
+          minimum: 1
+          description: "Resolution width in pixels"
+          example: 640
+        height:
+          type: integer
+          minimum: 1
+          description: "Resolution height in pixels"
+          example: 480
+
+    PerformanceLevel:
+      type: object
+      required: [level, targetResolution, frameSkipRatio]
+      properties:
+        level:
+          type: string
+          enum: ["high_quality", "balanced", "performance", "power_saving"]
+          description: "Performance level name"
+          example: "balanced"
+        targetResolution:
+          $ref: '#/components/schemas/Resolution'
+        frameSkipRatio:
+          type: integer
+          minimum: 1
+          description: "Process every Nth frame (1 = all frames)"
+          example: 2
+        maxDetectedPoses:
+          type: integer
+          minimum: 1
+          maximum: 5
+          description: "Maximum persons to detect simultaneously"
+          example: 3
+
+    # Privacy and Settings Models
+    PrivacySettings:
+      type: object
+      required: [privacyLevel, dataUploadConsent]
+      properties:
+        privacyLevel:
+          type: string
+          enum: ["maximum_privacy", "high_privacy", "balanced", "convenience"]
+          description: "Privacy protection level"
+          example: "high_privacy"
+        dataUploadConsent:
+          type: object
+          required: [images, audio, landmarks]
+          properties:
+            images:
+              type: boolean
+              description: "Consent to upload images"
+              example: false
+            audio:
+              type: boolean
+              description: "Consent to upload audio"
+              example: false
+            landmarks:
+              type: boolean
+              description: "Consent to upload pose landmarks"
+              example: true
+        offlineModeEnabled:
+          type: boolean
+          description: "Enable offline-only processing"
+          example: false
+        dataRetentionDays:
+          type: integer
+          minimum: 0
+          maximum: 365
+          description: "Data retention period in days (0 = no retention)"
+          example: 7
+
+    # Error Response Models
+    ErrorResponse:
+      type: object
+      required: [error, message, timestamp]
+      properties:
+        error:
+          type: string
+          description: "Error code"
+          example: "POSE_DETECTION_FAILED"
+        message:
+          type: string
+          description: "Human-readable error message"
+          example: "Failed to detect pose landmarks in the provided image"
+        timestamp:
+          type: string
+          format: date-time
+          description: "Error timestamp"
+          example: "2025-01-21T10:30:00Z"
+        details:
+          type: object
+          description: "Additional error details"
+          additionalProperties: true
+        traceId:
+          type: string
+          description: "Request trace ID for debugging"
+          example: "trace-123e4567-e89b"
+
+    # Pagination and Response Wrappers
+    PaginationMeta:
+      type: object
+      properties:
+        page:
+          type: integer
+          minimum: 1
+          description: "Current page number"
+          example: 1
+        limit:
+          type: integer
+          minimum: 1
+          maximum: 100
+          description: "Items per page"
+          example: 20
+        total:
+          type: integer
+          minimum: 0
+          description: "Total number of items"
+          example: 150
+        pages:
+          type: integer
+          minimum: 0
+          description: "Total number of pages"
+          example: 8
+
+  # Standard Response Templates
+  responses:
+    BadRequest:
+      description: "Invalid request parameters"
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/ErrorResponse'
+          example:
+            error: "INVALID_REQUEST"
+            message: "Missing required parameter: landmarks"
+            timestamp: "2025-01-21T10:30:00Z"
+
+    Unauthorized:
+      description: "Authentication required"
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/ErrorResponse'
+          example:
+            error: "UNAUTHORIZED"
+            message: "Valid API key required"
+            timestamp: "2025-01-21T10:30:00Z"
+
+    Forbidden:
+      description: "Access denied due to privacy settings"
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/ErrorResponse'
+          example:
+            error: "PRIVACY_RESTRICTED"
+            message: "This operation is not allowed with current privacy settings"
+            timestamp: "2025-01-21T10:30:00Z"
+
+    NotFound:
+      description: "Resource not found"
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/ErrorResponse'
+          example:
+            error: "NOT_FOUND"
+            message: "Session not found"
+            timestamp: "2025-01-21T10:30:00Z"
+
+    TooManyRequests:
+      description: "Rate limit exceeded"
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/ErrorResponse'
+          example:
+            error: "RATE_LIMIT_EXCEEDED"
+            message: "Too many requests. Please try again later."
+            timestamp: "2025-01-21T10:30:00Z"
+
+    InternalServerError:
+      description: "Internal server error"
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/ErrorResponse'
+          example:
+            error: "INTERNAL_ERROR"
+            message: "An unexpected error occurred"
+            timestamp: "2025-01-21T10:30:00Z"
+
+  # Standard Parameters
+  parameters:
+    SessionId:
+      name: sessionId
+      in: path
+      required: true
+      description: "Live coaching session ID"
+      schema:
+        type: string
+        format: uuid
+
+    PersonId:
+      name: personId
+      in: path
+      required: true
+      description: "Detected person ID"
+      schema:
+        type: string
+        pattern: '^person_[0-9]+$'
+
+    PrivacyLevel:
+      name: privacyLevel
+      in: query
+      description: "Filter by privacy level"
+      schema:
+        type: string
+        enum: ["maximum_privacy", "high_privacy", "balanced", "convenience"]
+
+    PerformanceLevel:
+      name: performanceLevel
+      in: query
+      description: "Filter by performance level"
+      schema:
+        type: string
+        enum: ["high_quality", "balanced", "performance", "power_saving"]
+
+# Standard API Paths - Examples following Pose Coach patterns
+paths:
+  # Health and System Status
+  /health:
+    get:
+      summary: "API health check"
+      description: "Check the health status of the API"
+      operationId: "healthCheck"
+      tags: ["System"]
+      security: []
+      responses:
+        '200':
+          description: "API is healthy"
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  status:
+                    type: string
+                    example: "healthy"
+                  timestamp:
+                    type: string
+                    format: date-time
+                    example: "2025-01-21T10:30:00Z"
+                  version:
+                    type: string
+                    example: "1.0.0"
+
+  # Pose Detection APIs
+  /pose/detect:
+    post:
+      summary: "Detect pose landmarks"
+      description: "Process image and return pose landmarks for detected persons"
+      operationId: "detectPose"
+      tags: ["Pose Detection"]
+      requestBody:
+        required: true
+        content:
+          multipart/form-data:
+            schema:
+              type: object
+              required: [image]
+              properties:
+                image:
+                  type: string
+                  format: binary
+                  description: "Image file for pose detection"
+                maxPersons:
+                  type: integer
+                  minimum: 1
+                  maximum: 5
+                  default: 1
+                  description: "Maximum number of persons to detect"
+                performanceLevel:
+                  type: string
+                  enum: ["high_quality", "balanced", "performance", "power_saving"]
+                  default: "balanced"
+                  description: "Detection performance level"
+      responses:
+        '200':
+          description: "Pose detection successful"
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/MultiPersonPoseResult'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '500':
+          $ref: '#/components/responses/InternalServerError'
+
+  # Live Coaching APIs
+  /coaching/sessions:
+    post:
+      summary: "Start live coaching session"
+      description: "Initialize a new live coaching session with Gemini 2.5 Live"
+      operationId: "startCoachingSession"
+      tags: ["Live Coaching"]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                userId:
+                  type: string
+                  description: "User identifier"
+                  example: "user_123"
+                sessionType:
+                  type: string
+                  enum: ["fitness", "yoga", "rehabilitation", "general"]
+                  default: "fitness"
+                  description: "Type of coaching session"
+                privacySettings:
+                  $ref: '#/components/schemas/PrivacySettings'
+      responses:
+        '201':
+          description: "Session created successfully"
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/LiveCoachingSession'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '500':
+          $ref: '#/components/responses/InternalServerError'
+
+  /coaching/sessions/{sessionId}:
+    parameters:
+      - $ref: '#/components/parameters/SessionId'
+
+    get:
+      summary: "Get coaching session status"
+      description: "Retrieve current status of a live coaching session"
+      operationId: "getCoachingSession"
+      tags: ["Live Coaching"]
+      responses:
+        '200':
+          description: "Session status retrieved"
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/LiveCoachingSession'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '500':
+          $ref: '#/components/responses/InternalServerError'
+
+    delete:
+      summary: "End coaching session"
+      description: "Terminate an active live coaching session"
+      operationId: "endCoachingSession"
+      tags: ["Live Coaching"]
+      responses:
+        '204':
+          description: "Session ended successfully"
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '500':
+          $ref: '#/components/responses/InternalServerError'
+
+  # Performance Monitoring APIs
+  /performance/metrics:
+    post:
+      summary: "Submit performance metrics"
+      description: "Record performance metrics for monitoring and analysis"
+      operationId: "submitPerformanceMetrics"
+      tags: ["Performance"]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/PerformanceMetrics'
+      responses:
+        '201':
+          description: "Metrics recorded successfully"
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '500':
+          $ref: '#/components/responses/InternalServerError'
+
+    get:
+      summary: "Get performance metrics"
+      description: "Retrieve performance metrics for analysis"
+      operationId: "getPerformanceMetrics"
+      tags: ["Performance"]
+      parameters:
+        - name: startTime
+          in: query
+          description: "Start time for metrics query"
+          schema:
+            type: string
+            format: date-time
+        - name: endTime
+          in: query
+          description: "End time for metrics query"
+          schema:
+            type: string
+            format: date-time
+        - $ref: '#/components/parameters/PerformanceLevel'
+      responses:
+        '200':
+          description: "Performance metrics retrieved"
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  metrics:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/PerformanceMetrics'
+                  summary:
+                    type: object
+                    properties:
+                      avgInferenceTime:
+                        type: number
+                        format: float
+                      p95InferenceTime:
+                        type: number
+                        format: float
+                      avgEndToEndTime:
+                        type: number
+                        format: float
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '500':
+          $ref: '#/components/responses/InternalServerError'
+
+# API Documentation Standards
+tags:
+  - name: "System"
+    description: "System health and status operations"
+  - name: "Pose Detection"
+    description: "Pose detection and analysis operations"
+  - name: "Live Coaching"
+    description: "Real-time AI coaching operations"
+  - name: "Performance"
+    description: "Performance monitoring and metrics"
+  - name: "Privacy"
+    description: "Privacy settings and data management"
+  - name: "Multi-Person"
+    description: "Multi-person detection and selection"
+
+# External Documentation Links
+externalDocs:
+  description: "Pose Coach Android Documentation"
+  url: "https://github.com/pose-coach/android/docs"

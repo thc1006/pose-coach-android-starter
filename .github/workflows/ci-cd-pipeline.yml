@@ -1,0 +1,801 @@
+name: 🚀 Production CI/CD Pipeline
+
+on:
+  push:
+    branches: [main, develop, release/*]
+  pull_request:
+    branches: [main, develop]
+    types: [opened, synchronize, reopened, ready_for_review]
+  release:
+    types: [created, published]
+  workflow_dispatch:
+    inputs:
+      environment:
+        description: 'Deployment Environment'
+        required: true
+        default: 'staging'
+        type: choice
+        options:
+        - staging
+        - production
+        - beta
+      force_deploy:
+        description: 'Force deployment (skip quality gates)'
+        required: false
+        default: false
+        type: boolean
+
+env:
+  JAVA_VERSION: '17'
+  ANDROID_COMPILE_SDK: '34'
+  ANDROID_BUILD_TOOLS: '34.0.0'
+  GRADLE_OPTS: '-Dorg.gradle.jvmargs="-Xmx4g -XX:+HeapDumpOnOutOfMemoryError"'
+  SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
+  FIREBASE_TOKEN: ${{ secrets.FIREBASE_TOKEN }}
+  PLAY_STORE_KEY: ${{ secrets.PLAY_STORE_SERVICE_ACCOUNT_KEY }}
+  GEMINI_API_KEY: ${{ secrets.GEMINI_API_KEY }}
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: ${{ github.ref != 'refs/heads/main' }}
+
+jobs:
+  # ============================================================================
+  # PRE-FLIGHT CHECKS & SETUP
+  # ============================================================================
+
+  pre-flight:
+    name: 🔍 Pre-flight Checks
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    outputs:
+      should_deploy: ${{ steps.deployment-check.outputs.should_deploy }}
+      environment: ${{ steps.deployment-check.outputs.environment }}
+      version: ${{ steps.version.outputs.version }}
+      is_release: ${{ steps.deployment-check.outputs.is_release }}
+      affected_modules: ${{ steps.changes.outputs.affected_modules }}
+      skip_tests: ${{ steps.changes.outputs.skip_tests }}
+
+    steps:
+      - name: 📥 Checkout
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+          token: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: 🔍 Detect Changes
+        id: changes
+        uses: dorny/paths-filter@v2
+        with:
+          filters: |
+            app:
+              - 'app/**'
+            core-pose:
+              - 'core-pose/**'
+            core-geom:
+              - 'core-geom/**'
+            suggestions-api:
+              - 'suggestions-api/**'
+            docs:
+              - 'docs/**'
+              - '*.md'
+            ci:
+              - '.github/**'
+              - 'scripts/**'
+              - 'docker/**'
+            gradle:
+              - '*.gradle.kts'
+              - 'gradle/**'
+
+      - name: 📋 Set Affected Modules
+        id: affected-modules
+        run: |
+          modules=()
+          if [[ "${{ steps.changes.outputs.app }}" == "true" ]]; then modules+=("app"); fi
+          if [[ "${{ steps.changes.outputs.core-pose }}" == "true" ]]; then modules+=("core-pose"); fi
+          if [[ "${{ steps.changes.outputs.core-geom }}" == "true" ]]; then modules+=("core-geom"); fi
+          if [[ "${{ steps.changes.outputs.suggestions-api }}" == "true" ]]; then modules+=("suggestions-api"); fi
+
+          affected_modules=$(IFS=,; echo "${modules[*]}")
+          skip_tests=$([[ "${{ steps.changes.outputs.docs }}" == "true" && ${#modules[@]} -eq 0 ]] && echo "true" || echo "false")
+
+          echo "affected_modules=$affected_modules" >> $GITHUB_OUTPUT
+          echo "skip_tests=$skip_tests" >> $GITHUB_OUTPUT
+          echo "Affected modules: $affected_modules"
+          echo "Skip tests: $skip_tests"
+
+      - name: 🎯 Version Generation
+        id: version
+        run: |
+          if [[ "${{ github.event_name }}" == "release" ]]; then
+            version="${{ github.event.release.tag_name }}"
+          else
+            version="$(date +'%Y.%m.%d')-${{ github.run_number }}"
+            if [[ "${{ github.ref }}" != "refs/heads/main" ]]; then
+              branch_name=$(echo "${{ github.ref_name }}" | sed 's/[^a-zA-Z0-9]/-/g')
+              version="${version}-${branch_name}"
+            fi
+          fi
+          echo "version=$version" >> $GITHUB_OUTPUT
+          echo "Generated version: $version"
+
+      - name: 🚦 Deployment Check
+        id: deployment-check
+        run: |
+          should_deploy="false"
+          environment="none"
+          is_release="false"
+
+          if [[ "${{ github.event_name }}" == "workflow_dispatch" ]]; then
+            should_deploy="true"
+            environment="${{ github.event.inputs.environment }}"
+          elif [[ "${{ github.event_name }}" == "push" && "${{ github.ref }}" == "refs/heads/main" ]]; then
+            should_deploy="true"
+            environment="staging"
+          elif [[ "${{ github.event_name }}" == "push" && "${{ github.ref }}" == "refs/heads/develop" ]]; then
+            should_deploy="true"
+            environment="development"
+          elif [[ "${{ github.event_name }}" == "release" ]]; then
+            should_deploy="true"
+            environment="production"
+            is_release="true"
+          fi
+
+          echo "should_deploy=$should_deploy" >> $GITHUB_OUTPUT
+          echo "environment=$environment" >> $GITHUB_OUTPUT
+          echo "is_release=$is_release" >> $GITHUB_OUTPUT
+          echo "Deployment decision: should_deploy=$should_deploy, environment=$environment"
+
+  # ============================================================================
+  # PARALLEL BUILD & ANALYSIS
+  # ============================================================================
+
+  build-matrix:
+    name: 🏗️ Build Matrix
+    runs-on: ubuntu-latest
+    needs: [pre-flight]
+    if: needs.pre-flight.outputs.skip_tests != 'true'
+    timeout-minutes: 20
+
+    strategy:
+      fail-fast: false
+      matrix:
+        build-type: [debug, release]
+        arch: [arm64-v8a, armeabi-v7a, x86_64]
+        include:
+          - build-type: debug
+            enable-minification: false
+            upload-artifacts: true
+          - build-type: release
+            enable-minification: true
+            upload-artifacts: true
+
+    steps:
+      - name: 📥 Checkout
+        uses: actions/checkout@v4
+
+      - name: ☕ Setup JDK
+        uses: actions/setup-java@v4
+        with:
+          java-version: ${{ env.JAVA_VERSION }}
+          distribution: 'temurin'
+
+      - name: 🤖 Setup Android SDK
+        uses: android-actions/setup-android@v3
+        with:
+          api-level: ${{ env.ANDROID_COMPILE_SDK }}
+          build-tools: ${{ env.ANDROID_BUILD_TOOLS }}
+
+      - name: 📦 Cache Dependencies
+        uses: actions/cache@v3
+        with:
+          path: |
+            ~/.gradle/caches
+            ~/.gradle/wrapper
+            ~/.android/build-cache
+          key: ${{ runner.os }}-gradle-${{ matrix.build-type }}-${{ hashFiles('**/*.gradle.kts', 'gradle/wrapper/gradle-wrapper.properties') }}
+          restore-keys: |
+            ${{ runner.os }}-gradle-${{ matrix.build-type }}-
+            ${{ runner.os }}-gradle-
+
+      - name: 🔧 Configure Build
+        run: |
+          echo "VERSION_NAME=${{ needs.pre-flight.outputs.version }}" >> gradle.properties
+          echo "VERSION_CODE=${{ github.run_number }}" >> gradle.properties
+          echo "BUILD_TYPE=${{ matrix.build-type }}" >> gradle.properties
+          echo "TARGET_ARCH=${{ matrix.arch }}" >> gradle.properties
+          echo "ENABLE_MINIFICATION=${{ matrix.enable-minification }}" >> gradle.properties
+
+      - name: 🏗️ Build APK
+        run: |
+          if [[ "${{ matrix.build-type }}" == "release" ]]; then
+            ./gradlew assembleRelease \
+              -PtargetArch=${{ matrix.arch }} \
+              -PenableMinification=${{ matrix.enable-minification }} \
+              --parallel \
+              --daemon \
+              --build-cache
+          else
+            ./gradlew assembleDebug \
+              -PtargetArch=${{ matrix.arch }} \
+              --parallel \
+              --daemon \
+              --build-cache
+          fi
+
+      - name: 📊 Build Metrics
+        run: |
+          apk_path="app/build/outputs/apk/${{ matrix.build-type }}/app-${{ matrix.build-type }}.apk"
+          if [[ -f "$apk_path" ]]; then
+            apk_size=$(stat -c%s "$apk_path")
+            echo "APK Size (${{ matrix.build-type }}-${{ matrix.arch }}): $(($apk_size / 1024 / 1024)) MB"
+            echo "apk_size_mb=$(($apk_size / 1024 / 1024))" >> $GITHUB_ENV
+          fi
+
+      - name: 📤 Upload Build Artifacts
+        if: matrix.upload-artifacts
+        uses: actions/upload-artifact@v3
+        with:
+          name: apk-${{ matrix.build-type }}-${{ matrix.arch }}
+          path: |
+            app/build/outputs/apk/${{ matrix.build-type }}/*.apk
+            app/build/outputs/mapping/${{ matrix.build-type }}/mapping.txt
+          retention-days: 30
+
+  # ============================================================================
+  # COMPREHENSIVE TESTING PIPELINE
+  # ============================================================================
+
+  unit-tests:
+    name: 🧪 Unit Tests
+    runs-on: ubuntu-latest
+    needs: [pre-flight]
+    if: needs.pre-flight.outputs.skip_tests != 'true'
+    timeout-minutes: 15
+
+    strategy:
+      matrix:
+        module: [app, core-pose, core-geom, suggestions-api]
+
+    steps:
+      - name: 📥 Checkout
+        uses: actions/checkout@v4
+
+      - name: ☕ Setup JDK
+        uses: actions/setup-java@v4
+        with:
+          java-version: ${{ env.JAVA_VERSION }}
+          distribution: 'temurin'
+
+      - name: 📦 Cache Dependencies
+        uses: actions/cache@v3
+        with:
+          path: |
+            ~/.gradle/caches
+            ~/.gradle/wrapper
+          key: ${{ runner.os }}-gradle-test-${{ hashFiles('**/*.gradle.kts') }}
+
+      - name: 🧪 Run Unit Tests
+        run: |
+          ./gradlew :${{ matrix.module }}:test \
+            --parallel \
+            --continue \
+            -PtestMode=unit
+
+      - name: 📊 Test Results
+        uses: dorny/test-reporter@v1
+        if: always()
+        with:
+          name: Unit Tests - ${{ matrix.module }}
+          path: '${{ matrix.module }}/build/test-results/test/*.xml'
+          reporter: java-junit
+
+      - name: 📈 Coverage Report
+        run: |
+          ./gradlew :${{ matrix.module }}:jacocoTestReport
+
+      - name: 📤 Upload Coverage
+        uses: codecov/codecov-action@v3
+        with:
+          files: ${{ matrix.module }}/build/reports/jacoco/test/jacocoTestReport.xml
+          flags: ${{ matrix.module }}
+          name: ${{ matrix.module }}-coverage
+
+  integration-tests:
+    name: 🔗 Integration Tests
+    runs-on: ubuntu-latest
+    needs: [pre-flight, build-matrix]
+    if: needs.pre-flight.outputs.skip_tests != 'true'
+    timeout-minutes: 30
+
+    strategy:
+      matrix:
+        api-level: [24, 28, 33, 34]
+        arch: [x86_64]
+        include:
+          - api-level: 24
+            target: google_apis
+          - api-level: 28
+            target: google_apis
+          - api-level: 33
+            target: google_apis_playstore
+          - api-level: 34
+            target: google_apis_playstore
+
+    steps:
+      - name: 📥 Checkout
+        uses: actions/checkout@v4
+
+      - name: ☕ Setup JDK
+        uses: actions/setup-java@v4
+        with:
+          java-version: ${{ env.JAVA_VERSION }}
+          distribution: 'temurin'
+
+      - name: 🤖 Setup Android SDK
+        uses: android-actions/setup-android@v3
+
+      - name: 📦 Cache Dependencies
+        uses: actions/cache@v3
+        with:
+          path: |
+            ~/.gradle/caches
+            ~/.gradle/wrapper
+            ~/.android/build-cache
+          key: ${{ runner.os }}-gradle-integration-${{ hashFiles('**/*.gradle.kts') }}
+
+      - name: 🚀 Enable KVM
+        run: |
+          echo 'KERNEL=="kvm", GROUP="kvm", MODE="0666", OPTIONS+="static_node=kvm"' | sudo tee /etc/udev/rules.d/99-kvm4all.rules
+          sudo udevadm control --reload-rules
+          sudo udevadm trigger --name-match=kvm
+
+      - name: 📱 AVD Cache
+        uses: actions/cache@v3
+        id: avd-cache
+        with:
+          path: |
+            ~/.android/avd/*
+            ~/.android/adb*
+          key: avd-${{ matrix.api-level }}-${{ matrix.arch }}-${{ matrix.target }}
+
+      - name: 🎯 Create AVD and Generate Snapshot
+        if: steps.avd-cache.outputs.cache-hit != 'true'
+        uses: reactivecircus/android-emulator-runner@v2
+        with:
+          api-level: ${{ matrix.api-level }}
+          arch: ${{ matrix.arch }}
+          target: ${{ matrix.target }}
+          force-avd-creation: false
+          emulator-options: -no-window -gpu swiftshader_indirect -noaudio -no-boot-anim -camera-back none
+          disable-animations: true
+          script: echo "Generated AVD snapshot for caching."
+
+      - name: 🧪 Run Integration Tests
+        uses: reactivecircus/android-emulator-runner@v2
+        with:
+          api-level: ${{ matrix.api-level }}
+          arch: ${{ matrix.arch }}
+          target: ${{ matrix.target }}
+          force-avd-creation: false
+          emulator-options: -no-snapshot-save -no-window -gpu swiftshader_indirect -noaudio -no-boot-anim -camera-back none
+          disable-animations: true
+          script: |
+            adb wait-for-device
+            ./gradlew connectedAndroidTest \
+              --parallel \
+              --continue \
+              -PtestMode=integration \
+              -PapiLevel=${{ matrix.api-level }}
+
+      - name: 📊 Test Results
+        uses: dorny/test-reporter@v1
+        if: always()
+        with:
+          name: Integration Tests - API ${{ matrix.api-level }}
+          path: 'app/build/outputs/androidTest-results/connected/*.xml'
+          reporter: java-junit
+
+  # ============================================================================
+  # PERFORMANCE & AI MODEL TESTING
+  # ============================================================================
+
+  performance-tests:
+    name: ⚡ Performance Tests
+    runs-on: ubuntu-latest
+    needs: [pre-flight, build-matrix]
+    if: needs.pre-flight.outputs.skip_tests != 'true'
+    timeout-minutes: 25
+
+    steps:
+      - name: 📥 Checkout
+        uses: actions/checkout@v4
+
+      - name: ☕ Setup JDK
+        uses: actions/setup-java@v4
+        with:
+          java-version: ${{ env.JAVA_VERSION }}
+          distribution: 'temurin'
+
+      - name: 📥 Download Build Artifacts
+        uses: actions/download-artifact@v3
+        with:
+          name: apk-debug-arm64-v8a
+          path: artifacts/
+
+      - name: 🎯 Firebase Test Lab - Performance
+        run: |
+          echo "${{ secrets.FIREBASE_SERVICE_ACCOUNT }}" > firebase-key.json
+          gcloud auth activate-service-account --key-file=firebase-key.json
+          gcloud config set project ${{ secrets.FIREBASE_PROJECT_ID }}
+
+          gcloud firebase test android run \
+            --type instrumentation \
+            --app artifacts/app-debug.apk \
+            --test artifacts/app-debug-androidTest.apk \
+            --device model=Pixel6,version=33,locale=en,orientation=portrait \
+            --device model=SM-G973F,version=29,locale=en,orientation=portrait \
+            --timeout 15m \
+            --results-bucket gs://${{ secrets.FIREBASE_BUCKET }}/performance-tests \
+            --performance-metrics
+
+      - name: 📊 Performance Baseline Comparison
+        run: |
+          python scripts/ci/performance-compare.py \
+            --current-results gs://${{ secrets.FIREBASE_BUCKET }}/performance-tests \
+            --baseline-results gs://${{ secrets.FIREBASE_BUCKET }}/performance-baseline \
+            --threshold 10
+
+  ai-model-validation:
+    name: 🤖 AI Model Validation
+    runs-on: ubuntu-latest
+    needs: [pre-flight]
+    if: needs.pre-flight.outputs.skip_tests != 'true' && (contains(needs.pre-flight.outputs.affected_modules, 'core-pose') || contains(needs.pre-flight.outputs.affected_modules, 'suggestions-api'))
+    timeout-minutes: 20
+
+    steps:
+      - name: 📥 Checkout
+        uses: actions/checkout@v4
+
+      - name: 🐍 Setup Python
+        uses: actions/setup-python@v4
+        with:
+          python-version: '3.11'
+
+      - name: 📦 Install Dependencies
+        run: |
+          pip install -r scripts/ci/requirements.txt
+
+      - name: 🤖 Model Accuracy Tests
+        env:
+          GEMINI_API_KEY: ${{ secrets.GEMINI_API_KEY }}
+        run: |
+          python scripts/ci/ai-model-tests.py \
+            --test-data test-data/pose-samples \
+            --accuracy-threshold 0.85 \
+            --latency-threshold 200ms
+
+      - name: 📊 Model Performance Report
+        run: |
+          python scripts/ci/generate-model-report.py \
+            --output reports/ai-model-performance.json
+
+  # ============================================================================
+  # SECURITY & QUALITY GATES
+  # ============================================================================
+
+  security-scan:
+    name: 🔒 Security Scan
+    runs-on: ubuntu-latest
+    needs: [pre-flight]
+    timeout-minutes: 15
+
+    steps:
+      - name: 📥 Checkout
+        uses: actions/checkout@v4
+
+      - name: 🔍 Dependency Check
+        uses: dependency-check/Dependency-Check_Action@main
+        with:
+          project: 'pose-coach-android'
+          path: '.'
+          format: 'ALL'
+          args: >
+            --enableRetired
+            --enableExperimental
+            --failOnCVSS 7
+
+      - name: 🛡️ CodeQL Analysis
+        uses: github/codeql-action/init@v2
+        with:
+          languages: java, kotlin
+
+      - name: 🏗️ Autobuild
+        uses: github/codeql-action/autobuild@v2
+
+      - name: 📊 CodeQL Analysis
+        uses: github/codeql-action/analyze@v2
+
+      - name: 🔐 Secret Scan
+        uses: trufflesecurity/trufflehog@main
+        with:
+          path: ./
+          base: main
+          head: HEAD
+
+  quality-gates:
+    name: 🚦 Quality Gates
+    runs-on: ubuntu-latest
+    needs: [pre-flight, unit-tests, integration-tests, security-scan]
+    if: always() && needs.pre-flight.outputs.skip_tests != 'true'
+    timeout-minutes: 10
+
+    steps:
+      - name: 📥 Checkout
+        uses: actions/checkout@v4
+
+      - name: ☕ Setup JDK
+        uses: actions/setup-java@v4
+        with:
+          java-version: ${{ env.JAVA_VERSION }}
+          distribution: 'temurin'
+
+      - name: 📊 SonarCloud Scan
+        uses: SonarSource/sonarcloud-github-action@master
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
+
+      - name: 🎯 Quality Gate Check
+        run: |
+          python scripts/ci/quality-gates.py \
+            --coverage-threshold 85 \
+            --complexity-threshold 10 \
+            --duplication-threshold 5 \
+            --security-rating A \
+            --maintainability-rating A
+
+      - name: 📋 Generate Quality Report
+        if: always()
+        run: |
+          python scripts/ci/quality-report.py \
+            --output reports/quality-gate-report.json \
+            --unit-tests ${{ needs.unit-tests.result }} \
+            --integration-tests ${{ needs.integration-tests.result }} \
+            --security-scan ${{ needs.security-scan.result }}
+
+  # ============================================================================
+  # DEPLOYMENT WORKFLOWS
+  # ============================================================================
+
+  deploy-staging:
+    name: 🚀 Deploy to Staging
+    runs-on: ubuntu-latest
+    needs: [pre-flight, build-matrix, quality-gates]
+    if: |
+      always() &&
+      needs.pre-flight.outputs.should_deploy == 'true' &&
+      needs.pre-flight.outputs.environment == 'staging' &&
+      (needs.quality-gates.result == 'success' || github.event.inputs.force_deploy == 'true')
+    environment: staging
+    timeout-minutes: 15
+
+    steps:
+      - name: 📥 Checkout
+        uses: actions/checkout@v4
+
+      - name: 📥 Download Artifacts
+        uses: actions/download-artifact@v3
+        with:
+          name: apk-release-arm64-v8a
+          path: artifacts/
+
+      - name: 🔧 Configure Staging Environment
+        run: |
+          echo "ENVIRONMENT=staging" >> $GITHUB_ENV
+          echo "APP_VERSION=${{ needs.pre-flight.outputs.version }}" >> $GITHUB_ENV
+
+      - name: 🚀 Deploy to Firebase App Distribution
+        uses: wzieba/Firebase-Distribution-Github-Action@v1
+        with:
+          appId: ${{ secrets.FIREBASE_STAGING_APP_ID }}
+          serviceCredentialsFileContent: ${{ secrets.FIREBASE_SERVICE_ACCOUNT }}
+          groups: staging-testers
+          file: artifacts/app-release.apk
+          releaseNotes: |
+            🚀 Staging Release ${{ needs.pre-flight.outputs.version }}
+
+            📋 Changes in this build:
+            ${{ github.event.head_commit.message }}
+
+            🔗 Commit: ${{ github.sha }}
+            📅 Build Time: ${{ github.event.head_commit.timestamp }}
+
+      - name: 📊 Deployment Metrics
+        run: |
+          python scripts/ci/deployment-metrics.py \
+            --environment staging \
+            --version ${{ needs.pre-flight.outputs.version }} \
+            --commit ${{ github.sha }}
+
+  deploy-production:
+    name: 🌟 Deploy to Production
+    runs-on: ubuntu-latest
+    needs: [pre-flight, build-matrix, quality-gates, performance-tests]
+    if: |
+      always() &&
+      needs.pre-flight.outputs.should_deploy == 'true' &&
+      needs.pre-flight.outputs.environment == 'production' &&
+      needs.quality-gates.result == 'success' &&
+      needs.performance-tests.result == 'success'
+    environment: production
+    timeout-minutes: 30
+
+    steps:
+      - name: 📥 Checkout
+        uses: actions/checkout@v4
+
+      - name: 📥 Download Artifacts
+        uses: actions/download-artifact@v3
+        with:
+          name: apk-release-arm64-v8a
+          path: artifacts/
+
+      - name: 🔧 Production Configuration
+        run: |
+          echo "ENVIRONMENT=production" >> $GITHUB_ENV
+          echo "APP_VERSION=${{ needs.pre-flight.outputs.version }}" >> $GITHUB_ENV
+
+      - name: 📱 Deploy to Play Store
+        uses: r0adkll/upload-google-play@v1
+        with:
+          serviceAccountJsonPlainText: ${{ secrets.PLAY_STORE_SERVICE_ACCOUNT_KEY }}
+          packageName: com.posecoach.camera
+          releaseFiles: artifacts/app-release.apk
+          track: production
+          status: completed
+          whatsNewDirectory: fastlane/metadata/android/en-US/changelogs
+
+      - name: 🎉 Success Notification
+        if: success()
+        run: |
+          python scripts/ci/notifications.py \
+            --type deployment-success \
+            --environment production \
+            --version ${{ needs.pre-flight.outputs.version }} \
+            --webhook ${{ secrets.SLACK_WEBHOOK }}
+
+  # ============================================================================
+  # POST-DEPLOYMENT MONITORING
+  # ============================================================================
+
+  post-deployment-monitoring:
+    name: 📊 Post-Deployment Monitoring
+    runs-on: ubuntu-latest
+    needs: [deploy-staging, deploy-production]
+    if: always() && (needs.deploy-staging.result == 'success' || needs.deploy-production.result == 'success')
+    timeout-minutes: 10
+
+    steps:
+      - name: 📥 Checkout
+        uses: actions/checkout@v4
+
+      - name: 🔍 Health Checks
+        run: |
+          python scripts/ci/health-checks.py \
+            --environment ${{ needs.pre-flight.outputs.environment }} \
+            --timeout 300
+
+      - name: 📈 Performance Monitoring Setup
+        run: |
+          python scripts/ci/setup-monitoring.py \
+            --version ${{ needs.pre-flight.outputs.version }} \
+            --environment ${{ needs.pre-flight.outputs.environment }}
+
+      - name: 🚨 Alert Configuration
+        run: |
+          python scripts/ci/configure-alerts.py \
+            --environment ${{ needs.pre-flight.outputs.environment }} \
+            --version ${{ needs.pre-flight.outputs.version }}
+
+  # ============================================================================
+  # CLEANUP & REPORTING
+  # ============================================================================
+
+  cleanup-and-report:
+    name: 🧹 Cleanup & Report
+    runs-on: ubuntu-latest
+    needs: [pre-flight, build-matrix, unit-tests, integration-tests, performance-tests, security-scan, quality-gates, deploy-staging, deploy-production, post-deployment-monitoring]
+    if: always()
+    timeout-minutes: 5
+
+    steps:
+      - name: 📥 Checkout
+        uses: actions/checkout@v4
+
+      - name: 📊 Generate Pipeline Report
+        run: |
+          python scripts/ci/pipeline-report.py \
+            --build-status "${{ needs.build-matrix.result }}" \
+            --test-status "${{ needs.unit-tests.result }},${{ needs.integration-tests.result }}" \
+            --security-status "${{ needs.security-scan.result }}" \
+            --quality-status "${{ needs.quality-gates.result }}" \
+            --deployment-status "${{ needs.deploy-staging.result }},${{ needs.deploy-production.result }}" \
+            --output reports/pipeline-summary.json
+
+      - name: 💬 Pipeline Summary Comment
+        if: github.event_name == 'pull_request'
+        uses: actions/github-script@v6
+        with:
+          script: |
+            const fs = require('fs');
+            const report = JSON.parse(fs.readFileSync('reports/pipeline-summary.json', 'utf8'));
+
+            const comment = `## 🚀 CI/CD Pipeline Summary
+
+            **Build Status**: ${report.build_status}
+            **Test Coverage**: ${report.test_coverage}%
+            **Security Score**: ${report.security_score}
+            **Performance**: ${report.performance_score}
+
+            ### 📊 Detailed Results
+            - Unit Tests: ${report.unit_tests}
+            - Integration Tests: ${report.integration_tests}
+            - Security Scan: ${report.security_scan}
+            - Quality Gates: ${report.quality_gates}
+
+            ### 🚀 Deployment
+            Environment: ${report.deployment_environment}
+            Version: ${report.version}
+            Status: ${report.deployment_status}
+            `;
+
+            github.rest.issues.createComment({
+              issue_number: context.issue.number,
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              body: comment
+            });
+
+      - name: 🧹 Cleanup Artifacts
+        run: |
+          # Clean up temporary files older than 7 days
+          find artifacts/ -type f -mtime +7 -delete 2>/dev/null || true
+          find reports/ -type f -mtime +30 -delete 2>/dev/null || true
+
+  # ============================================================================
+  # FAILURE NOTIFICATIONS & ROLLBACK
+  # ============================================================================
+
+  failure-handler:
+    name: ⚠️ Failure Handler
+    runs-on: ubuntu-latest
+    needs: [pre-flight, build-matrix, unit-tests, integration-tests, security-scan, quality-gates, deploy-staging, deploy-production]
+    if: failure()
+    timeout-minutes: 10
+
+    steps:
+      - name: 📥 Checkout
+        uses: actions/checkout@v4
+
+      - name: 🚨 Failure Analysis
+        run: |
+          python scripts/ci/failure-analysis.py \
+            --pipeline-id ${{ github.run_id }} \
+            --commit ${{ github.sha }} \
+            --branch ${{ github.ref_name }}
+
+      - name: 🔄 Auto Rollback (Production)
+        if: needs.deploy-production.result == 'failure' && needs.pre-flight.outputs.environment == 'production'
+        run: |
+          python scripts/ci/auto-rollback.py \
+            --environment production \
+            --previous-version ${{ secrets.LAST_KNOWN_GOOD_VERSION }}
+
+      - name: 📧 Failure Notification
+        run: |
+          python scripts/ci/notifications.py \
+            --type pipeline-failure \
+            --environment ${{ needs.pre-flight.outputs.environment }} \
+            --webhook ${{ secrets.SLACK_WEBHOOK }} \
+            --details "Pipeline failed at: ${{ github.job }}"

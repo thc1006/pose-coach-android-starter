@@ -1,0 +1,10 @@
+{
+  "default": [
+    {
+      "key": "project-context",
+      "value": "Pose Coach Camera - Android pose detection app with MediaPipe, Gemini 2.5 structured output, privacy-first architecture. Sprint P1/P2 complete with advanced features. Current: Sprint P3 production hardening. Critical issues: Missing Gradle wrapper, 4 TODOs in production paths, fake implementations need gating. Production readiness: 65/100. Needs 3-4 weeks hardening.",
+      "namespace": "default",
+      "timestamp": 1758462495608
+    }
+  ]
+}

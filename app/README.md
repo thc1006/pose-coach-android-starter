@@ -1,0 +1,1 @@
+# App module placeholder\n\n請依 CLAUDE.md 的 P1 任務以 CameraX + Overlay 打通預覽與疊圖。\n

@@ -1,0 +1,334 @@
+# Staging Environment Configuration
+# Pose Coach Android - Staging Settings
+
+environment:
+  name: staging
+  stage: staging
+  region: us-central1
+  debug_mode: false
+
+# Application Configuration
+app:
+  version_suffix: "-staging"
+  build_type: release
+  minify_enabled: true
+  shrink_resources: true
+  proguard_enabled: true
+
+  # Debug flags (limited for staging)
+  enable_logging: true
+  log_level: INFO
+  enable_strict_mode: false
+  enable_leak_canary: false
+  enable_flipper: false
+
+# API Configuration
+api:
+  base_url: "https://api-staging.posecoach.app"
+  timeout_seconds: 30
+  retry_attempts: 3
+  enable_mock_responses: false
+
+  # Gemini AI Configuration
+  gemini:
+    api_url: "https://generativelanguage.googleapis.com/v1"
+    model: "gemini-pro-vision"
+    api_key_ref: "GEMINI_API_KEY_STAGING"
+    enable_caching: true
+    request_timeout: 30
+    max_tokens: 4096
+
+# Database Configuration
+database:
+  name: "pose_coach_staging.db"
+  version: 1
+  enable_wal: true
+  enable_foreign_keys: true
+
+  # Staging-specific settings
+  enable_logging: false
+  allow_main_thread_queries: false
+  fallback_to_destructive_migration: false
+
+# Firebase Configuration
+firebase:
+  project_id: "pose-coach-staging"
+  app_id: "1:123456789:android:staging123"
+  analytics_enabled: true
+  crashlytics_enabled: true
+  performance_monitoring: true
+
+  # Remote Config
+  remote_config:
+    cache_expiration: 3600  # 1 hour
+    fetch_timeout: 60
+
+  # Cloud Messaging
+  messaging:
+    auto_init_enabled: true
+    default_notification_channel: "staging_notifications"
+
+# Security Configuration
+security:
+  certificate_pinning: true
+  network_security_config: "network_security_config_staging.xml"
+  enable_root_detection: true
+  enable_debug_detection: true
+
+  # Biometric Authentication
+  biometric:
+    enabled: true
+    allow_device_credential: true
+    require_confirmation: true
+
+# Feature Flags
+features:
+  # Core Features
+  pose_detection: true
+  real_time_coaching: true
+  ai_feedback: true
+  voice_commands: true
+
+  # Testing Features (enabled for staging validation)
+  advanced_analytics: true
+  beta_ui: false
+  experimental_models: false
+  developer_menu: false
+  debug_overlay: false
+
+  # Social Features (testing in staging)
+  social_sharing: true
+  leaderboards: true
+  challenges: false
+
+# Performance Configuration
+performance:
+  # Memory Management
+  max_memory_cache_size: 75MB
+  max_disk_cache_size: 200MB
+
+  # Network
+  connection_timeout: 15s
+  read_timeout: 30s
+  write_timeout: 30s
+
+  # AI Model Performance
+  pose_detection:
+    max_inference_time: 200ms
+    confidence_threshold: 0.75
+    enable_gpu_acceleration: true
+    model_cache_size: 50MB
+
+# Testing Configuration
+testing:
+  enable_test_mode: false
+  mock_api_responses: false
+  fake_data_generation: false
+  automated_screenshots: false
+
+  # Test Users (limited set for staging)
+  test_users:
+    - email: "staging-tester@posecoach.app"
+      role: "qa_tester"
+
+# Monitoring & Analytics
+monitoring:
+  enable_detailed_logging: false
+  log_network_requests: false
+  log_database_queries: false
+  log_performance_metrics: true
+
+  # Crash Reporting
+  crashlytics:
+    collect_user_identifiers: false
+    collect_custom_logs: true
+    send_unhandled_exceptions: true
+
+  # Performance Monitoring
+  performance:
+    trace_all_activities: false
+    trace_network_requests: true
+    custom_traces: true
+
+# Development Tools (disabled in staging)
+dev_tools:
+  flipper:
+    enabled: false
+  stetho:
+    enabled: false
+  leak_canary:
+    enabled: false
+
+# Build Configuration
+build:
+  compile_sdk: 34
+  min_sdk: 24
+  target_sdk: 34
+
+  # Build optimizations (enabled for staging)
+  r8_optimization: true
+  resource_shrinking: true
+  code_shrinking: true
+
+  # Signing (staging key)
+  signing:
+    store_file: "staging.keystore"
+    store_password: "STAGING_KEYSTORE_PASSWORD"
+    key_alias: "staging"
+    key_password: "STAGING_KEY_PASSWORD"
+
+# Network Configuration
+network:
+  use_cleartext_traffic: false
+  bypass_certificate_validation: false
+  trust_user_certs: false
+
+  # Proxy settings
+  proxy:
+    enabled: false
+
+# Privacy & Compliance (production-like settings)
+privacy:
+  data_collection_consent: true
+  analytics_opt_out: true
+  crash_reporting_opt_out: true
+
+  # GDPR
+  gdpr:
+    enabled: true
+    consent_required: true
+
+  # Data Retention
+  data_retention:
+    user_data: 365_days
+    analytics_data: 90_days
+    crash_reports: 30_days
+
+# Notification Configuration
+notifications:
+  default_channel: "staging_notifications"
+  show_debug_notifications: false
+
+  channels:
+    - id: "staging_notifications"
+      name: "Staging Notifications"
+      importance: "default"
+      show_badge: true
+    - id: "coaching_reminders"
+      name: "Coaching Reminders"
+      importance: "high"
+      show_badge: true
+
+# Content Configuration
+content:
+  # Exercise Library
+  exercises:
+    cache_duration: 3600s  # 1 hour
+    preload_count: 10
+
+  # AI Models
+  models:
+    pose_detection_model: "pose_detection_v1_staging.tflite"
+    coaching_model: "coaching_v1_staging.tflite"
+    auto_update: true
+    fallback_models: true
+
+# Error Handling
+error_handling:
+  show_detailed_errors: false
+  crash_on_error: false
+  error_reporting: true
+
+  # Retry Configuration
+  network_retry:
+    max_attempts: 3
+    initial_delay: 1s
+    max_delay: 30s
+    backoff_multiplier: 2
+
+# A/B Testing Configuration
+ab_testing:
+  enabled: true
+  provider: "firebase_remote_config"
+  user_bucketing: "staging"
+
+  experiments:
+    - name: "coaching_ui_variant"
+      variants: ["control", "variant_a"]
+      allocation: [50, 50]
+    - name: "onboarding_flow"
+      variants: ["standard", "simplified"]
+      allocation: [70, 30]
+
+# Progressive Rollout Configuration
+rollout:
+  strategy: "percentage"
+  initial_percentage: 25
+  increment_percentage: 25
+  increment_interval: "24h"
+  max_percentage: 100
+
+  # Rollback criteria
+  rollback_triggers:
+    error_rate_threshold: 5.0  # 5%
+    crash_rate_threshold: 2.0  # 2%
+    performance_degradation: 20.0  # 20%
+
+# User Feedback
+feedback:
+  in_app_feedback: true
+  rating_prompts: true
+  beta_feedback_collection: true
+
+  # Feedback channels
+  channels:
+    - type: "email"
+      address: "feedback-staging@posecoach.app"
+    - type: "slack"
+      webhook: "SLACK_FEEDBACK_WEBHOOK"
+
+# Quality Assurance
+qa:
+  automated_testing: true
+  manual_testing_required: true
+  performance_benchmarks: true
+
+  # QA Gates
+  gates:
+    - name: "crash_rate"
+      threshold: 1.0  # 1%
+      required: true
+    - name: "performance_score"
+      threshold: 75
+      required: true
+    - name: "user_satisfaction"
+      threshold: 4.0  # out of 5
+      required: false
+
+# Resource Configuration
+resources:
+  # Image Loading
+  image_cache_size: 75MB
+  image_quality: "high"
+
+  # Video
+  video_cache_size: 200MB
+  video_quality: "1080p"
+
+  # Fonts
+  custom_fonts: true
+  font_preloading: true
+
+# Compliance Testing
+compliance:
+  gdpr_testing: true
+  ccpa_testing: true
+  accessibility_testing: true
+  performance_testing: true
+
+  # Privacy Controls
+  privacy_controls:
+    data_export: true
+    data_deletion: true
+    consent_management: true
+    opt_out_mechanisms: true

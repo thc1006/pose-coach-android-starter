@@ -1,0 +1,589 @@
+# Sprint P1: Pose Coach Android - Core Pipeline Implementation
+# TDD Cycle: 任務 → 測試 → 實作 → 重構
+
+version: 2.0
+sprint: P1
+goal: "端上骨架：CameraX + Pose + Overlay + StablePoseGate + Gemini Integration"
+start_date: "2025-09-21"
+target_completion: "2025-10-05"
+
+# Performance Targets
+performance_targets:
+  inference_latency: "<30ms @720p"
+  overlay_alignment_error: "<2px"
+  stable_pose_trigger: "1-2s intervals"
+  frame_rate: ">20fps"
+  memory_usage: "<200MB"
+
+# Sprint P1 Task Board Structure
+columns:
+  testing: "測試"
+  implementation: "實作"
+  refactoring: "重構"
+  documentation: "文件"
+
+# Auto-completion triggers
+auto_completion:
+  trigger: "PR merge to main"
+  validation:
+    - "Unit tests pass"
+    - "Performance benchmarks met"
+    - "Code review approved"
+    - "DoD checklist verified"
+
+# Agent Coordination Matrix
+agent_matrix:
+  core_development:
+    - "mobile-dev"      # Android/Kotlin development
+    - "coder"           # General implementation
+    - "ml-developer"    # MediaPipe/ML integration
+  testing_validation:
+    - "tester"          # Unit/Integration tests
+    - "tdd-london-swarm" # TDD methodology
+    - "production-validator" # Performance validation
+  quality_assurance:
+    - "reviewer"        # Code review
+    - "perf-analyzer"   # Performance analysis
+    - "security-manager" # Security review
+  coordination:
+    - "sparc-coord"     # SPARC methodology coordination
+    - "task-orchestrator" # Task management
+    - "hierarchical-coordinator" # Swarm coordination
+
+# Task Definitions with Given-When-Then Acceptance Criteria
+tasks:
+  # === 測試 (Testing) Column ===
+
+  - id: "P1-T001"
+    name: "Core Geometry & Smoothing Tests"
+    column: "testing"
+    priority: "P0"
+    module: "core-geom"
+    assignee: "tester"
+    dependencies: []
+    estimated_hours: 8
+    acceptance_criteria:
+      given: "OneEuroFilter implementation for pose smoothing"
+      when: "Processing noisy pose landmark sequences"
+      then:
+        - "Smoothed landmarks have <5% jitter compared to raw input"
+        - "Filter adapts to motion speed changes within 100ms"
+        - "AngleUtils calculations accurate to 0.1 degrees"
+        - "All geometric transformations preserve coordinate system integrity"
+    performance_requirements:
+      - "Smoothing operation <2ms per pose"
+      - "Memory allocation <1MB per filter instance"
+    test_cases:
+      - "test_one_euro_filter_noise_reduction"
+      - "test_angle_calculation_accuracy"
+      - "test_coordinate_transform_precision"
+      - "test_smoothing_latency_benchmark"
+
+  - id: "P1-T002"
+    name: "CameraX Pipeline & Rotation Tests"
+    column: "testing"
+    priority: "P0"
+    module: "app"
+    assignee: "mobile-dev"
+    dependencies: []
+    estimated_hours: 12
+    acceptance_criteria:
+      given: "CameraX ImageAnalysis pipeline with rotation handling"
+      when: "Device rotates between portrait/landscape orientations"
+      then:
+        - "Image analysis continues without interruption during rotation"
+        - "Coordinate transformation maintains accuracy <2px error"
+        - "Preview-to-analysis coordinate mapping is pixel-perfect"
+        - "Frame rate maintains >20fps during rotation transitions"
+    performance_requirements:
+      - "Rotation handling latency <100ms"
+      - "No memory leaks during orientation changes"
+    test_cases:
+      - "test_camera_rotation_continuity"
+      - "test_coordinate_transform_accuracy"
+      - "test_preview_analysis_alignment"
+      - "test_performance_during_rotation"
+
+  - id: "P1-T003"
+    name: "MediaPipe LIVE_STREAM Integration Tests"
+    column: "testing"
+    priority: "P0"
+    module: "core-pose"
+    assignee: "ml-developer"
+    dependencies: []
+    estimated_hours: 10
+    acceptance_criteria:
+      given: "MediaPipe Pose Landmarker in LIVE_STREAM mode"
+      when: "Processing camera frames at 30fps"
+      then:
+        - "Pose detection results available <30ms per frame"
+        - "Callback-based result delivery maintains frame order"
+        - "Handles missing/partial pose detections gracefully"
+        - "Supports up to 5 simultaneous pose detections"
+    performance_requirements:
+      - "Inference latency <30ms @720p resolution"
+      - "Memory usage stable <200MB"
+    test_cases:
+      - "test_live_stream_latency"
+      - "test_multi_pose_detection"
+      - "test_callback_ordering"
+      - "test_error_recovery"
+
+  - id: "P1-T004"
+    name: "Overlay System Alignment Tests"
+    column: "testing"
+    priority: "P0"
+    module: "app"
+    assignee: "tester"
+    dependencies: ["P1-T002"]
+    estimated_hours: 8
+    acceptance_criteria:
+      given: "OverlayView and OverlayEffect rendering system"
+      when: "Drawing pose skeleton over camera preview"
+      then:
+        - "Skeleton landmarks align with body parts <2px error"
+        - "Overlay adapts correctly to camera crop/zoom changes"
+        - "Rotation transitions maintain overlay alignment"
+        - "Drawing performance maintains 60fps UI thread"
+    performance_requirements:
+      - "Overlay rendering <16ms per frame"
+      - "No UI thread blocking"
+    test_cases:
+      - "test_overlay_alignment_accuracy"
+      - "test_crop_zoom_adaptation"
+      - "test_rotation_overlay_sync"
+      - "test_rendering_performance"
+
+  - id: "P1-T005"
+    name: "Gemini 2.5 Structured Output Tests"
+    column: "testing"
+    priority: "P1"
+    module: "suggestions-api"
+    assignee: "ml-developer"
+    dependencies: []
+    estimated_hours: 6
+    acceptance_criteria:
+      given: "Gemini 2.5 Flash API integration with structured output"
+      when: "Sending pose landmarks for analysis"
+      then:
+        - "Structured JSON response validates against schema"
+        - "API response time <2s for pose analysis"
+        - "Handles network failures with proper fallbacks"
+        - "Rate limiting respected (60 requests/minute)"
+    performance_requirements:
+      - "API call latency <2s"
+      - "Offline mode degradation graceful"
+    test_cases:
+      - "test_structured_output_schema"
+      - "test_api_response_time"
+      - "test_network_failure_handling"
+      - "test_rate_limiting_compliance"
+
+  - id: "P1-T006"
+    name: "StablePoseGate Logic Tests"
+    column: "testing"
+    priority: "P0"
+    module: "core-pose"
+    assignee: "tester"
+    dependencies: ["P1-T001"]
+    estimated_hours: 6
+    acceptance_criteria:
+      given: "Enhanced StablePoseGate with confidence thresholds"
+      when: "Processing continuous pose stream"
+      then:
+        - "Stable pose triggers every 1-2 seconds when criteria met"
+        - "Confidence threshold filtering prevents false positives"
+        - "Temporal consistency maintained across frames"
+        - "Gate adapts to different exercise types"
+    performance_requirements:
+      - "Gate evaluation <1ms per frame"
+      - "Memory footprint <10MB"
+    test_cases:
+      - "test_stable_pose_timing"
+      - "test_confidence_threshold_filtering"
+      - "test_temporal_consistency"
+      - "test_exercise_adaptation"
+
+  # === 實作 (Implementation) Column ===
+
+  - id: "P1-I001"
+    name: "Core Geometry Module Implementation"
+    column: "implementation"
+    priority: "P0"
+    module: "core-geom"
+    assignee: "coder"
+    dependencies: ["P1-T001"]
+    estimated_hours: 16
+    acceptance_criteria:
+      given: "Test specifications for geometry and smoothing"
+      when: "Implementing OneEuroFilter and AngleUtils"
+      then:
+        - "All geometry tests pass with >95% coverage"
+        - "Filter parameters tunable for different use cases"
+        - "Angle calculations handle edge cases (±180° wrapping)"
+        - "Coordinate transformations support arbitrary rotations"
+    performance_requirements:
+      - "Pass all performance benchmarks from tests"
+      - "Code coverage >95%"
+    implementation_tasks:
+      - "Implement OneEuroFilter with adaptive parameters"
+      - "Create AngleUtils for joint angle calculations"
+      - "Add coordinate transformation utilities"
+      - "Implement pose landmark smoothing pipeline"
+
+  - id: "P1-I002"
+    name: "CameraX Integration Implementation"
+    column: "implementation"
+    priority: "P0"
+    module: "app"
+    assignee: "mobile-dev"
+    dependencies: ["P1-T002"]
+    estimated_hours: 20
+    acceptance_criteria:
+      given: "CameraX pipeline test specifications"
+      when: "Implementing camera preview and image analysis"
+      then:
+        - "All camera tests pass with rotation handling"
+        - "ImageAnalysis pipeline processes frames efficiently"
+        - "Preview and analysis coordinate systems synchronized"
+        - "Handles camera permissions and lifecycle correctly"
+    performance_requirements:
+      - "Meet all camera pipeline performance targets"
+      - "No memory leaks during camera operations"
+    implementation_tasks:
+      - "Set up CameraX preview with proper lifecycle binding"
+      - "Implement ImageAnalysis pipeline for pose detection"
+      - "Add rotation handling and coordinate transformation"
+      - "Create camera permission and error handling"
+
+  - id: "P1-I003"
+    name: "MediaPipe Pose Repository Implementation"
+    column: "implementation"
+    priority: "P0"
+    module: "core-pose"
+    assignee: "ml-developer"
+    dependencies: ["P1-T003"]
+    estimated_hours: 18
+    acceptance_criteria:
+      given: "MediaPipe integration test specifications"
+      when: "Implementing LIVE_STREAM pose detection"
+      then:
+        - "All MediaPipe tests pass with performance targets"
+        - "LIVE_STREAM mode handles real-time processing"
+        - "Result callbacks maintain proper threading"
+        - "Multi-pose detection works reliably"
+    performance_requirements:
+      - "Meet inference latency targets"
+      - "Stable memory usage under load"
+    implementation_tasks:
+      - "Integrate MediaPipe Pose Landmarker SDK"
+      - "Implement LIVE_STREAM processing pipeline"
+      - "Add multi-pose detection support"
+      - "Create result callback and threading management"
+
+  - id: "P1-I004"
+    name: "Overlay System Implementation"
+    column: "implementation"
+    priority: "P0"
+    module: "app"
+    assignee: "coder"
+    dependencies: ["P1-T004", "P1-I002"]
+    estimated_hours: 14
+    acceptance_criteria:
+      given: "Overlay alignment test specifications"
+      when: "Implementing pose skeleton rendering"
+      then:
+        - "All overlay tests pass with alignment accuracy"
+        - "Custom View and Effect both render correctly"
+        - "Coordinate mapping handles all device orientations"
+        - "Rendering performance meets 60fps target"
+    performance_requirements:
+      - "Meet overlay rendering performance targets"
+      - "No blocking of UI thread"
+    implementation_tasks:
+      - "Create PoseOverlayView for skeleton rendering"
+      - "Implement PoseOverlayEffect for CameraX integration"
+      - "Add coordinate mapping utilities"
+      - "Optimize rendering pipeline for performance"
+
+  - id: "P1-I005"
+    name: "Gemini API Client Implementation"
+    column: "implementation"
+    priority: "P1"
+    module: "suggestions-api"
+    assignee: "ml-developer"
+    dependencies: ["P1-T005"]
+    estimated_hours: 12
+    acceptance_criteria:
+      given: "Gemini API test specifications"
+      when: "Implementing structured output client"
+      then:
+        - "All API tests pass with response validation"
+        - "Structured output schema properly enforced"
+        - "Error handling and retries work correctly"
+        - "Rate limiting and quotas respected"
+    performance_requirements:
+      - "Meet API response time targets"
+      - "Graceful degradation when offline"
+    implementation_tasks:
+      - "Create GeminiPoseSuggestionClient"
+      - "Implement structured output schema validation"
+      - "Add network error handling and retries"
+      - "Create rate limiting and quota management"
+
+  - id: "P1-I006"
+    name: "Enhanced StablePoseGate Implementation"
+    column: "implementation"
+    priority: "P0"
+    module: "core-pose"
+    assignee: "coder"
+    dependencies: ["P1-T006", "P1-I001"]
+    estimated_hours: 10
+    acceptance_criteria:
+      given: "StablePoseGate test specifications"
+      when: "Implementing enhanced pose stability detection"
+      then:
+        - "All stability tests pass with timing accuracy"
+        - "Confidence-based filtering reduces false positives"
+        - "Temporal smoothing improves stability detection"
+        - "Configurable thresholds for different exercises"
+    performance_requirements:
+      - "Meet gate evaluation performance targets"
+      - "Minimal memory footprint"
+    implementation_tasks:
+      - "Enhance StablePoseGate with confidence thresholds"
+      - "Add temporal consistency checking"
+      - "Implement configurable stability criteria"
+      - "Create pose stability metrics"
+
+  # === 重構 (Refactoring) Column ===
+
+  - id: "P1-R001"
+    name: "Performance Optimization Refactoring"
+    column: "refactoring"
+    priority: "P1"
+    module: "all"
+    assignee: "perf-analyzer"
+    dependencies: ["P1-I001", "P1-I002", "P1-I003"]
+    estimated_hours: 8
+    acceptance_criteria:
+      given: "Working core implementation with performance bottlenecks"
+      when: "Optimizing for target performance metrics"
+      then:
+        - "All performance targets consistently met"
+        - "Memory usage optimized and stable"
+        - "CPU usage minimized for battery efficiency"
+        - "No performance regressions introduced"
+    performance_requirements:
+      - "10% improvement in inference latency"
+      - "20% reduction in memory allocation"
+    refactoring_tasks:
+      - "Profile and optimize pose detection pipeline"
+      - "Minimize object allocations in hot paths"
+      - "Optimize overlay rendering performance"
+      - "Add performance monitoring and metrics"
+
+  - id: "P1-R002"
+    name: "Error Handling & Resilience Refactoring"
+    column: "refactoring"
+    priority: "P1"
+    module: "all"
+    assignee: "reviewer"
+    dependencies: ["P1-I004", "P1-I005", "P1-I006"]
+    estimated_hours: 6
+    acceptance_criteria:
+      given: "Core functionality implemented with basic error handling"
+      when: "Hardening against edge cases and failures"
+      then:
+        - "All error paths tested and handled gracefully"
+        - "Network failures don't crash the app"
+        - "Camera errors recovered automatically"
+        - "Pose detection continues despite occasional failures"
+    resilience_requirements:
+      - "99% uptime during normal operation"
+      - "Graceful degradation when components fail"
+    refactoring_tasks:
+      - "Add comprehensive error handling"
+      - "Implement retry logic with exponential backoff"
+      - "Create fallback mechanisms for core features"
+      - "Add health checks and monitoring"
+
+  - id: "P1-R003"
+    name: "Code Quality & Architecture Refactoring"
+    column: "refactoring"
+    priority: "P2"
+    module: "all"
+    assignee: "reviewer"
+    dependencies: ["P1-R001", "P1-R002"]
+    estimated_hours: 10
+    acceptance_criteria:
+      given: "Working implementation with technical debt"
+      when: "Improving code quality and maintainability"
+      then:
+        - "Code coverage >95% across all modules"
+        - "Static analysis passes with no critical issues"
+        - "Architecture follows Android best practices"
+        - "Dependencies properly managed and minimal"
+    quality_requirements:
+      - "Cyclomatic complexity <10 per method"
+      - "Dependency injection properly implemented"
+    refactoring_tasks:
+      - "Extract interfaces and improve testability"
+      - "Implement proper dependency injection"
+      - "Add comprehensive documentation"
+      - "Optimize module boundaries and dependencies"
+
+  # === 文件 (Documentation) Column ===
+
+  - id: "P1-D001"
+    name: "API Documentation & Integration Guide"
+    column: "documentation"
+    priority: "P2"
+    module: "docs"
+    assignee: "api-docs"
+    dependencies: ["P1-I005"]
+    estimated_hours: 6
+    acceptance_criteria:
+      given: "Implemented Gemini API integration"
+      when: "Creating developer documentation"
+      then:
+        - "API usage examples are complete and tested"
+        - "Integration guide covers all configuration steps"
+        - "Error scenarios documented with solutions"
+        - "Performance considerations clearly explained"
+    documentation_requirements:
+      - "Code examples compile and run successfully"
+      - "Documentation stays in sync with implementation"
+    documentation_tasks:
+      - "Create Gemini API integration guide"
+      - "Document structured output schema"
+      - "Add troubleshooting guide"
+      - "Create performance tuning recommendations"
+
+  - id: "P1-D002"
+    name: "Performance Benchmarking Documentation"
+    column: "documentation"
+    priority: "P1"
+    module: "docs"
+    assignee: "perf-analyzer"
+    dependencies: ["P1-R001"]
+    estimated_hours: 4
+    acceptance_criteria:
+      given: "Optimized implementation with performance metrics"
+      when: "Documenting performance characteristics"
+      then:
+        - "Benchmark results for different device tiers"
+        - "Performance optimization guide for developers"
+        - "Monitoring and alerting setup instructions"
+        - "Performance regression testing procedures"
+    documentation_requirements:
+      - "Benchmarks reproducible on target devices"
+      - "Performance targets clearly defined"
+    documentation_tasks:
+      - "Create performance benchmark suite"
+      - "Document optimization strategies"
+      - "Add performance monitoring setup"
+      - "Create regression testing guide"
+
+  - id: "P1-D003"
+    name: "Architecture & Design Documentation"
+    column: "documentation"
+    priority: "P2"
+    module: "docs"
+    assignee: "system-architect"
+    dependencies: ["P1-R003"]
+    estimated_hours: 8
+    acceptance_criteria:
+      given: "Completed Sprint P1 implementation"
+      when: "Documenting system architecture and design decisions"
+      then:
+        - "Architecture diagrams accurately reflect implementation"
+        - "Design decisions documented with rationale"
+        - "Module boundaries and responsibilities clear"
+        - "Future extension points identified"
+    documentation_requirements:
+      - "Architecture docs stay current with code"
+      - "Design decisions traceable to requirements"
+    documentation_tasks:
+      - "Create system architecture diagrams"
+      - "Document design patterns and decisions"
+      - "Add module dependency documentation"
+      - "Create extension and customization guide"
+
+# Definition of Done (DoD) Checklist
+definition_of_done:
+  code_quality:
+    - "Unit tests written and passing (>95% coverage)"
+    - "Integration tests passing"
+    - "Code review approved by senior developer"
+    - "Static analysis passes with no critical issues"
+    - "Performance benchmarks meet targets"
+    - "Memory leaks tested and resolved"
+
+  performance_compliance:
+    - "Inference latency <30ms @720p verified"
+    - "Overlay alignment error <2px verified"
+    - "Frame rate >20fps maintained"
+    - "Memory usage <200MB verified"
+    - "Battery impact acceptable (<5% increase)"
+
+  security_privacy:
+    - "No sensitive data logged"
+    - "API keys properly secured"
+    - "Network communications encrypted"
+    - "Privacy settings respected"
+    - "Offline mode functional"
+
+  documentation:
+    - "API documentation updated"
+    - "Architecture documentation current"
+    - "Performance characteristics documented"
+    - "Known limitations documented"
+    - "Setup and configuration guide complete"
+
+# SPARC Methodology Integration
+sparc_integration:
+  specification:
+    agent: "specification"
+    requirements: "Each task includes detailed Given-When-Then acceptance criteria"
+    stakeholder_alignment: "Performance targets align with user experience goals"
+
+  pseudocode:
+    agent: "pseudocode"
+    algorithm_design: "Core algorithms documented before implementation"
+    flow_documentation: "Data flow and control flow clearly specified"
+
+  architecture:
+    agent: "architecture"
+    system_design: "Module boundaries and interfaces defined"
+    performance_architecture: "Performance-critical paths identified"
+
+  refinement:
+    agent: "refinement"
+    tdd_cycle: "Red-Green-Refactor cycle enforced for each task"
+    continuous_improvement: "Regular refactoring tasks scheduled"
+
+  completion:
+    agent: "sparc-coord"
+    integration_testing: "End-to-end testing validates complete system"
+    performance_validation: "All targets verified before completion"
+
+# Success Metrics
+success_metrics:
+  technical:
+    - "All P0 tasks completed and verified"
+    - "Performance targets met consistently"
+    - "Test coverage >95% across all modules"
+    - "Zero critical security vulnerabilities"
+
+  user_experience:
+    - "Smooth pose detection and overlay rendering"
+    - "Responsive UI with no blocking operations"
+    - "Graceful handling of edge cases"
+    - "Stable performance across device orientations"
+
+  development_velocity:
+    - "Sprint completed within target timeframe"
+    - "Technical debt minimized"
+    - "Clear path to Sprint P2 identified"
+    - "Team velocity sustained or improved"

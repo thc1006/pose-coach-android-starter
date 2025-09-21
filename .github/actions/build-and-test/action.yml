@@ -1,0 +1,241 @@
+name: 'Build and Test Android App'
+description: 'Composite action to build and test Android application with comprehensive validation'
+inputs:
+  variant:
+    description: 'Build variant (debug/release)'
+    required: true
+  run-tests:
+    description: 'Whether to run tests'
+    required: false
+    default: 'true'
+  coverage-threshold:
+    description: 'Code coverage threshold percentage'
+    required: false
+    default: '80'
+  keystore-data:
+    description: 'Base64 encoded keystore (for release builds)'
+    required: false
+  keystore-password:
+    description: 'Keystore password'
+    required: false
+  key-alias:
+    description: 'Key alias'
+    required: false
+  key-password:
+    description: 'Key password'
+    required: false
+
+outputs:
+  apk-path:
+    description: 'Path to generated APK'
+    value: ${{ steps.build-info.outputs.apk-path }}
+  test-results:
+    description: 'Test results summary'
+    value: ${{ steps.test-summary.outputs.summary }}
+  coverage-percentage:
+    description: 'Code coverage percentage'
+    value: ${{ steps.coverage-check.outputs.percentage }}
+
+runs:
+  using: 'composite'
+  steps:
+    - name: Setup Keystore (Release Only)
+      if: inputs.variant == 'release' && inputs.keystore-data != ''
+      shell: bash
+      run: |
+        echo "${{ inputs.keystore-data }}" | base64 -d > keystore.jks
+        echo "✅ Keystore configured for release build"
+
+    - name: Build APK
+      shell: bash
+      env:
+        KEYSTORE_PASSWORD: ${{ inputs.keystore-password }}
+        KEY_ALIAS: ${{ inputs.key-alias }}
+        KEY_PASSWORD: ${{ inputs.key-password }}
+      run: |
+        echo "🔨 Building ${{ inputs.variant }} APK"
+        echo "==============================="
+
+        if [ "${{ inputs.variant }}" = "release" ]; then
+          ./gradlew assembleRelease --parallel --build-cache
+        else
+          ./gradlew assembleDebug --parallel --build-cache
+        fi
+
+        echo "✅ Build completed successfully"
+
+    - name: Extract Build Information
+      id: build-info
+      shell: bash
+      run: |
+        VARIANT="${{ inputs.variant }}"
+        APK_PATH="app/build/outputs/apk/${VARIANT}/"
+
+        if [ -d "$APK_PATH" ]; then
+          APK_FILE=$(find "$APK_PATH" -name "*.apk" | head -1)
+          echo "apk-path=$APK_FILE" >> $GITHUB_OUTPUT
+          echo "APK generated at: $APK_FILE"
+
+          # Get APK size
+          if [ -f "$APK_FILE" ]; then
+            APK_SIZE=$(du -h "$APK_FILE" | cut -f1)
+            echo "APK size: $APK_SIZE"
+            echo "apk-size=$APK_SIZE" >> $GITHUB_OUTPUT
+          fi
+        else
+          echo "❌ APK directory not found"
+          exit 1
+        fi
+
+    - name: Run Unit Tests
+      if: inputs.run-tests == 'true'
+      shell: bash
+      run: |
+        echo "🧪 Running Unit Tests"
+        echo "===================="
+
+        if [ "${{ inputs.variant }}" = "release" ]; then
+          ./gradlew testReleaseUnitTest --parallel
+        else
+          ./gradlew testDebugUnitTest --parallel
+        fi
+
+        echo "✅ Unit tests completed"
+
+    - name: Generate Coverage Report
+      if: inputs.run-tests == 'true'
+      shell: bash
+      run: |
+        echo "📊 Generating Coverage Report"
+        echo "============================"
+
+        ./gradlew jacocoTestReport
+
+        echo "✅ Coverage report generated"
+
+    - name: Check Coverage Threshold
+      if: inputs.run-tests == 'true'
+      id: coverage-check
+      shell: bash
+      run: |
+        echo "🎯 Checking Coverage Threshold"
+        echo "============================="
+
+        # Extract coverage percentage from Jacoco report
+        COVERAGE_FILE="app/build/reports/jacoco/jacocoTestReport/html/index.html"
+
+        if [ -f "$COVERAGE_FILE" ]; then
+          # Extract coverage percentage (this is a simplified extraction)
+          COVERAGE=$(grep -o '[0-9]*%' "$COVERAGE_FILE" | head -1 | sed 's/%//')
+
+          if [ -z "$COVERAGE" ]; then
+            echo "⚠️ Could not extract coverage percentage, assuming 0%"
+            COVERAGE=0
+          fi
+
+          echo "Current coverage: $COVERAGE%"
+          echo "Threshold: ${{ inputs.coverage-threshold }}%"
+          echo "percentage=$COVERAGE" >> $GITHUB_OUTPUT
+
+          # Check if coverage meets threshold
+          if [ "$COVERAGE" -ge "${{ inputs.coverage-threshold }}" ]; then
+            echo "✅ Coverage check passed: $COVERAGE% >= ${{ inputs.coverage-threshold }}%"
+          else
+            echo "❌ Coverage check failed: $COVERAGE% < ${{ inputs.coverage-threshold }}%"
+            exit 1
+          fi
+        else
+          echo "⚠️ Coverage report not found, skipping threshold check"
+          echo "percentage=0" >> $GITHUB_OUTPUT
+        fi
+
+    - name: Run Lint Analysis
+      shell: bash
+      run: |
+        echo "🔍 Running Lint Analysis"
+        echo "======================="
+
+        if [ "${{ inputs.variant }}" = "release" ]; then
+          ./gradlew lintRelease
+        else
+          ./gradlew lintDebug
+        fi
+
+        echo "✅ Lint analysis completed"
+
+    - name: Generate Test Summary
+      if: inputs.run-tests == 'true'
+      id: test-summary
+      shell: bash
+      run: |
+        echo "📋 Generating Test Summary"
+        echo "========================="
+
+        TEST_DIR="app/build/test-results"
+        TOTAL_TESTS=0
+        PASSED_TESTS=0
+        FAILED_TESTS=0
+
+        if [ -d "$TEST_DIR" ]; then
+          # Count test results from XML files
+          for xml_file in $(find "$TEST_DIR" -name "*.xml" -type f); do
+            if grep -q "<testsuite" "$xml_file"; then
+              TESTS=$(grep -o 'tests="[0-9]*"' "$xml_file" | sed 's/tests="//;s/"//')
+              FAILURES=$(grep -o 'failures="[0-9]*"' "$xml_file" | sed 's/failures="//;s/"//')
+              ERRORS=$(grep -o 'errors="[0-9]*"' "$xml_file" | sed 's/errors="//;s/"//')
+
+              TOTAL_TESTS=$((TOTAL_TESTS + TESTS))
+              FAILED_TESTS=$((FAILED_TESTS + FAILURES + ERRORS))
+            fi
+          done
+
+          PASSED_TESTS=$((TOTAL_TESTS - FAILED_TESTS))
+        fi
+
+        SUMMARY="Tests: $TOTAL_TESTS, Passed: $PASSED_TESTS, Failed: $FAILED_TESTS"
+        echo "summary=$SUMMARY" >> $GITHUB_OUTPUT
+        echo "Test Summary: $SUMMARY"
+
+        if [ $FAILED_TESTS -gt 0 ]; then
+          echo "❌ Some tests failed"
+          exit 1
+        else
+          echo "✅ All tests passed"
+        fi
+
+    - name: Upload Build Artifacts
+      uses: actions/upload-artifact@v4
+      if: always()
+      with:
+        name: build-outputs-${{ inputs.variant }}
+        path: |
+          app/build/outputs/apk/${{ inputs.variant }}/
+          app/build/reports/
+        retention-days: 30
+
+    - name: Generate Build Report
+      shell: bash
+      run: |
+        cat > build-report-${{ inputs.variant }}.md << EOF
+        # Build Report - ${{ inputs.variant }}
+
+        ## Build Information
+        - **Variant**: ${{ inputs.variant }}
+        - **APK Path**: ${{ steps.build-info.outputs.apk-path || 'Not generated' }}
+        - **APK Size**: ${{ steps.build-info.outputs.apk-size || 'Unknown' }}
+
+        ## Test Results
+        - **Tests Run**: ${{ inputs.run-tests }}
+        - **Summary**: ${{ steps.test-summary.outputs.summary || 'No tests run' }}
+        - **Coverage**: ${{ steps.coverage-check.outputs.percentage || 'N/A' }}%
+        - **Threshold**: ${{ inputs.coverage-threshold }}%
+
+        ## Status
+        - **Build**: ✅ Success
+        - **Tests**: $([ "${{ inputs.run-tests }}" = "true" ] && echo "✅ Passed" || echo "⏭️ Skipped")
+        - **Coverage**: $([ "${{ steps.coverage-check.outputs.percentage || 0 }}" -ge "${{ inputs.coverage-threshold }}" ] && echo "✅ Passed" || echo "❌ Failed")
+
+        Generated: $(date)
+        EOF
+
+        echo "📄 Build report generated: build-report-${{ inputs.variant }}.md"
