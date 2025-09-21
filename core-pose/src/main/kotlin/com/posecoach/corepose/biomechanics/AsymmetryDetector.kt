@@ -4,6 +4,7 @@ import com.posecoach.corepose.PoseLandmarks
 import com.posecoach.corepose.biomechanics.models.*
 import com.posecoach.corepose.models.PoseLandmarkResult
 import com.posecoach.coregeom.VectorUtils
+import com.posecoach.corepose.utils.averageOrNull
 import kotlin.math.*
 
 /**

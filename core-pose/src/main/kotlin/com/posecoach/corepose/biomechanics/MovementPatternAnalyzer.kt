@@ -5,6 +5,7 @@ import com.posecoach.corepose.biomechanics.models.*
 import com.posecoach.corepose.models.PoseLandmarkResult
 import com.posecoach.coregeom.AngleUtils
 import com.posecoach.coregeom.VectorUtils
+import com.posecoach.corepose.utils.averageOrNull
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
 import kotlin.math.*

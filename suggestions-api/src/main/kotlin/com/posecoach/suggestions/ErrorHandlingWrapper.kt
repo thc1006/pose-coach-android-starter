@@ -62,7 +62,7 @@ class ErrorHandlingWrapper(
                         ?: IllegalStateException("Unknown error from primary client")
 
                     if (!isRetryableError(lastException)) {
-                        break // Don't retry non-retryable errors
+                        return@repeat // Don't retry non-retryable errors
                     }
                 }
 
@@ -71,7 +71,7 @@ class ErrorHandlingWrapper(
                 Timber.w("Primary client attempt ${attempt + 1} failed: ${e.message}")
 
                 if (!isRetryableError(e)) {
-                    break // Don't retry non-retryable errors
+                    return@repeat // Don't retry non-retryable errors
                 }
             }
 

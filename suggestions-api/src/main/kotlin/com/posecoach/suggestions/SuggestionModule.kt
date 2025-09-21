@@ -1,6 +1,8 @@
 package com.posecoach.suggestions
 
 import android.content.Context
+import com.posecoach.suggestions.models.PrivacyLevel
+import timber.log.Timber
 
 /**
  * Dependency injection module for pose suggestion components
@@ -87,7 +89,7 @@ class SuggestionModule(private val context: Context) {
             rateLimitManager.reset()
         }
 
-        timber.log.Timber.d("SuggestionModule initialized")
+        Timber.d("SuggestionModule initialized")
     }
 
     /**
@@ -115,7 +117,7 @@ class SuggestionModule(private val context: Context) {
      */
     suspend fun shutdown() {
         // Perform any necessary cleanup
-        timber.log.Timber.d("SuggestionModule shutting down")
+        Timber.d("SuggestionModule shutting down")
     }
 }
 

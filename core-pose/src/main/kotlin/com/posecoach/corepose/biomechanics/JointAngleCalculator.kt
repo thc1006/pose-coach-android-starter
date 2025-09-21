@@ -164,7 +164,7 @@ class JointAngleCalculator {
     /**
      * Calculate knee flexion angle
      */
-    private fun calculateKneeAngle(landmarks: PoseLandmarkResult, isLeft: Boolean): JointAngle {
+    internal fun calculateKneeAngle(landmarks: PoseLandmarkResult, isLeft: Boolean): JointAngle {
         val hipIdx = if (isLeft) PoseLandmarks.LEFT_HIP else PoseLandmarks.RIGHT_HIP
         val kneeIdx = if (isLeft) PoseLandmarks.LEFT_KNEE else PoseLandmarks.RIGHT_KNEE
         val ankleIdx = if (isLeft) PoseLandmarks.LEFT_ANKLE else PoseLandmarks.RIGHT_ANKLE
@@ -222,7 +222,7 @@ class JointAngleCalculator {
     /**
      * Calculate spine alignment angle
      */
-    private fun calculateSpineAlignment(landmarks: PoseLandmarkResult): JointAngle {
+    internal fun calculateSpineAlignment(landmarks: PoseLandmarkResult): JointAngle {
         val nose = landmarks.worldLandmarks[PoseLandmarks.NOSE]
         val leftShoulder = landmarks.worldLandmarks[PoseLandmarks.LEFT_SHOULDER]
         val rightShoulder = landmarks.worldLandmarks[PoseLandmarks.RIGHT_SHOULDER]

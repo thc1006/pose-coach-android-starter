@@ -1,7 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
 <manifest xmlns:android="http://schemas.android.com/apk/res/android"
-    xmlns:tools="http://schemas.android.com/tools"
-    package="com.posecoach">
+    xmlns:tools="http://schemas.android.com/tools">
 
     <!-- Gemini Live API Required Permissions -->
     <uses-permission android:name="android.permission.INTERNET" />
@@ -29,16 +28,14 @@
 
     <application
         android:allowBackup="true"
-        android:dataExtractionRules="@xml/data_extraction_rules"
-        android:fullBackupContent="@xml/backup_rules"
-        android:icon="@mipmap/ic_launcher"
+        android:icon="@drawable/ic_launcher_foreground"
         android:label="@string/app_name"
         android:theme="@style/Theme.PoseCoach"
         tools:targetApi="31">
 
-        <!-- Main Live Coaching Activity -->
+        <!-- Main Activity - TDD Integration Entry Point -->
         <activity
-            android:name=".ui.activities.LiveCoachingActivity"
+            android:name=".MainActivity"
             android:exported="true"
             android:screenOrientation="portrait"
             android:theme="@style/Theme.PoseCoach.NoActionBar">
@@ -47,6 +44,20 @@
                 <category android:name="android.intent.category.LAUNCHER" />
             </intent-filter>
         </activity>
+
+        <!-- Enhanced Camera Activity -->
+        <activity
+            android:name=".app.camera.CameraActivity"
+            android:exported="false"
+            android:screenOrientation="portrait"
+            android:theme="@style/Theme.PoseCoach.NoActionBar" />
+
+        <!-- Main Live Coaching Activity -->
+        <activity
+            android:name=".ui.activities.LiveCoachingActivity"
+            android:exported="false"
+            android:screenOrientation="portrait"
+            android:theme="@style/Theme.PoseCoach.NoActionBar" />
 
         <!-- Settings Activity -->
         <activity
@@ -66,6 +77,12 @@
             android:name=".services.PoseAnalysisService"
             android:enabled="true"
             android:exported="false" />
+
+        <!-- BlockCanary fix for Android 12+ -->
+        <activity
+            android:name="com.github.moduth.blockcanary.ui.DisplayActivity"
+            android:exported="false"
+            tools:node="merge" />
 
     </application>
 </manifest>

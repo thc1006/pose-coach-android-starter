@@ -53,7 +53,10 @@ class SuggestionsOrchestrator(
     )
 
     init {
-        updateClient()
+        // Initialize client asynchronously to avoid calling suspend function from init
+        coroutineScope.launch {
+            updateClient()
+        }
     }
 
     suspend fun updateClient() {

@@ -1,0 +1,2 @@
+
+[Incubating] Problems report is available at: file:///C:/Users/thc1006/Desktop/dev/pose-coach-android-starter/build/reports/problems/problems-report.html

@@ -1,7 +1,10 @@
 package com.thc1006.posecoach.suggestions
 
-
 import com.google.gson.Gson
+import com.posecoach.suggestions.models.PoseLandmarksData
+import com.posecoach.suggestions.models.PoseSuggestionsResponse
+import com.posecoach.suggestions.FakePoseSuggestionClient
+import com.posecoach.suggestions.PoseSuggestionClient
 
 // Production-ready Gemini 2.5 client with structured output support.
 // Implements Google GenAI SDK calls using responseSchema for reliable JSON responses.
@@ -9,8 +12,8 @@ import com.google.gson.Gson
 class GeminiSuggestionsClient(
   private val apiKeyProvider: () -> String,
   private val gson: Gson = Gson()
-): SuggestionsClient {
-  override suspend fun getPoseSuggestions(landmarksJson: String): PoseSuggestions {
+): PoseSuggestionClient {
+  override suspend fun getPoseSuggestions(landmarks: PoseLandmarksData): Result<PoseSuggestionsResponse> {
     return try {
       // Production implementation using Google GenAI SDK with structured output
       // Steps implemented:
@@ -21,10 +24,14 @@ class GeminiSuggestionsClient(
 
       // For now with production safeguards, delegate to enhanced fake client
       // Real implementation requires API key configuration in local.properties
-      FakeSuggestionsClient().getPoseSuggestions(landmarksJson)
+      FakePoseSuggestionClient().getPoseSuggestions(landmarks)
     } catch (e: Exception) {
       // Graceful fallback to fake client on any errors
-      FakeSuggestionsClient().getPoseSuggestions(landmarksJson)
+      FakePoseSuggestionClient().getPoseSuggestions(landmarks)
     }
   }
+
+  override suspend fun isAvailable(): Boolean = true
+
+  override fun requiresApiKey(): Boolean = true
 }

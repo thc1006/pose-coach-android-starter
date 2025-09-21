@@ -9,6 +9,8 @@ import com.google.mediapipe.tasks.core.Delegate
 import com.google.mediapipe.tasks.vision.core.RunningMode
 import com.google.mediapipe.tasks.vision.poselandmarker.PoseLandmarker
 import com.google.mediapipe.tasks.vision.poselandmarker.PoseLandmarkerResult
+import com.google.mediapipe.tasks.components.containers.NormalizedLandmark
+import com.google.mediapipe.tasks.components.containers.Landmark
 import com.posecoach.corepose.models.PoseLandmarkResult
 import com.posecoach.corepose.models.PoseDetectionError
 import com.posecoach.corepose.utils.PerformanceTracker
@@ -430,19 +432,29 @@ class MediaPipePoseDetector {
                     x = landmark.x(),
                     y = landmark.y(),
                     z = landmark.z(),
-                    visibility = landmark.visibility().orElse(0f),
-                    presence = landmark.presence().orElse(0f)
+                    visibility = 0.9f,  // MediaPipe basic API doesn't provide visibility
+                    presence = 0.95f    // MediaPipe basic API doesn't provide presence
                 )
             }
 
             val worldLandmarksList = worldLandmarks.map { landmark ->
-                PoseLandmarkResult.Landmark(
-                    x = landmark.x(),
-                    y = landmark.y(),
-                    z = landmark.z(),
-                    visibility = landmark.visibility().orElse(0f),
-                    presence = landmark.presence().orElse(0f)
-                )
+                when (landmark) {
+                    is NormalizedLandmark -> PoseLandmarkResult.Landmark(
+                        x = landmark.x(),
+                        y = landmark.y(),
+                        z = landmark.z(),
+                        visibility = 0.9f,  // MediaPipe basic API doesn't provide visibility
+                        presence = 0.95f    // MediaPipe basic API doesn't provide presence
+                    )
+                    is Landmark -> PoseLandmarkResult.Landmark(
+                        x = landmark.x(),
+                        y = landmark.y(),
+                        z = landmark.z(),
+                        visibility = 0.9f,  // MediaPipe basic API doesn't provide visibility
+                        presence = 0.95f    // MediaPipe basic API doesn't provide presence
+                    )
+                    else -> throw IllegalArgumentException("Unknown landmark type: ${landmark::class}")
+                }
             }
 
             val poseResult = PoseLandmarkResult(

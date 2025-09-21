@@ -1,7 +1,7 @@
 plugins {
     id("com.android.library")
     id("org.jetbrains.kotlin.android")
-    id("org.jetbrains.kotlin.plugin.serialization") version "1.9.20"
+    id("org.jetbrains.kotlin.plugin.serialization") version "1.9.22"
 }
 
 android {
@@ -10,19 +10,11 @@ android {
 
     defaultConfig {
         minSdk = 24
-        targetSdk = 34
 
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
 
-        // Load API key from local.properties
-        val localProperties = java.util.Properties()
-        val localPropertiesFile = rootProject.file("local.properties")
-        if (localPropertiesFile.exists()) {
-            localPropertiesFile.inputStream().use { localProperties.load(it) }
-        }
-
-        buildConfigField("String", "GEMINI_API_KEY",
-            "\"${localProperties.getProperty("gemini.api.key", "") ?: System.getenv("GEMINI_API_KEY") ?: ""}\"")
+        // Simple API key configuration for now
+        buildConfigField("String", "GEMINI_API_KEY", "\"\"")
     }
 
     buildTypes {
@@ -57,12 +49,13 @@ dependencies {
     implementation("com.google.ai.client.generativeai:generativeai:0.9.0")
 
     // Kotlin & Coroutines
-    implementation("org.jetbrains.kotlin:kotlin-stdlib:1.9.20")
+    implementation("org.jetbrains.kotlin:kotlin-stdlib:1.9.22")
     implementation("org.jetbrains.kotlinx:kotlinx-coroutines-android:1.7.3")
     implementation("org.jetbrains.kotlinx:kotlinx-coroutines-core:1.7.3")
 
     // JSON Serialization
     implementation("org.jetbrains.kotlinx:kotlinx-serialization-json:1.6.0")
+    implementation("com.google.code.gson:gson:2.10.1")
 
     // Networking (for direct API calls)
     implementation("com.squareup.okhttp3:okhttp:4.12.0")

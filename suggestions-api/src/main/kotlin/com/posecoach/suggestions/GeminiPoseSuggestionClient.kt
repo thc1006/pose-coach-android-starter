@@ -43,41 +43,32 @@ class GeminiPoseSuggestionClient(
                     type = FunctionType.OBJECT,
                     properties = mapOf(
                         "suggestions" to Schema(
+                            name = "suggestions",
                             type = FunctionType.ARRAY,
                             description = "Array of exactly 3 pose improvement suggestions",
-                            minItems = 3,
-                            maxItems = 3,
                             items = Schema(
+                                name = "suggestion",
                                 type = FunctionType.OBJECT,
                                 description = "Individual pose suggestion with title, instruction, and target landmarks",
                                 properties = mapOf(
                                     "title" to Schema(
+                                        name = "title",
                                         type = FunctionType.STRING,
-                                        description = "Concise title (20-50 characters) describing the improvement",
-                                        minLength = 5,
-                                        maxLength = 50
+                                        description = "Concise title describing the improvement"
                                     ),
                                     "instruction" to Schema(
+                                        name = "instruction",
                                         type = FunctionType.STRING,
-                                        description = "Detailed, actionable instruction (50-200 characters) for pose improvement",
-                                        minLength = 30,
-                                        maxLength = 200
+                                        description = "Detailed, actionable instruction for pose improvement"
                                     ),
                                     "target_landmarks" to Schema(
+                                        name = "target_landmarks",
                                         type = FunctionType.ARRAY,
-                                        description = "Array of 2-6 MediaPipe landmark names to focus on",
-                                        minItems = 2,
-                                        maxItems = 6,
+                                        description = "Array of MediaPipe landmark names to focus on",
                                         items = Schema(
+                                            name = "landmark",
                                             type = FunctionType.STRING,
-                                            description = "MediaPipe landmark name (e.g., LEFT_SHOULDER, RIGHT_HIP)",
-                                            enum = listOf(
-                                                "NOSE", "LEFT_EYE", "RIGHT_EYE", "LEFT_EAR", "RIGHT_EAR",
-                                                "LEFT_SHOULDER", "RIGHT_SHOULDER", "LEFT_ELBOW", "RIGHT_ELBOW",
-                                                "LEFT_WRIST", "RIGHT_WRIST", "LEFT_HIP", "RIGHT_HIP",
-                                                "LEFT_KNEE", "RIGHT_KNEE", "LEFT_ANKLE", "RIGHT_ANKLE",
-                                                "LEFT_INDEX", "RIGHT_INDEX", "LEFT_THUMB", "RIGHT_THUMB"
-                                            )
+                                            description = "MediaPipe landmark name"
                                         )
                                     )
                                 ),
@@ -176,7 +167,6 @@ Response must be valid JSON matching the exact schema structure.
 
                 // Record successful request
                 rateLimitManager.recordSuccess()
-                apiKeyManager.markApiKeyAsValidated(true)
 
                 Timber.d("Successfully processed ${validatedSuggestions.suggestions.size} suggestions")
                 Result.success(validatedSuggestions)
@@ -188,7 +178,6 @@ Response must be valid JSON matching the exact schema structure.
             } catch (e: Exception) {
                 Timber.e(e, "Error getting suggestions from Gemini")
                 rateLimitManager.recordFailure(e)
-                apiKeyManager.markApiKeyAsValidated(false)
                 Result.failure(e)
             }
         }
@@ -214,8 +203,8 @@ Response must be valid JSON matching the exact schema structure.
             return false
         }
 
-        // Use cached validation result if recent
-        if (apiKeyManager.isApiKeyRecentlyValidated()) {
+        // Use API key validation
+        if (apiKeyManager.hasValidApiKey()) {
             return true
         }
 
@@ -227,7 +216,7 @@ Response must be valid JSON matching the exact schema structure.
                     val response = testModel.generateContent("test")
                     val isAvailable = response.text != null
 
-                    apiKeyManager.markApiKeyAsValidated(isAvailable)
+                    // Test completed
                     Timber.d("Gemini API availability test: $isAvailable")
 
                     isAvailable
@@ -235,7 +224,7 @@ Response must be valid JSON matching the exact schema structure.
             }
         } catch (e: Exception) {
             Timber.e(e, "Gemini API not available")
-            apiKeyManager.markApiKeyAsValidated(false)
+            // Test failed
             false
         }
     }
@@ -252,8 +241,8 @@ Response must be valid JSON matching the exact schema structure.
 
         return GeminiClientStatus(
             hasApiKey = !apiKey.isNullOrBlank(),
-            apiKeySource = apiKeyManager.getApiKeySource(),
-            isApiKeyValidated = apiKeyManager.isApiKeyRecentlyValidated(),
+            apiKeySource = "configured",
+            isApiKeyValidated = apiKeyManager.hasValidApiKey(),
             hasPrivacyConsent = privacyStatus.hasConsent,
             rateLimitStatus = rateLimitStatus,
             privacyLevel = PrivacyLevel.STANDARD
@@ -298,7 +287,7 @@ Response must be valid JSON matching the exact schema structure.
         val hasPrivacyConsent: Boolean,
         val rateLimitStatus: RateLimitStatus,
         val privacyLevel: PrivacyLevel
-    )}
+    )
 
     private fun buildPrompt(landmarks: PoseLandmarksData, landmarksJson: String): String {
         val poseAnalysis = analyzePoseContext(landmarks)

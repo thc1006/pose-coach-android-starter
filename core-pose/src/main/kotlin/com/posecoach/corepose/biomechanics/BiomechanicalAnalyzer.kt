@@ -6,6 +6,8 @@ import com.posecoach.corepose.models.PoseLandmarkResult
 import com.posecoach.corepose.utils.PerformanceTracker
 import com.posecoach.coregeom.AngleUtils
 import com.posecoach.coregeom.VectorUtils
+import com.posecoach.corepose.utils.measureOperation
+import com.posecoach.corepose.utils.toMap
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.SupervisorJob
@@ -38,9 +40,9 @@ class BiomechanicalAnalyzer(
     val analysisResults: StateFlow<BiomechanicalAnalysisResult?> = _analysisResults.asStateFlow()
 
     // Configuration
-    private val jointAngleCalculator = JointAngleCalculator()
-    private val asymmetryDetector = AsymmetryDetector()
-    private val posturalAssessment = PosturalAssessment()
+    internal val jointAngleCalculator = JointAngleCalculator()
+    internal val asymmetryDetector = AsymmetryDetector()
+    internal val posturalAssessment = PosturalAssessment()
     private val movementPatternAnalyzer = MovementPatternAnalyzer()
 
     // Temporal tracking for kinetic chain analysis
@@ -552,7 +554,7 @@ class BiomechanicalAnalyzer(
      * Get current analysis performance metrics
      */
     fun getPerformanceMetrics(): Map<String, Double> {
-        return performanceTracker.getMetrics()
+        return performanceTracker.getMetrics().toMap()
     }
 }
 

@@ -1,1 +1,317 @@
-package com.posecoach.suggestions\n\nimport android.content.Context\nimport com.posecoach.suggestions.models.PoseLandmarksData\nimport com.posecoach.suggestions.models.PoseSuggestionsResponse\nimport kotlinx.coroutines.sync.Mutex\nimport kotlinx.coroutines.sync.withLock\nimport kotlinx.serialization.encodeToString\nimport kotlinx.serialization.json.Json\nimport timber.log.Timber\nimport java.io.File\nimport java.security.MessageDigest\nimport kotlin.math.abs\n\n/**\n * Intelligent response caching system for pose suggestions\n * Uses pose similarity hashing and LRU eviction with persistence\n */\nclass ResponseCacheManager(private val context: Context) {\n    \n    private val mutex = Mutex()\n    private val memoryCache = mutableMapOf<String, CacheEntry>()\n    private val accessOrder = mutableListOf<String>() // For LRU tracking\n    \n    private val json = Json {\n        ignoreUnknownKeys = true\n        isLenient = true\n        prettyPrint = false\n    }\n    \n    private val cacheDir by lazy {\n        File(context.cacheDir, \"pose_suggestions\").apply {\n            if (!exists()) mkdirs()\n        }\n    }\n    \n    companion object {\n        private const val MAX_MEMORY_CACHE_SIZE = 50\n        private const val MAX_DISK_CACHE_SIZE = 200\n        private const val CACHE_VERSION = 1\n        private const val CACHE_TTL_MS = 60 * 60 * 1000L // 1 hour\n        private const val POSE_SIMILARITY_THRESHOLD = 0.15f // 15% difference threshold\n        private const val INDEX_FILE_NAME = \"cache_index.json\"\n    }\n    \n    init {\n        // Load cache index on initialization\n        loadCacheIndex()\n    }\n    \n    /**\n     * Get cached suggestions for similar pose\n     * @param landmarks The pose landmarks to find suggestions for\n     * @return Cached suggestions if found and valid, null otherwise\n     */\n    suspend fun getCachedSuggestions(landmarks: PoseLandmarksData): PoseSuggestionsResponse? {\n        return mutex.withLock {\n            val poseHash = calculatePoseHash(landmarks)\n            \n            // Try exact match first\n            val exactMatch = memoryCache[poseHash]\n            if (exactMatch != null && !exactMatch.isExpired()) {\n                updateAccessOrder(poseHash)\n                Timber.d(\"Cache hit (exact): $poseHash\")\n                return@withLock exactMatch.response\n            }\n            \n            // Try similarity matching\n            val similarEntry = findSimilarCachedPose(landmarks)\n            if (similarEntry != null) {\n                updateAccessOrder(similarEntry.first)\n                Timber.d(\"Cache hit (similar): ${similarEntry.first} for $poseHash\")\n                return@withLock similarEntry.second.response\n            }\n            \n            // Try loading from disk\n            val diskEntry = loadFromDisk(poseHash)\n            if (diskEntry != null && !diskEntry.isExpired()) {\n                memoryCache[poseHash] = diskEntry\n                updateAccessOrder(poseHash)\n                Timber.d(\"Cache hit (disk): $poseHash\")\n                return@withLock diskEntry.response\n            }\n            \n            Timber.d(\"Cache miss: $poseHash\")\n            null\n        }\n    }\n    \n    /**\n     * Cache pose suggestions with intelligent similarity grouping\n     */\n    suspend fun cacheSuggestions(\n        landmarks: PoseLandmarksData,\n        response: PoseSuggestionsResponse\n    ) {\n        mutex.withLock {\n            val poseHash = calculatePoseHash(landmarks)\n            val entry = CacheEntry(\n                poseHash = poseHash,\n                landmarks = landmarks,\n                response = response,\n                timestamp = System.currentTimeMillis(),\n                accessCount = 1\n            )\n            \n            // Add to memory cache\n            memoryCache[poseHash] = entry\n            updateAccessOrder(poseHash)\n            \n            // Persist to disk\n            saveToDisk(poseHash, entry)\n            \n            // Cleanup if needed\n            if (memoryCache.size > MAX_MEMORY_CACHE_SIZE) {\n                evictLeastRecentlyUsed()\n            }\n            \n            Timber.d(\"Cached suggestions for pose: $poseHash\")\n        }\n    }\n    \n    /**\n     * Get cache statistics\n     */\n    suspend fun getCacheStats(): CacheStats {\n        return mutex.withLock {\n            val diskFiles = cacheDir.listFiles()?.size ?: 0\n            val totalMemorySize = memoryCache.size\n            val expiredCount = memoryCache.values.count { it.isExpired() }\n            \n            CacheStats(\n                memoryEntries = totalMemorySize,\n                diskEntries = diskFiles,\n                expiredEntries = expiredCount,\n                hitRate = calculateHitRate(),\n                totalSize = estimateCacheSize()\n            )\n        }\n    }\n    \n    /**\n     * Clear all cached data\n     */\n    suspend fun clearCache() {\n        mutex.withLock {\n            memoryCache.clear()\n            accessOrder.clear()\n            cacheDir.deleteRecursively()\n            cacheDir.mkdirs()\n            Timber.d(\"Cache cleared\")\n        }\n    }\n    \n    /**\n     * Clean expired entries\n     */\n    suspend fun cleanExpiredEntries() {\n        mutex.withLock {\n            val expiredKeys = memoryCache.filterValues { it.isExpired() }.keys\n            expiredKeys.forEach { key ->\n                memoryCache.remove(key)\n                accessOrder.remove(key)\n                File(cacheDir, \"$key.json\").delete()\n            }\n            \n            Timber.d(\"Cleaned ${expiredKeys.size} expired entries\")\n        }\n    }\n    \n    private fun calculatePoseHash(landmarks: PoseLandmarksData): String {\n        // Use key landmarks for hashing (torso and head for stability)\n        val keyLandmarks = landmarks.landmarks.filter { landmark ->\n            landmark.index in listOf(0, 11, 12, 23, 24) // nose, shoulders, hips\n        }\n        \n        val hashInput = keyLandmarks.joinToString(\",\") { landmark ->\n            \"${(landmark.x * 100).toInt()}_${(landmark.y * 100).toInt()}\"\n        }\n        \n        return MessageDigest.getInstance(\"SHA-256\")\n            .digest(hashInput.toByteArray())\n            .joinToString(\"\") { \"%02x\".format(it) }\n            .take(16) // Use first 16 characters\n    }\n    \n    private fun findSimilarCachedPose(landmarks: PoseLandmarksData): Pair<String, CacheEntry>? {\n        return memoryCache.entries.find { (_, entry) ->\n            !entry.isExpired() && isPoseSimilar(landmarks, entry.landmarks)\n        }?.let { it.key to it.value }\n    }\n    \n    private fun isPoseSimilar(pose1: PoseLandmarksData, pose2: PoseLandmarksData): Boolean {\n        if (pose1.landmarks.size != pose2.landmarks.size) return false\n        \n        // Compare key landmarks only for efficiency\n        val keyIndices = listOf(0, 11, 12, 15, 16, 23, 24) // nose, shoulders, wrists, hips\n        \n        val differences = keyIndices.mapNotNull { index ->\n            val landmark1 = pose1.landmarks.find { it.index == index }\n            val landmark2 = pose2.landmarks.find { it.index == index }\n            \n            if (landmark1 != null && landmark2 != null) {\n                val xDiff = abs(landmark1.x - landmark2.x)\n                val yDiff = abs(landmark1.y - landmark2.y)\n                kotlin.math.sqrt((xDiff * xDiff + yDiff * yDiff).toDouble()).toFloat()\n            } else null\n        }\n        \n        val avgDifference = differences.average().toFloat()\n        return avgDifference < POSE_SIMILARITY_THRESHOLD\n    }\n    \n    private fun updateAccessOrder(key: String) {\n        accessOrder.remove(key)\n        accessOrder.add(key)\n        \n        memoryCache[key]?.let { entry ->\n            memoryCache[key] = entry.copy(accessCount = entry.accessCount + 1)\n        }\n    }\n    \n    private fun evictLeastRecentlyUsed() {\n        if (accessOrder.isNotEmpty()) {\n            val lruKey = accessOrder.removeAt(0)\n            memoryCache.remove(lruKey)\n            Timber.d(\"Evicted LRU entry: $lruKey\")\n        }\n    }\n    \n    private fun saveToDisk(key: String, entry: CacheEntry) {\n        try {\n            val file = File(cacheDir, \"$key.json\")\n            val cacheData = DiskCacheEntry(\n                version = CACHE_VERSION,\n                poseHash = entry.poseHash,\n                response = entry.response,\n                timestamp = entry.timestamp,\n                accessCount = entry.accessCount\n            )\n            \n            file.writeText(json.encodeToString(cacheData))\n        } catch (e: Exception) {\n            Timber.w(e, \"Failed to save cache entry to disk: $key\")\n        }\n    }\n    \n    private fun loadFromDisk(key: String): CacheEntry? {\n        return try {\n            val file = File(cacheDir, \"$key.json\")\n            if (!file.exists()) return null\n            \n            val cacheData = json.decodeFromString<DiskCacheEntry>(file.readText())\n            if (cacheData.version != CACHE_VERSION) {\n                file.delete()\n                return null\n            }\n            \n            // Create minimal landmarks data for the entry\n            val landmarks = PoseLandmarksData(emptyList(), cacheData.timestamp)\n            \n            CacheEntry(\n                poseHash = cacheData.poseHash,\n                landmarks = landmarks,\n                response = cacheData.response,\n                timestamp = cacheData.timestamp,\n                accessCount = cacheData.accessCount\n            )\n        } catch (e: Exception) {\n            Timber.w(e, \"Failed to load cache entry from disk: $key\")\n            null\n        }\n    }\n    \n    private fun loadCacheIndex() {\n        // Implementation for loading cache index\n        // This would restore access order and metadata\n    }\n    \n    private fun calculateHitRate(): Float {\n        // This would track hit/miss ratio over time\n        return 0.0f // Placeholder\n    }\n    \n    private fun estimateCacheSize(): Long {\n        return cacheDir.walkTopDown().filter { it.isFile }.map { it.length() }.sum()\n    }\n    \n    private data class CacheEntry(\n        val poseHash: String,\n        val landmarks: PoseLandmarksData,\n        val response: PoseSuggestionsResponse,\n        val timestamp: Long,\n        val accessCount: Int\n    ) {\n        fun isExpired(): Boolean {\n            return System.currentTimeMillis() - timestamp > CACHE_TTL_MS\n        }\n    }\n    \n    @kotlinx.serialization.Serializable\n    private data class DiskCacheEntry(\n        val version: Int,\n        val poseHash: String,\n        val response: PoseSuggestionsResponse,\n        val timestamp: Long,\n        val accessCount: Int\n    )\n}\n\ndata class CacheStats(\n    val memoryEntries: Int,\n    val diskEntries: Int,\n    val expiredEntries: Int,\n    val hitRate: Float,\n    val totalSize: Long\n)"
+package com.posecoach.suggestions
+
+import android.content.Context
+import com.posecoach.suggestions.models.PoseLandmarksData
+import com.posecoach.suggestions.models.PoseSuggestionsResponse
+import kotlinx.coroutines.sync.Mutex
+import kotlinx.coroutines.sync.withLock
+import kotlinx.serialization.encodeToString
+import kotlinx.serialization.json.Json
+import timber.log.Timber
+import java.io.File
+import java.security.MessageDigest
+import kotlin.math.abs
+
+/**
+ * Intelligent response caching system for pose suggestions
+ * Uses pose similarity hashing and LRU eviction with persistence
+ */
+class ResponseCacheManager(private val context: Context) {
+
+    private val mutex = Mutex()
+    private val memoryCache = mutableMapOf<String, CacheEntry>()
+    private val accessOrder = mutableListOf<String>() // For LRU tracking
+
+    private val json = Json {
+        ignoreUnknownKeys = true
+        isLenient = true
+        prettyPrint = false
+    }
+
+    private val cacheDir by lazy {
+        File(context.cacheDir, "pose_suggestions").apply {
+            if (!exists()) mkdirs()
+        }
+    }
+
+    companion object {
+        private const val MAX_MEMORY_CACHE_SIZE = 50
+        private const val MAX_DISK_CACHE_SIZE = 200
+        private const val CACHE_VERSION = 1
+        private const val CACHE_TTL_MS = 60 * 60 * 1000L // 1 hour
+        private const val POSE_SIMILARITY_THRESHOLD = 0.15f // 15% difference threshold
+        private const val INDEX_FILE_NAME = "cache_index.json"
+    }
+
+    init {
+        // Load cache index on initialization
+        loadCacheIndex()
+    }
+
+    /**
+     * Get cached suggestions for similar pose
+     * @param landmarks The pose landmarks to find suggestions for
+     * @return Cached suggestions if found and valid, null otherwise
+     */
+    suspend fun getCachedSuggestions(landmarks: PoseLandmarksData): PoseSuggestionsResponse? {
+        return mutex.withLock {
+            val poseHash = calculatePoseHash(landmarks)
+
+            // Try exact match first
+            val exactMatch = memoryCache[poseHash]
+            if (exactMatch != null && !exactMatch.isExpired()) {
+                updateAccessOrder(poseHash)
+                Timber.d("Cache hit (exact): $poseHash")
+                return@withLock exactMatch.response
+            }
+
+            // Try similarity matching
+            val similarEntry = findSimilarCachedPose(landmarks)
+            if (similarEntry != null) {
+                updateAccessOrder(similarEntry.first)
+                Timber.d("Cache hit (similar): ${similarEntry.first} for $poseHash")
+                return@withLock similarEntry.second.response
+            }
+
+            // Try loading from disk
+            val diskEntry = loadFromDisk(poseHash)
+            if (diskEntry != null && !diskEntry.isExpired()) {
+                memoryCache[poseHash] = diskEntry
+                updateAccessOrder(poseHash)
+                Timber.d("Cache hit (disk): $poseHash")
+                return@withLock diskEntry.response
+            }
+
+            Timber.d("Cache miss: $poseHash")
+            null
+        }
+    }
+
+    /**
+     * Cache pose suggestions with intelligent similarity grouping
+     */
+    suspend fun cacheSuggestions(
+        landmarks: PoseLandmarksData,
+        response: PoseSuggestionsResponse
+    ) {
+        mutex.withLock {
+            val poseHash = calculatePoseHash(landmarks)
+            val entry = CacheEntry(
+                poseHash = poseHash,
+                landmarks = landmarks,
+                response = response,
+                timestamp = System.currentTimeMillis(),
+                accessCount = 1
+            )
+
+            // Add to memory cache
+            memoryCache[poseHash] = entry
+            updateAccessOrder(poseHash)
+
+            // Persist to disk
+            saveToDisk(poseHash, entry)
+
+            // Cleanup if needed
+            if (memoryCache.size > MAX_MEMORY_CACHE_SIZE) {
+                evictLeastRecentlyUsed()
+            }
+
+            Timber.d("Cached suggestions for pose: $poseHash")
+        }
+    }
+
+    /**
+     * Get cache statistics
+     */
+    suspend fun getCacheStats(): CacheStats {
+        return mutex.withLock {
+            val diskFiles = cacheDir.listFiles()?.size ?: 0
+            val totalMemorySize = memoryCache.size
+            val expiredCount = memoryCache.values.count { it.isExpired() }
+
+            CacheStats(
+                memoryEntries = totalMemorySize,
+                diskEntries = diskFiles,
+                expiredEntries = expiredCount,
+                hitRate = calculateHitRate(),
+                totalSize = estimateCacheSize()
+            )
+        }
+    }
+
+    /**
+     * Clear all cached data
+     */
+    suspend fun clearCache() {
+        mutex.withLock {
+            memoryCache.clear()
+            accessOrder.clear()
+            cacheDir.deleteRecursively()
+            cacheDir.mkdirs()
+            Timber.d("Cache cleared")
+        }
+    }
+
+    /**
+     * Clean expired entries
+     */
+    suspend fun cleanExpiredEntries() {
+        mutex.withLock {
+            val expiredKeys = memoryCache.filterValues { it.isExpired() }.keys
+            expiredKeys.forEach { key ->
+                memoryCache.remove(key)
+                accessOrder.remove(key)
+                File(cacheDir, "$key.json").delete()
+            }
+
+            Timber.d("Cleaned ${expiredKeys.size} expired entries")
+        }
+    }
+
+    private fun calculatePoseHash(landmarks: PoseLandmarksData): String {
+        // Use key landmarks for hashing (torso and head for stability)
+        val keyLandmarks = landmarks.landmarks.filter { landmark ->
+            landmark.index in listOf(0, 11, 12, 23, 24) // nose, shoulders, hips
+        }
+
+        val hashInput = keyLandmarks.joinToString(",") { landmark ->
+            "${(landmark.x * 100).toInt()}_${(landmark.y * 100).toInt()}"
+        }
+
+        return MessageDigest.getInstance("SHA-256")
+            .digest(hashInput.toByteArray())
+            .joinToString("") { "%02x".format(it) }
+            .take(16) // Use first 16 characters
+    }
+
+    private fun findSimilarCachedPose(landmarks: PoseLandmarksData): Pair<String, CacheEntry>? {
+        return memoryCache.entries.find { (_, entry) ->
+            !entry.isExpired() && isPoseSimilar(landmarks, entry.landmarks)
+        }?.let { it.key to it.value }
+    }
+
+    private fun isPoseSimilar(pose1: PoseLandmarksData, pose2: PoseLandmarksData): Boolean {
+        if (pose1.landmarks.size != pose2.landmarks.size) return false
+
+        // Compare key landmarks only for efficiency
+        val keyIndices = listOf(0, 11, 12, 15, 16, 23, 24) // nose, shoulders, wrists, hips
+
+        val differences = keyIndices.mapNotNull { index ->
+            val landmark1 = pose1.landmarks.find { it.index == index }
+            val landmark2 = pose2.landmarks.find { it.index == index }
+
+            if (landmark1 != null && landmark2 != null) {
+                val xDiff = abs(landmark1.x - landmark2.x)
+                val yDiff = abs(landmark1.y - landmark2.y)
+                kotlin.math.sqrt((xDiff * xDiff + yDiff * yDiff).toDouble()).toFloat()
+            } else null
+        }
+
+        val avgDifference = differences.average().toFloat()
+        return avgDifference < POSE_SIMILARITY_THRESHOLD
+    }
+
+    private fun updateAccessOrder(key: String) {
+        accessOrder.remove(key)
+        accessOrder.add(key)
+
+        memoryCache[key]?.let { entry ->
+            memoryCache[key] = entry.copy(accessCount = entry.accessCount + 1)
+        }
+    }
+
+    private fun evictLeastRecentlyUsed() {
+        if (accessOrder.isNotEmpty()) {
+            val lruKey = accessOrder.removeAt(0)
+            memoryCache.remove(lruKey)
+            Timber.d("Evicted LRU entry: $lruKey")
+        }
+    }
+
+    private fun saveToDisk(key: String, entry: CacheEntry) {
+        try {
+            val file = File(cacheDir, "$key.json")
+            val cacheData = DiskCacheEntry(
+                version = CACHE_VERSION,
+                poseHash = entry.poseHash,
+                response = entry.response,
+                timestamp = entry.timestamp,
+                accessCount = entry.accessCount
+            )
+
+            file.writeText(json.encodeToString(cacheData))
+        } catch (e: Exception) {
+            Timber.w(e, "Failed to save cache entry to disk: $key")
+        }
+    }
+
+    private fun loadFromDisk(key: String): CacheEntry? {
+        return try {
+            val file = File(cacheDir, "$key.json")
+            if (!file.exists()) return null
+
+            val cacheData = json.decodeFromString<DiskCacheEntry>(file.readText())
+            if (cacheData.version != CACHE_VERSION) {
+                file.delete()
+                return null
+            }
+
+            // Create minimal landmarks data for the entry
+            val landmarks = PoseLandmarksData(emptyList(), cacheData.timestamp)
+
+            CacheEntry(
+                poseHash = cacheData.poseHash,
+                landmarks = landmarks,
+                response = cacheData.response,
+                timestamp = cacheData.timestamp,
+                accessCount = cacheData.accessCount
+            )
+        } catch (e: Exception) {
+            Timber.w(e, "Failed to load cache entry from disk: $key")
+            null
+        }
+    }
+
+    private fun loadCacheIndex() {
+        // Implementation for loading cache index
+        // This would restore access order and metadata
+    }
+
+    private fun calculateHitRate(): Float {
+        // This would track hit/miss ratio over time
+        return 0.0f // Placeholder
+    }
+
+    private fun estimateCacheSize(): Long {
+        return cacheDir.walkTopDown().filter { it.isFile }.map { it.length() }.sum()
+    }
+
+    private data class CacheEntry(
+        val poseHash: String,
+        val landmarks: PoseLandmarksData,
+        val response: PoseSuggestionsResponse,
+        val timestamp: Long,
+        val accessCount: Int
+    ) {
+        fun isExpired(): Boolean {
+            return System.currentTimeMillis() - timestamp > CACHE_TTL_MS
+        }
+    }
+
+    @kotlinx.serialization.Serializable
+    private data class DiskCacheEntry(
+        val version: Int,
+        val poseHash: String,
+        val response: PoseSuggestionsResponse,
+        val timestamp: Long,
+        val accessCount: Int
+    )
+}
+
+data class CacheStats(
+    val memoryEntries: Int,
+    val diskEntries: Int,
+    val expiredEntries: Int,
+    val hitRate: Float,
+    val totalSize: Long
+)

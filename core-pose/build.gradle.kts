@@ -9,9 +9,10 @@ android {
 
     defaultConfig {
         minSdk = 24
-        targetSdk = 34
+        // targetSdk is deprecated for library modules in Gradle 9.0
 
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
+        consumerProguardFiles("consumer-rules.pro")
     }
 
     buildTypes {
@@ -35,11 +36,14 @@ android {
 }
 
 dependencies {
+    // Project modules
+    implementation(project(":core-geom"))
+
     // MediaPipe Pose Detection
-    implementation("com.google.mediapipe:tasks-vision:0.10.14")
+    implementation("com.google.mediapipe:tasks-vision:0.10.9")
 
     // Kotlin & Coroutines
-    implementation("org.jetbrains.kotlin:kotlin-stdlib:1.9.20")
+    implementation("org.jetbrains.kotlin:kotlin-stdlib:1.9.22")
     implementation("org.jetbrains.kotlinx:kotlinx-coroutines-android:1.7.3")
     implementation("org.jetbrains.kotlinx:kotlinx-coroutines-core:1.7.3")
 

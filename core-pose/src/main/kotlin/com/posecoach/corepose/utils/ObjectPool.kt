@@ -114,10 +114,11 @@ class ObjectPool<T>(
 /**
  * Specialized object pool for bitmaps with automatic recycling.
  */
-class BitmapPool(capacity: Int) : ObjectPool<android.graphics.Bitmap>(capacity, { null }) {
+class BitmapPool(private val capacity: Int) {
+    private val pool = ObjectPool<android.graphics.Bitmap>(capacity) { null }
 
     fun acquireBitmap(width: Int, height: Int, config: android.graphics.Bitmap.Config): android.graphics.Bitmap? {
-        val pooled = acquire()
+        val pooled = pool.acquire()
         return if (pooled != null &&
                    pooled.width == width &&
                    pooled.height == height &&
@@ -127,7 +128,7 @@ class BitmapPool(capacity: Int) : ObjectPool<android.graphics.Bitmap>(capacity, 
         } else {
             // Return unsuitable bitmap to pool or recycle
             pooled?.let {
-                if (!it.isRecycled) release(it)
+                if (!it.isRecycled) pool.release(it)
             }
             // Create new bitmap
             try {
@@ -139,25 +140,31 @@ class BitmapPool(capacity: Int) : ObjectPool<android.graphics.Bitmap>(capacity, 
         }
     }
 
-    override fun release(obj: android.graphics.Bitmap): Boolean {
+    fun acquire(): android.graphics.Bitmap? = pool.acquire()
+
+    fun release(obj: android.graphics.Bitmap): Boolean {
         return if (!obj.isRecycled) {
-            super.release(obj)
+            pool.release(obj)
         } else {
             Timber.v("Attempted to release recycled bitmap")
             false
         }
     }
 
+    fun clear() = pool.clear()
+
+    fun getStats() = pool.getStats()
+
     fun recycleAll() {
-        val stats = getStats()
+        val stats = pool.getStats()
         repeat(stats.currentSize) {
-            acquire()?.let { bitmap ->
+            pool.acquire()?.let { bitmap ->
                 if (!bitmap.isRecycled) {
                     bitmap.recycle()
                 }
             }
         }
-        clear()
+        pool.clear()
         Timber.i("Recycled all bitmaps in pool")
     }
 }

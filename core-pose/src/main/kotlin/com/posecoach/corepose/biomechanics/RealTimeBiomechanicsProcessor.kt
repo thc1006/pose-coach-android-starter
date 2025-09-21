@@ -129,7 +129,7 @@ class RealTimeBiomechanicsProcessor(
         try {
             val task = processingQueue.poll() ?: return
 
-            val processingTime = measureTimeMillis {
+            val processingTimeInternal = measureTimeMillis {
                 try {
                     val result = when (task.qualityLevel) {
                         QualityLevel.HIGH -> processHighQuality(task.landmarks)
@@ -141,17 +141,17 @@ class RealTimeBiomechanicsProcessor(
                     // Emit result
                     _results.tryEmit(result)
 
-                    // Update metrics
-                    val totalLatency = System.currentTimeMillis() - task.submissionTime
-                    recordProcessingSuccess(processingTime, totalLatency)
-
                 } catch (e: Exception) {
                     Timber.e(e, "Error processing biomechanical analysis")
                     recordProcessingError()
                 }
             }
 
-            lastProcessingTime.set(processingTime)
+            // Update metrics
+            val totalLatency = System.currentTimeMillis() - task.submissionTime
+            recordProcessingSuccess(processingTimeInternal, totalLatency)
+
+            lastProcessingTime.set(processingTimeInternal)
 
         } finally {
             isProcessing.set(false)

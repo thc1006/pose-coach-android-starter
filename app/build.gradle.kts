@@ -9,7 +9,7 @@ android {
 
     defaultConfig {
         applicationId = "com.posecoach.camera"
-        minSdk = 24
+        minSdk = 26
         targetSdk = 34
         versionCode = 1
         versionName = "1.0"
@@ -20,10 +20,15 @@ android {
     buildTypes {
         release {
             isMinifyEnabled = false
+            isShrinkResources = false
             proguardFiles(
                 getDefaultProguardFile("proguard-android-optimize.txt"),
                 "proguard-rules.pro"
             )
+        }
+        debug {
+            isDebuggable = true
+            isMinifyEnabled = false
         }
     }
 
@@ -55,21 +60,20 @@ dependencies {
     implementation("androidx.camera:camera-lifecycle:$cameraxVersion")
     implementation("androidx.camera:camera-view:$cameraxVersion")
     implementation("androidx.camera:camera-extensions:$cameraxVersion")
-    implementation("androidx.camera:camera-mlkit-vision:$cameraxVersion")
+    // camera-mlkit-vision not needed - we use MediaPipe instead
 
-    // MediaPipe for pose detection
-    implementation("com.google.mediapipe:solution-core:0.10.9")
+    // MediaPipe for pose detection - only tasks-vision needed
     implementation("com.google.mediapipe:tasks-vision:0.10.9")
 
     // Kotlin & Coroutines
-    implementation("org.jetbrains.kotlin:kotlin-stdlib:1.9.20")
+    implementation("org.jetbrains.kotlin:kotlin-stdlib:1.9.22")
     implementation("org.jetbrains.kotlinx:kotlinx-coroutines-android:1.7.3")
     implementation("org.jetbrains.kotlinx:kotlinx-coroutines-core:1.7.3")
 
     // Android Core
     implementation("androidx.core:core-ktx:1.12.0")
     implementation("androidx.appcompat:appcompat:1.6.1")
-    implementation("com.google.android.material:material:1.10.0")
+    implementation("com.google.android.material:material:1.11.0")
     implementation("androidx.constraintlayout:constraintlayout:2.1.4")
     implementation("androidx.lifecycle:lifecycle-runtime-ktx:2.6.2")
     implementation("androidx.lifecycle:lifecycle-viewmodel-ktx:2.6.2")
@@ -87,7 +91,7 @@ dependencies {
     implementation("com.squareup.okhttp3:logging-interceptor:4.12.0")
 
     // Audio Processing & Compression
-    implementation("com.github.adrielcafe:opus-android:1.0.0")
+    // Opus codec not needed - use native Android audio
     implementation("androidx.media3:media3-common:1.2.0")
 
     // Performance Monitoring

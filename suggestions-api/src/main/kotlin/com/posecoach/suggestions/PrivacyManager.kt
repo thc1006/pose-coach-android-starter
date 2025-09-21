@@ -1,1 +1,279 @@
-package com.posecoach.suggestions\n\nimport android.content.Context\nimport androidx.security.crypto.EncryptedSharedPreferences\nimport androidx.security.crypto.MasterKey\nimport com.posecoach.suggestions.models.PoseLandmarksData\nimport kotlinx.serialization.Serializable\nimport kotlinx.serialization.encodeToString\nimport kotlinx.serialization.json.Json\nimport timber.log.Timber\nimport java.security.SecureRandom\nimport kotlin.math.abs\nimport kotlin.math.max\nimport kotlin.math.min\n\n/**\n * Privacy manager for pose data with anonymization and consent management\n * Implements data minimization, differential privacy, and audit logging\n */\nclass PrivacyManager(private val context: Context) {\n    \n    private val masterKey by lazy {\n        MasterKey.Builder(context)\n            .setKeyScheme(MasterKey.KeyScheme.AES256_GCM)\n            .build()\n    }\n    \n    private val encryptedPrefs by lazy {\n        EncryptedSharedPreferences.create(\n            context,\n            \"privacy_prefs\",\n            masterKey,\n            EncryptedSharedPreferences.PrefKeyEncryptionScheme.AES256_SIV,\n            EncryptedSharedPreferences.PrefValueEncryptionScheme.AES256_GCM\n        )\n    }\n    \n    private val json = Json {\n        ignoreUnknownKeys = true\n        isLenient = true\n    }\n    \n    private val secureRandom = SecureRandom()\n    private val auditLog = mutableListOf<AuditEntry>()\n    \n    companion object {\n        private const val CONSENT_VERSION = 1\n        private const val CONSENT_GRANTED_KEY = \"consent_granted\"\n        private const val CONSENT_VERSION_KEY = \"consent_version\"\n        private const val CONSENT_TIMESTAMP_KEY = \"consent_timestamp\"\n        private const val DATA_RETENTION_DAYS = 30\n        private const val NOISE_SCALE = 0.01f // 1% noise for differential privacy\n        private const val MIN_VISIBILITY_THRESHOLD = 0.5f\n        \n        // Sensitive landmark indices that require extra protection\n        private val SENSITIVE_LANDMARKS = setOf(\n            0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, // Face/head landmarks\n            17, 18, 19, 20, 21, 22 // Hand landmarks\n        )\n    }\n    \n    /**\n     * Check if user has given valid consent for data processing\n     */\n    fun hasValidConsent(): Boolean {\n        val consentGranted = encryptedPrefs.getBoolean(CONSENT_GRANTED_KEY, false)\n        val consentVersion = encryptedPrefs.getInt(CONSENT_VERSION_KEY, 0)\n        val consentTimestamp = encryptedPrefs.getLong(CONSENT_TIMESTAMP_KEY, 0)\n        \n        // Check if consent is current version and not expired\n        val maxAge = DATA_RETENTION_DAYS * 24 * 60 * 60 * 1000L\n        val isExpired = System.currentTimeMillis() - consentTimestamp > maxAge\n        \n        val isValid = consentGranted && \n                     consentVersion >= CONSENT_VERSION && \n                     !isExpired\n        \n        Timber.d(\"Consent check: granted=$consentGranted, version=$consentVersion/$CONSENT_VERSION, expired=$isExpired\")\n        \n        return isValid\n    }\n    \n    /**\n     * Record user consent with timestamp and version\n     */\n    fun grantConsent(purpose: ConsentPurpose = ConsentPurpose.POSE_ANALYSIS) {\n        encryptedPrefs.edit()\n            .putBoolean(CONSENT_GRANTED_KEY, true)\n            .putInt(CONSENT_VERSION_KEY, CONSENT_VERSION)\n            .putLong(CONSENT_TIMESTAMP_KEY, System.currentTimeMillis())\n            .apply()\n        \n        logAudit(AuditAction.CONSENT_GRANTED, \"Purpose: $purpose\")\n        Timber.i(\"User consent granted for $purpose\")\n    }\n    \n    /**\n     * Revoke user consent and clear associated data\n     */\n    fun revokeConsent() {\n        encryptedPrefs.edit()\n            .putBoolean(CONSENT_GRANTED_KEY, false)\n            .apply()\n        \n        logAudit(AuditAction.CONSENT_REVOKED, \"User revoked consent\")\n        Timber.i(\"User consent revoked\")\n    }\n    \n    /**\n     * Anonymize pose landmarks for transmission\n     * Applies differential privacy, data minimization, and sensitive data filtering\n     */\n    fun anonymizeLandmarks(\n        landmarks: PoseLandmarksData,\n        privacyLevel: PrivacyLevel = PrivacyLevel.STANDARD\n    ): PoseLandmarksData {\n        if (!hasValidConsent()) {\n            throw SecurityException(\"No valid consent for data processing\")\n        }\n        \n        logAudit(AuditAction.DATA_ANONYMIZED, \"Privacy level: $privacyLevel, landmarks: ${landmarks.landmarks.size}\")\n        \n        val anonymizedLandmarks = landmarks.landmarks.mapNotNull { landmark ->\n            // Skip low-visibility landmarks\n            if (landmark.visibility < MIN_VISIBILITY_THRESHOLD) {\n                return@mapNotNull null\n            }\n            \n            // Apply privacy level filtering\n            when (privacyLevel) {\n                PrivacyLevel.MINIMAL -> {\n                    // Only keep essential body landmarks\n                    if (landmark.index in SENSITIVE_LANDMARKS) return@mapNotNull null\n                }\n                PrivacyLevel.STANDARD -> {\n                    // Reduce precision of sensitive landmarks\n                    if (landmark.index in SENSITIVE_LANDMARKS) {\n                        return@mapNotNull landmark.copy(\n                            x = quantizeCoordinate(landmark.x, 0.1f),\n                            y = quantizeCoordinate(landmark.y, 0.1f)\n                        )\n                    }\n                }\n                PrivacyLevel.FULL -> {\n                    // Keep all landmarks but add noise\n                }\n            }\n            \n            // Apply differential privacy noise\n            val noisyLandmark = landmark.copy(\n                x = addNoise(landmark.x, NOISE_SCALE),\n                y = addNoise(landmark.y, NOISE_SCALE),\n                z = addNoise(landmark.z, NOISE_SCALE)\n            )\n            \n            noisyLandmark\n        }\n        \n        return landmarks.copy(\n            landmarks = anonymizedLandmarks,\n            timestamp = System.currentTimeMillis() // Update timestamp for privacy tracking\n        )\n    }\n    \n    /**\n     * Check if data should be retained based on privacy settings\n     */\n    fun shouldRetainData(timestamp: Long): Boolean {\n        val age = System.currentTimeMillis() - timestamp\n        val maxAge = DATA_RETENTION_DAYS * 24 * 60 * 60 * 1000L\n        \n        return age <= maxAge && hasValidConsent()\n    }\n    \n    /**\n     * Get privacy settings summary\n     */\n    fun getPrivacyStatus(): PrivacyStatus {\n        val consentTimestamp = encryptedPrefs.getLong(CONSENT_TIMESTAMP_KEY, 0)\n        val consentVersion = encryptedPrefs.getInt(CONSENT_VERSION_KEY, 0)\n        \n        return PrivacyStatus(\n            hasConsent = hasValidConsent(),\n            consentVersion = consentVersion,\n            consentTimestamp = consentTimestamp,\n            dataRetentionDays = DATA_RETENTION_DAYS,\n            auditLogSize = auditLog.size\n        )\n    }\n    \n    /**\n     * Export audit log for compliance\n     */\n    fun exportAuditLog(): String {\n        logAudit(AuditAction.AUDIT_EXPORTED, \"Audit log exported\")\n        \n        return json.encodeToString(auditLog.takeLast(1000)) // Last 1000 entries\n    }\n    \n    /**\n     * Clear all privacy-related data\n     */\n    fun clearAllData() {\n        encryptedPrefs.edit().clear().apply()\n        auditLog.clear()\n        \n        Timber.i(\"All privacy data cleared\")\n    }\n    \n    private fun addNoise(value: Float, scale: Float): Float {\n        val noise = secureRandom.nextGaussian().toFloat() * scale\n        return (value + noise).coerceIn(0f, 1f) // Keep within valid coordinate range\n    }\n    \n    private fun quantizeCoordinate(value: Float, step: Float): Float {\n        return (value / step).toInt() * step\n    }\n    \n    private fun logAudit(action: AuditAction, details: String) {\n        val entry = AuditEntry(\n            timestamp = System.currentTimeMillis(),\n            action = action,\n            details = details,\n            sessionId = generateSessionId()\n        )\n        \n        auditLog.add(entry)\n        \n        // Keep only recent entries to manage memory\n        if (auditLog.size > 5000) {\n            auditLog.removeAt(0)\n        }\n        \n        Timber.d(\"Audit logged: $action - $details\")\n    }\n    \n    private fun generateSessionId(): String {\n        return System.currentTimeMillis().toString() + secureRandom.nextInt(1000)\n    }\n}\n\nenum class ConsentPurpose {\n    POSE_ANALYSIS,\n    IMPROVEMENT_SUGGESTIONS,\n    ANALYTICS,\n    RESEARCH\n}\n\nenum class PrivacyLevel {\n    MINIMAL,    // Only essential landmarks, no sensitive data\n    STANDARD,   // Reduced precision for sensitive areas\n    FULL        // All landmarks with differential privacy\n}\n\nenum class AuditAction {\n    CONSENT_GRANTED,\n    CONSENT_REVOKED,\n    DATA_ANONYMIZED,\n    DATA_PROCESSED,\n    DATA_TRANSMITTED,\n    AUDIT_EXPORTED,\n    PRIVACY_VIOLATION\n}\n\n@Serializable\ndata class AuditEntry(\n    val timestamp: Long,\n    val action: AuditAction,\n    val details: String,\n    val sessionId: String\n)\n\ndata class PrivacyStatus(\n    val hasConsent: Boolean,\n    val consentVersion: Int,\n    val consentTimestamp: Long,\n    val dataRetentionDays: Int,\n    val auditLogSize: Int\n)"
+package com.posecoach.suggestions
+
+import android.content.Context
+import androidx.security.crypto.EncryptedSharedPreferences
+import androidx.security.crypto.MasterKey
+import com.posecoach.suggestions.models.PoseLandmarksData
+import kotlinx.serialization.Serializable
+import kotlinx.serialization.encodeToString
+import kotlinx.serialization.json.Json
+import timber.log.Timber
+import java.security.SecureRandom
+import kotlin.math.abs
+import kotlin.math.max
+import kotlin.math.min
+
+/**
+ * Privacy manager for pose data with anonymization and consent management
+ * Implements data minimization, differential privacy, and audit logging
+ */
+class PrivacyManager(private val context: Context) {
+
+    private val masterKey by lazy {
+        MasterKey.Builder(context)
+            .setKeyScheme(MasterKey.KeyScheme.AES256_GCM)
+            .build()
+    }
+
+    private val encryptedPrefs by lazy {
+        EncryptedSharedPreferences.create(
+            context,
+            "privacy_prefs",
+            masterKey,
+            EncryptedSharedPreferences.PrefKeyEncryptionScheme.AES256_SIV,
+            EncryptedSharedPreferences.PrefValueEncryptionScheme.AES256_GCM
+        )
+    }
+
+    private val json = Json {
+        ignoreUnknownKeys = true
+        isLenient = true
+    }
+
+    private val secureRandom = SecureRandom()
+    private val auditLog = mutableListOf<AuditEntry>()
+
+    companion object {
+        private const val CONSENT_VERSION = 1
+        private const val CONSENT_GRANTED_KEY = "consent_granted"
+        private const val CONSENT_VERSION_KEY = "consent_version"
+        private const val CONSENT_TIMESTAMP_KEY = "consent_timestamp"
+        private const val DATA_RETENTION_DAYS = 30
+        private const val NOISE_SCALE = 0.01f // 1% noise for differential privacy
+        private const val MIN_VISIBILITY_THRESHOLD = 0.5f
+
+        // Sensitive landmark indices that require extra protection
+        private val SENSITIVE_LANDMARKS = setOf(
+            0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, // Face/head landmarks
+            17, 18, 19, 20, 21, 22 // Hand landmarks
+        )
+    }
+
+    /**
+     * Check if user has given valid consent for data processing
+     */
+    fun hasValidConsent(): Boolean {
+        val consentGranted = encryptedPrefs.getBoolean(CONSENT_GRANTED_KEY, false)
+        val consentVersion = encryptedPrefs.getInt(CONSENT_VERSION_KEY, 0)
+        val consentTimestamp = encryptedPrefs.getLong(CONSENT_TIMESTAMP_KEY, 0)
+
+        // Check if consent is current version and not expired
+        val maxAge = DATA_RETENTION_DAYS * 24 * 60 * 60 * 1000L
+        val isExpired = System.currentTimeMillis() - consentTimestamp > maxAge
+
+        val isValid = consentGranted &&
+                     consentVersion >= CONSENT_VERSION &&
+                     !isExpired
+
+        Timber.d("Consent check: granted=$consentGranted, version=$consentVersion/$CONSENT_VERSION, expired=$isExpired")
+
+        return isValid
+    }
+
+    /**
+     * Record user consent with timestamp and version
+     */
+    fun grantConsent(purpose: ConsentPurpose = ConsentPurpose.POSE_ANALYSIS) {
+        encryptedPrefs.edit()
+            .putBoolean(CONSENT_GRANTED_KEY, true)
+            .putInt(CONSENT_VERSION_KEY, CONSENT_VERSION)
+            .putLong(CONSENT_TIMESTAMP_KEY, System.currentTimeMillis())
+            .apply()
+
+        logAudit(AuditAction.CONSENT_GRANTED, "Purpose: $purpose")
+        Timber.i("User consent granted for $purpose")
+    }
+
+    /**
+     * Revoke user consent and clear associated data
+     */
+    fun revokeConsent() {
+        encryptedPrefs.edit()
+            .putBoolean(CONSENT_GRANTED_KEY, false)
+            .apply()
+
+        logAudit(AuditAction.CONSENT_REVOKED, "User revoked consent")
+        Timber.i("User consent revoked")
+    }
+
+    /**
+     * Anonymize pose landmarks for transmission
+     * Applies differential privacy, data minimization, and sensitive data filtering
+     */
+    fun anonymizeLandmarks(
+        landmarks: PoseLandmarksData,
+        privacyLevel: PrivacyLevel = PrivacyLevel.STANDARD
+    ): PoseLandmarksData {
+        if (!hasValidConsent()) {
+            throw SecurityException("No valid consent for data processing")
+        }
+
+        logAudit(AuditAction.DATA_ANONYMIZED, "Privacy level: $privacyLevel, landmarks: ${landmarks.landmarks.size}")
+
+        val anonymizedLandmarks = landmarks.landmarks.mapNotNull { landmark ->
+            // Skip low-visibility landmarks
+            if (landmark.visibility < MIN_VISIBILITY_THRESHOLD) {
+                return@mapNotNull null
+            }
+
+            // Apply privacy level filtering
+            when (privacyLevel) {
+                PrivacyLevel.MINIMAL -> {
+                    // Only keep essential body landmarks
+                    if (landmark.index in SENSITIVE_LANDMARKS) return@mapNotNull null
+                }
+                PrivacyLevel.STANDARD -> {
+                    // Reduce precision of sensitive landmarks
+                    if (landmark.index in SENSITIVE_LANDMARKS) {
+                        return@mapNotNull landmark.copy(
+                            x = quantizeCoordinate(landmark.x, 0.1f),
+                            y = quantizeCoordinate(landmark.y, 0.1f)
+                        )
+                    }
+                }
+                PrivacyLevel.FULL -> {
+                    // Keep all landmarks but add noise
+                }
+            }
+
+            // Apply differential privacy noise
+            val noisyLandmark = landmark.copy(
+                x = addNoise(landmark.x, NOISE_SCALE),
+                y = addNoise(landmark.y, NOISE_SCALE),
+                z = addNoise(landmark.z, NOISE_SCALE)
+            )
+
+            noisyLandmark
+        }
+
+        return landmarks.copy(
+            landmarks = anonymizedLandmarks,
+            timestamp = System.currentTimeMillis() // Update timestamp for privacy tracking
+        )
+    }
+
+    /**
+     * Check if data should be retained based on privacy settings
+     */
+    fun shouldRetainData(timestamp: Long): Boolean {
+        val age = System.currentTimeMillis() - timestamp
+        val maxAge = DATA_RETENTION_DAYS * 24 * 60 * 60 * 1000L
+
+        return age <= maxAge && hasValidConsent()
+    }
+
+    /**
+     * Get privacy settings summary
+     */
+    fun getPrivacyStatus(): PrivacyStatus {
+        val consentTimestamp = encryptedPrefs.getLong(CONSENT_TIMESTAMP_KEY, 0)
+        val consentVersion = encryptedPrefs.getInt(CONSENT_VERSION_KEY, 0)
+
+        return PrivacyStatus(
+            hasConsent = hasValidConsent(),
+            consentVersion = consentVersion,
+            consentTimestamp = consentTimestamp,
+            dataRetentionDays = DATA_RETENTION_DAYS,
+            auditLogSize = auditLog.size
+        )
+    }
+
+    /**
+     * Export audit log for compliance
+     */
+    fun exportAuditLog(): String {
+        logAudit(AuditAction.AUDIT_EXPORTED, "Audit log exported")
+
+        return json.encodeToString(auditLog.takeLast(1000)) // Last 1000 entries
+    }
+
+    /**
+     * Clear all privacy-related data
+     */
+    fun clearAllData() {
+        encryptedPrefs.edit().clear().apply()
+        auditLog.clear()
+
+        Timber.i("All privacy data cleared")
+    }
+
+    private fun addNoise(value: Float, scale: Float): Float {
+        val noise = secureRandom.nextGaussian().toFloat() * scale
+        return (value + noise).coerceIn(0f, 1f) // Keep within valid coordinate range
+    }
+
+    private fun quantizeCoordinate(value: Float, step: Float): Float {
+        return (value / step).toInt() * step
+    }
+
+    private fun logAudit(action: AuditAction, details: String) {
+        val entry = AuditEntry(
+            timestamp = System.currentTimeMillis(),
+            action = action,
+            details = details,
+            sessionId = generateSessionId()
+        )
+
+        auditLog.add(entry)
+
+        // Keep only recent entries to manage memory
+        if (auditLog.size > 5000) {
+            auditLog.removeAt(0)
+        }
+
+        Timber.d("Audit logged: $action - $details")
+    }
+
+    private fun generateSessionId(): String {
+        return System.currentTimeMillis().toString() + secureRandom.nextInt(1000)
+    }
+}
+
+enum class ConsentPurpose {
+    POSE_ANALYSIS,
+    IMPROVEMENT_SUGGESTIONS,
+    ANALYTICS,
+    RESEARCH
+}
+
+enum class PrivacyLevel {
+    MINIMAL,    // Only essential landmarks, no sensitive data
+    STANDARD,   // Reduced precision for sensitive areas
+    FULL        // All landmarks with differential privacy
+}
+
+enum class AuditAction {
+    CONSENT_GRANTED,
+    CONSENT_REVOKED,
+    DATA_ANONYMIZED,
+    DATA_PROCESSED,
+    DATA_TRANSMITTED,
+    AUDIT_EXPORTED,
+    PRIVACY_VIOLATION
+}
+
+@Serializable
+data class AuditEntry(
+    val timestamp: Long,
+    val action: AuditAction,
+    val details: String,
+    val sessionId: String
+)
+
+data class PrivacyStatus(
+    val hasConsent: Boolean,
+    val consentVersion: Int,
+    val consentTimestamp: Long,
+    val dataRetentionDays: Int,
+    val auditLogSize: Int
+)

@@ -14,18 +14,18 @@ class FakePoseRepository : PoseRepository {
     private var isRunning = false
     private val coroutineScope = CoroutineScope(Dispatchers.Default)
 
-    override suspend fun init(context: Context, modelPath: String?) {
+    suspend fun init(context: Context, modelPath: String?) {
         Timber.d("FakePoseRepository initialized")
         delay(100)
     }
 
-    override fun start(listener: PoseDetectionListener) {
+    fun start(listener: PoseDetectionListener) {
         this.listener = listener
         isRunning = true
         Timber.d("FakePoseRepository started")
     }
 
-    override fun stop() {
+    fun stop() {
         listener = null
         isRunning = false
         Timber.d("FakePoseRepository stopped")
@@ -62,7 +62,12 @@ class FakePoseRepository : PoseRepository {
         }
     }
 
-    override fun isRunning(): Boolean = isRunning
+    fun isRunning(): Boolean = isRunning
+
+    override fun release() {
+        stop()
+        Timber.d("FakePoseRepository released")
+    }
 
     fun generateStablePose(timestampMs: Long): PoseLandmarkResult {
         val landmarks = generateRealisticPoseLandmarks()
@@ -81,7 +86,7 @@ class FakePoseRepository : PoseRepository {
                 landmarks = landmarks,
                 worldLandmarks = landmarks,
                 timestampMs = timestampMs,
-                inferenceTimeMs = 18 + personIndex * 2
+                inferenceTimeMs = (18 + personIndex * 2).toLong()
             )
         }
     }
