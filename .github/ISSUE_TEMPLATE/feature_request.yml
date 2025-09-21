@@ -1,0 +1,178 @@
+name: 🚀 Feature Request
+description: Suggest a new feature or enhancement
+title: "[FEATURE] "
+labels: ["enhancement", "needs-triage"]
+assignees: []
+
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Thank you for suggesting a new feature! Please provide as much detail as possible to help us understand your request.
+
+  - type: checkboxes
+    id: preliminary-checks
+    attributes:
+      label: Preliminary Checks
+      description: Please confirm you have done the following
+      options:
+        - label: I have searched existing issues and this is not a duplicate
+          required: true
+        - label: This feature would be beneficial to other users, not just me
+          required: true
+
+  - type: textarea
+    id: feature-summary
+    attributes:
+      label: Feature Summary
+      description: A clear and concise description of the feature you'd like to see
+      placeholder: Briefly describe the feature you're requesting
+    validations:
+      required: true
+
+  - type: textarea
+    id: problem-statement
+    attributes:
+      label: Problem Statement
+      description: What problem does this feature solve?
+      placeholder: |
+        Describe the problem or pain point that this feature would address.
+
+        Example: "As a user, I find it difficult to..."
+    validations:
+      required: true
+
+  - type: textarea
+    id: proposed-solution
+    attributes:
+      label: Proposed Solution
+      description: How would you like this feature to work?
+      placeholder: |
+        Describe your ideal solution in detail. Include:
+        - How the feature would work
+        - What the user interface might look like
+        - How users would interact with it
+    validations:
+      required: true
+
+  - type: textarea
+    id: user-stories
+    attributes:
+      label: User Stories
+      description: Describe how different users would benefit from this feature
+      placeholder: |
+        Example:
+        - As a fitness instructor, I want to... so that I can...
+        - As a beginner user, I want to... so that I can...
+    validations:
+      required: true
+
+  - type: dropdown
+    id: feature-category
+    attributes:
+      label: Feature Category
+      description: Which area of the app would this feature affect?
+      options:
+        - Pose Detection/Analysis
+        - Camera/Video
+        - User Interface/Experience
+        - Performance/Optimization
+        - Privacy/Security
+        - Accessibility
+        - Integration/API
+        - Analytics/Tracking
+        - Other
+    validations:
+      required: true
+
+  - type: dropdown
+    id: priority
+    attributes:
+      label: Priority Level
+      description: How important is this feature to you?
+      options:
+        - Low - Nice to have
+        - Medium - Would improve experience
+        - High - Important for workflow
+        - Critical - Essential for core functionality
+    validations:
+      required: true
+
+  - type: dropdown
+    id: complexity
+    attributes:
+      label: Estimated Complexity
+      description: How complex do you think this feature would be to implement?
+      options:
+        - Low - Simple UI change or minor enhancement
+        - Medium - New functionality or moderate changes
+        - High - Major feature requiring significant development
+        - Unknown - Not sure about implementation complexity
+
+  - type: textarea
+    id: alternatives
+    attributes:
+      label: Alternative Solutions
+      description: What other solutions have you considered?
+      placeholder: |
+        Describe any alternative approaches you've thought about.
+        Include why you prefer the main solution over these alternatives.
+
+  - type: textarea
+    id: acceptance-criteria
+    attributes:
+      label: Acceptance Criteria
+      description: How would we know this feature is complete and working correctly?
+      placeholder: |
+        List specific, testable criteria that would indicate the feature is done:
+        - [ ] User can...
+        - [ ] System responds by...
+        - [ ] Error handling works when...
+
+  - type: textarea
+    id: mockups-examples
+    attributes:
+      label: Mockups/Examples
+      description: Include any mockups, wireframes, or examples from other apps
+      placeholder: |
+        If you have visual examples or references, describe them here or attach images.
+
+        You can drag and drop images directly into this text box.
+
+  - type: checkboxes
+    id: implementation-considerations
+    attributes:
+      label: Implementation Considerations
+      description: Please consider the following aspects (check all that apply)
+      options:
+        - label: This feature should work on both phones and tablets
+        - label: This feature should be accessible to users with disabilities
+        - label: This feature involves camera/pose detection capabilities
+        - label: This feature requires network connectivity
+        - label: This feature involves sensitive user data
+        - label: This feature should work offline
+        - label: This feature affects app performance
+
+  - type: textarea
+    id: success-metrics
+    attributes:
+      label: Success Metrics
+      description: How would we measure the success of this feature?
+      placeholder: |
+        What metrics would indicate that this feature is successful?
+        - User engagement
+        - Task completion rate
+        - User satisfaction
+        - Performance improvements
+        - etc.
+
+  - type: textarea
+    id: additional-context
+    attributes:
+      label: Additional Context
+      description: Any other relevant information about this feature request
+      placeholder: |
+        - Similar features in other apps
+        - Technical constraints to consider
+        - Timeline considerations
+        - Dependencies on other features

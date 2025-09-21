@@ -1,0 +1,417 @@
+name: Quality Gates Enforcement
+
+on:
+  pull_request:
+    types: [opened, synchronize, reopened]
+  push:
+    branches: [main, develop]
+
+jobs:
+  # Enforce code quality standards
+  enforce-quality-standards:
+    name: Enforce Quality Standards
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Set up JDK 17
+        uses: actions/setup-java@v4
+        with:
+          java-version: '17'
+          distribution: 'temurin'
+          cache: gradle
+
+      - name: Setup Android SDK
+        uses: android-actions/setup-android@v3
+
+      - name: Grant execute permission for gradlew
+        run: chmod +x gradlew
+
+      - name: Cache Gradle dependencies
+        uses: actions/cache@v4
+        with:
+          path: |
+            ~/.gradle/caches
+            ~/.gradle/wrapper
+          key: ${{ runner.os }}-gradle-${{ hashFiles('**/*.gradle*') }}
+          restore-keys: |
+            ${{ runner.os }}-gradle-
+
+      # Code style enforcement
+      - name: Kotlin Code Style Check
+        run: |
+          ./gradlew ktlintCheck
+          if [ $? -ne 0 ]; then
+            echo "❌ Code style violations found. Run 'gradlew ktlintFormat' to fix."
+            exit 1
+          fi
+
+      # Static analysis
+      - name: Static Analysis with Detekt
+        run: |
+          ./gradlew detekt
+          if [ $? -ne 0 ]; then
+            echo "❌ Static analysis issues found. Check detekt report."
+            exit 1
+          fi
+
+      # Android Lint
+      - name: Android Lint Check
+        run: |
+          ./gradlew lint
+          if [ $? -ne 0 ]; then
+            echo "❌ Android lint issues found."
+            exit 1
+          fi
+
+      # API compatibility check
+      - name: API Compatibility Check
+        run: |
+          ./gradlew apiCheck
+          if [ $? -ne 0 ]; then
+            echo "❌ API compatibility issues found."
+            exit 1
+          fi
+
+  # Security quality gate
+  security-quality-gate:
+    name: Security Quality Gate
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Run security checks
+        run: |
+          # Check for hardcoded secrets
+          if grep -r "password\s*=\s*[\"']" --include="*.kt" --include="*.java" app/; then
+            echo "❌ Hardcoded passwords found"
+            exit 1
+          fi
+
+          # Check for API keys in code
+          if grep -r "api_key\s*=\s*[\"']" --include="*.kt" --include="*.java" app/; then
+            echo "❌ Hardcoded API keys found"
+            exit 1
+          fi
+
+          # Check for debug flags in release
+          if grep -r "BuildConfig.DEBUG\s*=\s*true" --include="*.kt" --include="*.java" app/; then
+            echo "❌ Debug flags found in release code"
+            exit 1
+          fi
+
+          echo "✅ Security checks passed"
+
+      - name: Check permissions usage
+        run: |
+          # Verify only necessary permissions are used
+          required_permissions=(
+            "android.permission.CAMERA"
+            "android.permission.INTERNET"
+            "android.permission.WRITE_EXTERNAL_STORAGE"
+          )
+
+          manifest_file="app/src/main/AndroidManifest.xml"
+          if [ -f "$manifest_file" ]; then
+            for permission in "${required_permissions[@]}"; do
+              if ! grep -q "$permission" "$manifest_file"; then
+                echo "⚠️ Expected permission $permission not found"
+              fi
+            done
+
+            # Check for dangerous permissions
+            dangerous_permissions=(
+              "android.permission.READ_CONTACTS"
+              "android.permission.ACCESS_FINE_LOCATION"
+              "android.permission.RECORD_AUDIO"
+            )
+
+            for permission in "${dangerous_permissions[@]}"; do
+              if grep -q "$permission" "$manifest_file"; then
+                echo "❌ Dangerous permission $permission found without justification"
+                exit 1
+              fi
+            done
+          fi
+
+          echo "✅ Permissions check passed"
+
+  # Test coverage quality gate
+  test-coverage-gate:
+    name: Test Coverage Quality Gate (≥80%)
+    runs-on: ubuntu-latest
+    timeout-minutes: 25
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Set up JDK 17
+        uses: actions/setup-java@v4
+        with:
+          java-version: '17'
+          distribution: 'temurin'
+          cache: gradle
+
+      - name: Setup Android SDK
+        uses: android-actions/setup-android@v3
+
+      - name: Grant execute permission for gradlew
+        run: chmod +x gradlew
+
+      - name: Run tests and generate coverage
+        run: |
+          ./gradlew testDebugUnitTest jacocoTestReport
+
+      - name: Verify coverage threshold
+        run: |
+          ./gradlew jacocoCoverageVerification
+          if [ $? -ne 0 ]; then
+            echo "❌ Code coverage below 80% threshold"
+            exit 1
+          fi
+
+      - name: Parse coverage results
+        run: |
+          # Extract coverage percentage from jacoco report
+          coverage_file="build/reports/jacoco/test/html/index.html"
+          if [ -f "$coverage_file" ]; then
+            coverage=$(grep -o 'Total.*[0-9]*%' "$coverage_file" | grep -o '[0-9]*%' | head -1 | sed 's/%//')
+            echo "Current coverage: $coverage%"
+
+            if [ "$coverage" -lt 80 ]; then
+              echo "❌ Coverage $coverage% is below required 80%"
+              exit 1
+            else
+              echo "✅ Coverage $coverage% meets requirement"
+            fi
+          fi
+
+      - name: Upload coverage reports
+        uses: actions/upload-artifact@v4
+        with:
+          name: coverage-reports
+          path: |
+            **/build/reports/jacoco/
+          retention-days: 30
+
+  # Performance quality gate
+  performance-quality-gate:
+    name: Performance Quality Gate
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Set up JDK 17
+        uses: actions/setup-java@v4
+        with:
+          java-version: '17'
+          distribution: 'temurin'
+          cache: gradle
+
+      - name: Setup Android SDK
+        uses: android-actions/setup-android@v3
+
+      - name: Grant execute permission for gradlew
+        run: chmod +x gradlew
+
+      - name: Build APK for performance testing
+        run: ./gradlew assembleDebug
+
+      - name: Check APK size
+        run: |
+          apk_file="app/build/outputs/apk/debug/app-debug.apk"
+          if [ -f "$apk_file" ]; then
+            size_mb=$(stat -c%s "$apk_file" | awk '{print int($1/1024/1024)}')
+            echo "APK size: ${size_mb}MB"
+
+            # Enforce 50MB limit for debug APK
+            if [ "$size_mb" -gt 50 ]; then
+              echo "❌ APK size ${size_mb}MB exceeds 50MB limit"
+              exit 1
+            else
+              echo "✅ APK size within acceptable range"
+            fi
+          fi
+
+      - name: Memory leak detection
+        run: |
+          # Run memory leak detection tests
+          ./gradlew testDebugUnitTest -Dtest.single=*MemoryTest*
+          echo "✅ Memory leak detection completed"
+
+      - name: Build time analysis
+        run: |
+          start_time=$(date +%s)
+          ./gradlew clean assembleDebug
+          end_time=$(date +%s)
+          build_time=$((end_time - start_time))
+
+          echo "Build time: ${build_time}s"
+
+          # Enforce 5-minute build time limit
+          if [ "$build_time" -gt 300 ]; then
+            echo "❌ Build time ${build_time}s exceeds 300s limit"
+            exit 1
+          else
+            echo "✅ Build time within acceptable range"
+          fi
+
+  # Documentation quality gate
+  documentation-quality-gate:
+    name: Documentation Quality Gate
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Check README exists and is comprehensive
+        run: |
+          if [ ! -f "README.md" ]; then
+            echo "❌ README.md is missing"
+            exit 1
+          fi
+
+          readme_length=$(wc -l < README.md)
+          if [ "$readme_length" -lt 20 ]; then
+            echo "❌ README.md is too short (less than 20 lines)"
+            exit 1
+          fi
+
+          echo "✅ README.md exists and is comprehensive"
+
+      - name: Check API documentation
+        run: |
+          # Generate and validate KDoc documentation
+          ./gradlew dokkaHtml
+          if [ $? -ne 0 ]; then
+            echo "❌ KDoc generation failed"
+            exit 1
+          fi
+
+          echo "✅ API documentation generated successfully"
+
+      - name: Verify privacy policy documentation
+        run: |
+          if [ ! -f "PRIVACY.md" ] && [ ! -f "docs/privacy.md" ]; then
+            echo "❌ Privacy policy documentation missing"
+            exit 1
+          fi
+
+          echo "✅ Privacy policy documentation found"
+
+  # Accessibility quality gate
+  accessibility-quality-gate:
+    name: Accessibility Quality Gate
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Check for accessibility features
+        run: |
+          # Check for content descriptions
+          if ! grep -r "contentDescription" app/src/main/res/layout/; then
+            echo "❌ Missing content descriptions for accessibility"
+            exit 1
+          fi
+
+          # Check for accessibility services
+          if ! grep -r "accessibility" app/src/main/kotlin/; then
+            echo "⚠️ No accessibility services found"
+          fi
+
+          echo "✅ Accessibility checks passed"
+
+  # Dependency quality gate
+  dependency-quality-gate:
+    name: Dependency Quality Gate
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Set up JDK 17
+        uses: actions/setup-java@v4
+        with:
+          java-version: '17'
+          distribution: 'temurin'
+          cache: gradle
+
+      - name: Check for outdated dependencies
+        run: |
+          ./gradlew dependencyUpdates
+
+          # Check if critical security updates are available
+          if grep -q "security" build/dependencyUpdates/report.txt; then
+            echo "❌ Security-related dependency updates available"
+            exit 1
+          fi
+
+      - name: License compliance check
+        run: |
+          # Ensure only approved licenses are used
+          ./gradlew checkLicense
+          if [ $? -ne 0 ]; then
+            echo "❌ License compliance issues found"
+            exit 1
+          fi
+
+          echo "✅ License compliance verified"
+
+  # Final quality gate summary
+  quality-gate-summary:
+    name: Quality Gate Summary
+    runs-on: ubuntu-latest
+    needs: [
+      enforce-quality-standards,
+      security-quality-gate,
+      test-coverage-gate,
+      performance-quality-gate,
+      documentation-quality-gate,
+      accessibility-quality-gate,
+      dependency-quality-gate
+    ]
+    if: always()
+
+    steps:
+      - name: Quality Gate Results
+        run: |
+          echo "## Quality Gate Results 📊"
+          echo "- Code Style: ${{ needs.enforce-quality-standards.result == 'success' && '✅' || '❌' }}"
+          echo "- Security: ${{ needs.security-quality-gate.result == 'success' && '✅' || '❌' }}"
+          echo "- Test Coverage: ${{ needs.test-coverage-gate.result == 'success' && '✅' || '❌' }}"
+          echo "- Performance: ${{ needs.performance-quality-gate.result == 'success' && '✅' || '❌' }}"
+          echo "- Documentation: ${{ needs.documentation-quality-gate.result == 'success' && '✅' || '❌' }}"
+          echo "- Accessibility: ${{ needs.accessibility-quality-gate.result == 'success' && '✅' || '❌' }}"
+          echo "- Dependencies: ${{ needs.dependency-quality-gate.result == 'success' && '✅' || '❌' }}"
+
+      - name: Fail if any quality gate failed
+        if: |
+          needs.enforce-quality-standards.result != 'success' ||
+          needs.security-quality-gate.result != 'success' ||
+          needs.test-coverage-gate.result != 'success' ||
+          needs.performance-quality-gate.result != 'success' ||
+          needs.documentation-quality-gate.result != 'success' ||
+          needs.accessibility-quality-gate.result != 'success' ||
+          needs.dependency-quality-gate.result != 'success'
+        run: |
+          echo "❌ One or more quality gates failed"
+          exit 1

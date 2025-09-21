@@ -1,0 +1,66 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="app_name">Pose Coach</string>
+
+    <!-- UI Labels -->
+    <string name="settings">Settings</string>
+    <string name="vad_settings">Voice Detection Settings</string>
+    <string name="audio_device">Audio Device</string>
+    <string name="transcription_hint">Voice transcription will appear here...</string>
+
+    <!-- Connection Status -->
+    <string name="status_disconnected">Disconnected</string>
+    <string name="status_connecting">Connecting...</string>
+    <string name="status_connected">Connected</string>
+    <string name="status_resuming">Resuming session...</string>
+    <string name="status_error">Connection error</string>
+
+    <!-- Session Timer -->
+    <string name="session_ready">Ready</string>
+    <string name="session_active">Active</string>
+    <string name="session_resuming">Resuming...</string>
+    <string name="session_expired">Session expired</string>
+
+    <!-- Push to Talk -->
+    <string name="push_to_talk_hint">Hold to talk</string>
+    <string name="push_to_talk_listening">Listening...</string>
+    <string name="push_to_talk_processing">Processing...</string>
+
+    <!-- Pose Coaching -->
+    <string name="pose_quality_good">Good posture</string>
+    <string name="pose_quality_warning">Check alignment</string>
+    <string name="pose_quality_error">Adjust position</string>
+
+    <!-- Error Messages -->
+    <string name="error_camera_permission">Camera permission required for pose detection</string>
+    <string name="error_microphone_permission">Microphone permission required for voice coaching</string>
+    <string name="error_network">Network connection required</string>
+    <string name="error_session_expired">Session expired. Starting new session...</string>
+    <string name="error_token_refresh">Failed to refresh authentication token</string>
+
+    <!-- Notifications -->
+    <string name="notification_coaching_active">Live coaching session active</string>
+    <string name="notification_analyzing_pose">Analyzing your pose...</string>
+
+    <!-- Tool Execution -->
+    <string name="tool_pose_analysis">Pose Analysis</string>
+    <string name="tool_execution_starting">Starting analysis...</string>
+    <string name="tool_execution_running">Analyzing...</string>
+    <string name="tool_execution_completed">Analysis complete</string>
+    <string name="tool_execution_failed">Analysis failed</string>
+
+    <!-- Voice Activity -->
+    <string name="voice_detected">Voice detected</string>
+    <string name="voice_not_detected">No voice activity</string>
+
+    <!-- Suggestions -->
+    <string name="suggestion_breathing">Focus on your breathing</string>
+    <string name="suggestion_posture">Straighten your back</string>
+    <string name="suggestion_alignment">Align your shoulders</string>
+    <string name="suggestion_encouragement">Great job!</string>
+
+    <!-- Session Management -->
+    <string name="session_limit_warning">Session will end in 1 minute</string>
+    <string name="session_resuming_notification">Resuming session automatically</string>
+    <string name="session_new_starting">Starting new session...</string>
+</resources>

@@ -1,252 +1,399 @@
-name: 'Security Scan & Privacy Validation'
+name: Security Scanning & Vulnerability Assessment
 
 on:
-  schedule:
-    - cron: '0 2 * * 1' # Weekly on Monday at 2 AM
-  workflow_dispatch:
   push:
-    branches: [main]
-    paths:
-      - 'app/src/**'
-      - '**/*.gradle'
-      - 'gradle/**'
+    branches: [ main, develop ]
+  pull_request:
+    branches: [ main, develop ]
+  schedule:
+    # Run security scans daily at 2 AM UTC
+    - cron: '0 2 * * *'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  security-events: write
+  actions: read
 
 jobs:
-  security-scan:
-    name: 'Security & Privacy Scan'
+  # OWASP Dependency Check
+  dependency-security-scan:
+    name: OWASP Dependency Check
     runs-on: ubuntu-latest
-    timeout-minutes: 30
+    timeout-minutes: 15
 
     steps:
-      - name: Checkout Code
+      - name: Checkout code
         uses: actions/checkout@v4
 
-      - name: Setup JDK
-        uses: actions/setup-java@v4
-        with:
-          java-version: '17'
-          distribution: 'temurin'
-
-      - name: Build Debug APK for Analysis
-        run: ./gradlew assembleDebug
-
-      - name: Privacy Checklist Automated Validation
-        run: |
-          echo "🔒 Privacy Checklist Automated Validation"
-          echo "========================================="
-
-          # 1. Check for sensitive permissions
-          echo "1. Checking sensitive permissions..."
-          SENSITIVE_PERMS=""
-          if grep -r "android.permission.CAMERA" app/src/main/; then
-            SENSITIVE_PERMS="$SENSITIVE_PERMS CAMERA"
-            echo "   ⚠️  CAMERA permission detected"
-          fi
-          if grep -r "android.permission.RECORD_AUDIO" app/src/main/; then
-            SENSITIVE_PERMS="$SENSITIVE_PERMS RECORD_AUDIO"
-            echo "   ⚠️  RECORD_AUDIO permission detected"
-          fi
-          if grep -r "android.permission.ACCESS_FINE_LOCATION" app/src/main/; then
-            SENSITIVE_PERMS="$SENSITIVE_PERMS LOCATION"
-            echo "   ⚠️  FINE_LOCATION permission detected"
-          fi
-          if grep -r "android.permission.READ_EXTERNAL_STORAGE\|android.permission.WRITE_EXTERNAL_STORAGE" app/src/main/; then
-            SENSITIVE_PERMS="$SENSITIVE_PERMS STORAGE"
-            echo "   ⚠️  STORAGE permissions detected"
-          fi
-
-          # 2. Validate consent mechanisms
-          echo "2. Checking consent mechanisms..."
-          CONSENT_FOUND=false
-          if grep -r -i "consent\|permission.*request\|requestPermission" app/src/main/kotlin/ app/src/main/java/ 2>/dev/null; then
-            CONSENT_FOUND=true
-            echo "   ✅ Consent/permission request mechanisms found"
-          else
-            echo "   ❌ No consent mechanisms detected"
-          fi
-
-          # 3. Privacy policy references
-          echo "3. Checking privacy policy references..."
-          PRIVACY_POLICY_FOUND=false
-          if grep -r -i "privacy.*policy\|Privacy.*Policy" app/src/main/ 2>/dev/null; then
-            PRIVACY_POLICY_FOUND=true
-            echo "   ✅ Privacy policy references found"
-          else
-            echo "   ❌ No privacy policy references found"
-          fi
-
-          # 4. Data collection validation
-          echo "4. Checking data collection practices..."
-          DATA_COLLECTION=""
-          if grep -r "SharedPreferences\|getSharedPreferences" app/src/main/; then
-            DATA_COLLECTION="$DATA_COLLECTION LOCAL_STORAGE"
-            echo "   ⚠️  Local data storage detected"
-          fi
-          if grep -r "http\|https\|retrofit\|okhttp" app/src/main/; then
-            DATA_COLLECTION="$DATA_COLLECTION NETWORK"
-            echo "   ⚠️  Network communication detected"
-          fi
-          if grep -r "analytics\|Analytics\|firebase\|Firebase" app/src/main/; then
-            DATA_COLLECTION="$DATA_COLLECTION ANALYTICS"
-            echo "   ⚠️  Analytics/tracking detected"
-          fi
-
-          # 5. Generate privacy checklist report
-          echo "5. Generating privacy checklist report..."
-          cat > privacy-checklist-report.md << EOF
-          # Privacy Checklist Report
-
-          ## Sensitive Permissions Detected
-          $SENSITIVE_PERMS
-
-          ## Consent Mechanisms
-          - Status: $([ "$CONSENT_FOUND" = true ] && echo "✅ IMPLEMENTED" || echo "❌ MISSING")
-          - Required for: $SENSITIVE_PERMS
-
-          ## Privacy Policy
-          - Status: $([ "$PRIVACY_POLICY_FOUND" = true ] && echo "✅ REFERENCED" || echo "❌ MISSING")
-
-          ## Data Collection Practices
-          $DATA_COLLECTION
-
-          ## Compliance Status
-          - GDPR Ready: $([ "$CONSENT_FOUND" = true ] && [ "$PRIVACY_POLICY_FOUND" = true ] && echo "✅ YES" || echo "❌ NO")
-          - CCPA Ready: $([ "$PRIVACY_POLICY_FOUND" = true ] && echo "✅ YES" || echo "❌ NO")
-
-          Generated: $(date)
-          EOF
-
-          # Fail if critical privacy elements are missing
-          if [ "$CONSENT_FOUND" = false ] && [ -n "$SENSITIVE_PERMS" ]; then
-            echo "❌ PRIVACY VALIDATION FAILED: Sensitive permissions without consent mechanisms"
-            exit 1
-          fi
-
-          echo "✅ Privacy checklist validation completed"
-
-      - name: SAST Security Scan with CodeQL
-        uses: github/codeql-action/init@v3
-        with:
-          languages: java-kotlin
-
-      - name: Perform CodeQL Analysis
-        uses: github/codeql-action/analyze@v3
-
-      - name: OWASP Dependency Check
+      - name: Run OWASP Dependency Check
         uses: dependency-check/Dependency-Check_Action@main
+        id: depcheck
         with:
           project: 'pose-coach-android'
           path: '.'
           format: 'ALL'
+          out: 'dependency-check-reports'
           args: >
             --enableRetired
             --enableExperimental
-            --failOnCVSS 7
             --suppression dependency-check-suppressions.xml
 
-      - name: Android Security Analysis
+      - name: Upload OWASP Dependency Check results
+        uses: actions/upload-artifact@v4
+        with:
+          name: owasp-dependency-check-reports
+          path: dependency-check-reports/
+          retention-days: 30
+
+      - name: Parse vulnerability results
         run: |
-          echo "🔍 Android Security Analysis"
-          echo "============================"
+          if [ -f "dependency-check-reports/dependency-check-report.json" ]; then
+            high_vulns=$(jq '.dependencies[].vulnerabilities[]? | select(.severity == "HIGH") | .name' dependency-check-reports/dependency-check-report.json | wc -l)
+            critical_vulns=$(jq '.dependencies[].vulnerabilities[]? | select(.severity == "CRITICAL") | .name' dependency-check-reports/dependency-check-report.json | wc -l)
 
-          # Check for hardcoded secrets
-          echo "1. Scanning for hardcoded secrets..."
-          if grep -r -i "password\|secret\|api.*key\|token" app/src/main/ --include="*.kt" --include="*.java" | grep -v "//.*password" | grep -v "/\*.*password"; then
-            echo "   ⚠️  Potential hardcoded secrets found"
-          else
-            echo "   ✅ No hardcoded secrets detected"
+            echo "Critical vulnerabilities: $critical_vulns"
+            echo "High vulnerabilities: $high_vulns"
+
+            if [ "$critical_vulns" -gt 0 ]; then
+              echo "❌ Critical vulnerabilities found - blocking deployment"
+              exit 1
+            fi
+
+            if [ "$high_vulns" -gt 5 ]; then
+              echo "❌ Too many high-severity vulnerabilities ($high_vulns > 5)"
+              exit 1
+            fi
           fi
 
-          # Check for debug builds in production
-          echo "2. Checking build configurations..."
-          if grep -r "debuggable.*true" app/build.gradle; then
-            echo "   ⚠️  Debug mode detected in build configuration"
-          else
-            echo "   ✅ Debug mode properly configured"
+  # Trivy vulnerability scanner
+  trivy-security-scan:
+    name: Trivy Vulnerability Scanner
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Run Trivy vulnerability scanner
+        uses: aquasecurity/trivy-action@master
+        with:
+          scan-type: 'fs'
+          scan-ref: '.'
+          format: 'sarif'
+          output: 'trivy-results.sarif'
+          severity: 'CRITICAL,HIGH,MEDIUM'
+
+      - name: Upload Trivy scan results to GitHub Security tab
+        uses: github/codeql-action/upload-sarif@v3
+        if: always()
+        with:
+          sarif_file: 'trivy-results.sarif'
+
+      - name: Run Trivy config scan
+        uses: aquasecurity/trivy-action@master
+        with:
+          scan-type: 'config'
+          scan-ref: '.'
+          format: 'table'
+          exit-code: '1'
+          severity: 'CRITICAL,HIGH'
+
+  # Secret scanning
+  secret-scanning:
+    name: Secret Scanning & Credential Detection
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Run TruffleHog secret scanner
+        uses: trufflesecurity/trufflehog@main
+        with:
+          path: ./
+          base: main
+          head: HEAD
+          extra_args: --debug --only-verified
+
+      - name: Custom secret patterns check
+        run: |
+          echo "🔍 Scanning for common secret patterns..."
+
+          # API Keys
+          if grep -r "api[_-]key\s*=\s*[\"'][a-zA-Z0-9]{20,}" --include="*.kt" --include="*.java" --include="*.xml" --include="*.properties" .; then
+            echo "❌ Potential API keys found in code"
+            exit 1
           fi
 
-          # Check for insecure network configurations
-          echo "3. Checking network security..."
-          if grep -r "usesCleartextTraffic.*true\|android:usesCleartextTraffic=\"true\"" app/src/main/; then
-            echo "   ❌ Cleartext traffic allowed - security risk"
-          else
-            echo "   ✅ Cleartext traffic properly restricted"
+          # AWS credentials
+          if grep -r "AKIA[0-9A-Z]{16}" --include="*.kt" --include="*.java" --include="*.xml" --include="*.properties" .; then
+            echo "❌ AWS access keys found in code"
+            exit 1
+          fi
+
+          # Database passwords
+          if grep -r "password\s*=\s*[\"'][^\"']{8,}" --include="*.kt" --include="*.java" --include="*.properties" .; then
+            echo "❌ Potential passwords found in code"
+            exit 1
+          fi
+
+          # JWT tokens
+          if grep -r "eyJ[A-Za-z0-9_-]*\.[A-Za-z0-9_-]*\.[A-Za-z0-9_-]*" --include="*.kt" --include="*.java" .; then
+            echo "❌ JWT tokens found in code"
+            exit 1
+          fi
+
+          # Google API keys
+          if grep -r "AIza[0-9A-Za-z_-]{35}" --include="*.kt" --include="*.java" --include="*.xml" .; then
+            echo "❌ Google API keys found in code"
+            exit 1
+          fi
+
+          echo "✅ No secrets detected"
+
+      - name: Check for debug certificates in production
+        run: |
+          if find . -name "*.keystore" -o -name "*.jks" | grep -v "debug"; then
+            echo "❌ Production keystores found in repository"
+            exit 1
+          fi
+
+          echo "✅ No production keystores in repository"
+
+  # Android security analysis
+  android-security-analysis:
+    name: Android Security Analysis
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Set up JDK 17
+        uses: actions/setup-java@v4
+        with:
+          java-version: '17'
+          distribution: 'temurin'
+          cache: gradle
+
+      - name: Setup Android SDK
+        uses: android-actions/setup-android@v3
+
+      - name: Grant execute permission for gradlew
+        run: chmod +x gradlew
+
+      - name: Build debug APK for analysis
+        run: ./gradlew assembleDebug
+
+      - name: Run MobSF static analysis
+        uses: fundacaocerti/mobsf-action@v1.7.1
+        with:
+          input-file-path: app/build/outputs/apk/debug/app-debug.apk
+          mobsf-url: https://mobsf.live
+          api-key: ${{ secrets.MOBSF_API_KEY }}
+
+      - name: Android manifest security check
+        run: |
+          manifest="app/src/main/AndroidManifest.xml"
+
+          # Check for exported components without proper protection
+          if grep -q 'android:exported="true"' "$manifest" && ! grep -q 'android:permission' "$manifest"; then
+            echo "❌ Exported components without proper permissions found"
+            exit 1
+          fi
+
+          # Check for debug flags
+          if grep -q 'android:debuggable="true"' "$manifest"; then
+            echo "❌ Debug flag enabled in manifest"
+            exit 1
           fi
 
           # Check for backup allowance
-          echo "4. Checking backup allowance..."
-          if grep -r "allowBackup.*true\|android:allowBackup=\"true\"" app/src/main/; then
-            echo "   ⚠️  App backup is allowed - potential data exposure"
-          else
-            echo "   ✅ App backup properly configured"
+          if grep -q 'android:allowBackup="true"' "$manifest"; then
+            echo "⚠️ Backup allowed - ensure sensitive data is excluded"
           fi
 
-      - name: Mobile Security Framework (MobSF) Analysis
-        uses: docker://opensecurity/mobsf:latest
-        with:
-          entrypoint: /bin/bash
-          args: |
-            -c "
-            python3 /home/mobsf/Mobile-Security-Framework-MobSF/mobsf.py &
-            sleep 30
-            curl -X POST -F 'file=@app/build/outputs/apk/debug/app-debug.apk' http://localhost:8000/api/v1/upload || true
-            "
-        continue-on-error: true
+          # Check for clear text traffic
+          if grep -q 'android:usesCleartextTraffic="true"' "$manifest"; then
+            echo "❌ Clear text traffic allowed"
+            exit 1
+          fi
 
-      - name: Generate Security Report
+          echo "✅ Android manifest security checks passed"
+
+      - name: ProGuard/R8 configuration check
         run: |
-          mkdir -p security-reports
+          proguard_file="app/proguard-rules.pro"
 
-          cat > security-reports/security-summary.md << EOF
-          # Security Scan Summary
+          if [ -f "$proguard_file" ]; then
+            # Check for overly permissive rules
+            if grep -q "\-dontobfuscate" "$proguard_file"; then
+              echo "❌ Code obfuscation disabled"
+              exit 1
+            fi
 
-          ## Scan Results
-          - **SAST (CodeQL)**: Completed
-          - **Dependency Check**: Completed
-          - **Privacy Validation**: Completed
-          - **Mobile Security**: Completed
+            if grep -q "\-dontshrink" "$proguard_file"; then
+              echo "❌ Code shrinking disabled"
+              exit 1
+            fi
 
-          ## Critical Findings
-          $(if [ -f "reports/dependency-check-report.json" ]; then
-            echo "- Dependency vulnerabilities found (see detailed report)"
+            echo "✅ ProGuard configuration is secure"
           else
-            echo "- No critical dependency vulnerabilities"
-          fi)
+            echo "⚠️ No ProGuard configuration found"
+          fi
 
-          ## Recommendations
-          1. Review all identified vulnerabilities
-          2. Update dependencies with known vulnerabilities
-          3. Implement proper consent mechanisms for sensitive permissions
-          4. Ensure privacy policy is accessible and up-to-date
+  # Network security analysis
+  network-security-analysis:
+    name: Network Security Analysis
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
 
-          Generated: $(date)
-          EOF
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
 
-      - name: Upload Security Reports
-        uses: actions/upload-artifact@v4
-        if: always()
+      - name: Network security configuration check
+        run: |
+          nsc_file="app/src/main/res/xml/network_security_config.xml"
+
+          if [ -f "$nsc_file" ]; then
+            # Check for clear text traffic permissions
+            if grep -q "cleartextTrafficPermitted.*true" "$nsc_file"; then
+              echo "❌ Clear text traffic permitted in network security config"
+              exit 1
+            fi
+
+            # Check for certificate pinning
+            if ! grep -q "pin-set" "$nsc_file"; then
+              echo "⚠️ Certificate pinning not configured"
+            fi
+
+            echo "✅ Network security configuration is secure"
+          else
+            echo "⚠️ No network security configuration found"
+          fi
+
+      - name: Check for insecure network calls
+        run: |
+          # Check for HTTP URLs in code
+          if grep -r "http://" --include="*.kt" --include="*.java" app/src/; then
+            echo "❌ Insecure HTTP URLs found in code"
+            exit 1
+          fi
+
+          # Check for disabled SSL verification
+          if grep -r "setHostnameVerifier.*ALLOW_ALL" --include="*.kt" --include="*.java" app/src/; then
+            echo "❌ SSL hostname verification disabled"
+            exit 1
+          fi
+
+          if grep -r "trustAllCerts" --include="*.kt" --include="*.java" app/src/; then
+            echo "❌ SSL certificate validation disabled"
+            exit 1
+          fi
+
+          echo "✅ Network security checks passed"
+
+  # Data protection analysis
+  data-protection-analysis:
+    name: Data Protection & Privacy Analysis
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Check for proper data encryption
+        run: |
+          # Check for encrypted shared preferences
+          if ! grep -r "EncryptedSharedPreferences" --include="*.kt" --include="*.java" app/src/; then
+            echo "❌ Encrypted shared preferences not implemented"
+            exit 1
+          fi
+
+          # Check for database encryption
+          if grep -r "SQLiteDatabase" --include="*.kt" --include="*.java" app/src/ && ! grep -r "sqlcipher" --include="*.kt" --include="*.java" app/src/; then
+            echo "⚠️ Database encryption not detected"
+          fi
+
+          echo "✅ Data protection checks passed"
+
+      - name: Check for privacy compliance
+        run: |
+          # Check for permission explanations
+          if ! grep -r "shouldShowRequestPermissionRationale" --include="*.kt" --include="*.java" app/src/; then
+            echo "❌ Permission rationale handling not found"
+            exit 1
+          fi
+
+          # Check for data collection consent
+          if ! grep -r "privacy.*consent\|consent.*privacy" --include="*.kt" --include="*.java" app/src/; then
+            echo "❌ Privacy consent handling not found"
+            exit 1
+          fi
+
+          echo "✅ Privacy compliance checks passed"
+
+  # Security scan summary
+  security-scan-summary:
+    name: Security Scan Summary
+    runs-on: ubuntu-latest
+    needs: [
+      dependency-security-scan,
+      trivy-security-scan,
+      secret-scanning,
+      android-security-analysis,
+      network-security-analysis,
+      data-protection-analysis
+    ]
+    if: always()
+
+    steps:
+      - name: Generate security report
+        run: |
+          echo "## 🔒 Security Scan Summary"
+          echo "| Component | Status |"
+          echo "|-----------|--------|"
+          echo "| Dependencies | ${{ needs.dependency-security-scan.result == 'success' && '✅ Passed' || '❌ Failed' }} |"
+          echo "| Vulnerabilities | ${{ needs.trivy-security-scan.result == 'success' && '✅ Passed' || '❌ Failed' }} |"
+          echo "| Secrets | ${{ needs.secret-scanning.result == 'success' && '✅ Passed' || '❌ Failed' }} |"
+          echo "| Android Security | ${{ needs.android-security-analysis.result == 'success' && '✅ Passed' || '❌ Failed' }} |"
+          echo "| Network Security | ${{ needs.network-security-analysis.result == 'success' && '✅ Passed' || '❌ Failed' }} |"
+          echo "| Data Protection | ${{ needs.data-protection-analysis.result == 'success' && '✅ Passed' || '❌ Failed' }} |"
+
+      - name: Notify security team on critical issues
+        if: |
+          needs.dependency-security-scan.result == 'failure' ||
+          needs.secret-scanning.result == 'failure' ||
+          needs.android-security-analysis.result == 'failure'
+        uses: 8398a7/action-slack@v3
         with:
-          name: security-reports
-          path: |
-            security-reports/
-            reports/
-            privacy-checklist-report.md
-          retention-days: 90
+          status: failure
+          text: |
+            🚨 CRITICAL SECURITY ISSUES DETECTED 🚨
+            Repository: ${{ github.repository }}
+            Branch: ${{ github.ref }}
 
-      - name: Comment PR with Security Summary
-        if: github.event_name == 'pull_request'
-        uses: actions/github-script@v7
-        with:
-          script: |
-            const fs = require('fs');
-            try {
-              const report = fs.readFileSync('privacy-checklist-report.md', 'utf8');
-              github.rest.issues.createComment({
-                issue_number: context.issue.number,
-                owner: context.repo.owner,
-                repo: context.repo.repo,
-                body: `## 🔒 Security & Privacy Scan Results\n\n${report}`
-              });
-            } catch (error) {
-              console.log('No privacy report found or error reading file:', error.message);
-            }
+            Failed Security Checks:
+            - Dependencies: ${{ needs.dependency-security-scan.result }}
+            - Secrets: ${{ needs.secret-scanning.result }}
+            - Android: ${{ needs.android-security-analysis.result }}
+
+            Please review immediately!
+        env:
+          SLACK_WEBHOOK_URL: ${{ secrets.SECURITY_SLACK_WEBHOOK_URL }}
+
+      - name: Block merge on critical security failures
+        if: |
+          needs.dependency-security-scan.result == 'failure' ||
+          needs.secret-scanning.result == 'failure'
+        run: |
+          echo "❌ Critical security issues detected - blocking merge"
+          exit 1

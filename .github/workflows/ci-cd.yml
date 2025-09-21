@@ -1,0 +1,513 @@
+name: CI/CD Pipeline
+
+on:
+  push:
+    branches: [ main, develop, feature/* ]
+  pull_request:
+    branches: [ main, develop ]
+    types: [ opened, synchronize, reopened ]
+  workflow_dispatch:
+    inputs:
+      deploy_env:
+        description: 'Deployment environment'
+        required: true
+        default: 'staging'
+        type: choice
+        options:
+          - staging
+          - production
+
+env:
+  GRADLE_OPTS: '-Dorg.gradle.daemon=false -Dorg.gradle.parallel=true -Dorg.gradle.configureondemand=true'
+  JAVA_VERSION: '17'
+  ANDROID_COMPILE_SDK: '34'
+  ANDROID_BUILD_TOOLS: '34.0.0'
+  ANDROID_SDK_TOOLS: '9477386'
+
+jobs:
+  # Quality checks and code analysis
+  code-quality:
+    name: Code Quality & Static Analysis
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0  # Full history for better analysis
+
+      - name: Set up JDK
+        uses: actions/setup-java@v4
+        with:
+          java-version: ${{ env.JAVA_VERSION }}
+          distribution: 'temurin'
+          cache: gradle
+
+      - name: Setup Android SDK
+        uses: android-actions/setup-android@v3
+        with:
+          api-level: ${{ env.ANDROID_COMPILE_SDK }}
+          build-tools: ${{ env.ANDROID_BUILD_TOOLS }}
+
+      - name: Cache Gradle dependencies
+        uses: actions/cache@v4
+        with:
+          path: |
+            ~/.gradle/caches
+            ~/.gradle/wrapper
+            ~/.android/build-cache
+          key: ${{ runner.os }}-gradle-${{ hashFiles('**/*.gradle*', '**/gradle-wrapper.properties') }}
+          restore-keys: |
+            ${{ runner.os }}-gradle-
+
+      - name: Grant execute permission for gradlew
+        run: chmod +x gradlew
+
+      - name: Run Kotlin linting (ktlint)
+        run: ./gradlew ktlintCheck --continue
+
+      - name: Run Detekt static analysis
+        run: ./gradlew detekt --continue
+
+      - name: Run Android lint
+        run: ./gradlew lint --continue
+
+      - name: Upload lint reports
+        uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: lint-reports
+          path: |
+            **/build/reports/ktlint/
+            **/build/reports/detekt/
+            **/build/reports/lint-results-*.html
+          retention-days: 30
+
+  # Security scanning
+  security-scan:
+    name: Security Vulnerability Scan
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    permissions:
+      security-events: write
+      actions: read
+      contents: read
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Run Trivy vulnerability scanner
+        uses: aquasecurity/trivy-action@master
+        with:
+          scan-type: 'fs'
+          scan-ref: '.'
+          format: 'sarif'
+          output: 'trivy-results.sarif'
+
+      - name: Upload Trivy scan results to GitHub Security tab
+        uses: github/codeql-action/upload-sarif@v3
+        if: always()
+        with:
+          sarif_file: 'trivy-results.sarif'
+
+      - name: OWASP Dependency Check
+        uses: dependency-check/Dependency-Check_Action@main
+        with:
+          project: 'pose-coach-android'
+          path: '.'
+          format: 'ALL'
+          out: 'dependency-check-reports'
+
+      - name: Upload OWASP Dependency Check results
+        uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: dependency-check-reports
+          path: dependency-check-reports/
+          retention-days: 30
+
+  # Build and test matrix
+  build-test:
+    name: Build & Test (API ${{ matrix.api-level }})
+    runs-on: ubuntu-latest
+    timeout-minutes: 45
+    needs: [code-quality, security-scan]
+
+    strategy:
+      fail-fast: false
+      matrix:
+        api-level: [24, 28, 30, 34]
+        target: [default, google_apis]
+        exclude:
+          - api-level: 24
+            target: google_apis
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Set up JDK
+        uses: actions/setup-java@v4
+        with:
+          java-version: ${{ env.JAVA_VERSION }}
+          distribution: 'temurin'
+          cache: gradle
+
+      - name: Enable KVM group permissions
+        run: |
+          echo 'KERNEL=="kvm", GROUP="kvm", MODE="0666", OPTIONS+="static_node=kvm"' | sudo tee /etc/udev/rules.d/99-kvm4all.rules
+          sudo udev-reload-rules
+          sudo udevadm trigger --name-match=kvm
+
+      - name: Setup Android SDK
+        uses: android-actions/setup-android@v3
+        with:
+          api-level: ${{ matrix.api-level }}
+          target: ${{ matrix.target }}
+          arch: x86_64
+          force-avd-creation: false
+          emulator-options: -no-snapshot-save -no-window -gpu swiftshader_indirect -noaudio -no-boot-anim -camera-back none
+          disable-animations: true
+
+      - name: Cache Gradle dependencies
+        uses: actions/cache@v4
+        with:
+          path: |
+            ~/.gradle/caches
+            ~/.gradle/wrapper
+            ~/.android/build-cache
+          key: ${{ runner.os }}-gradle-${{ hashFiles('**/*.gradle*', '**/gradle-wrapper.properties') }}
+          restore-keys: |
+            ${{ runner.os }}-gradle-
+
+      - name: Grant execute permission for gradlew
+        run: chmod +x gradlew
+
+      - name: Build debug APK
+        run: ./gradlew assembleDebug --stacktrace
+
+      - name: Build test APK
+        run: ./gradlew assembleDebugAndroidTest --stacktrace
+
+      - name: Run unit tests
+        run: ./gradlew testDebugUnitTest --continue
+
+      - name: Run connected tests on emulator
+        uses: reactivecircus/android-emulator-runner@v2
+        with:
+          api-level: ${{ matrix.api-level }}
+          target: ${{ matrix.target }}
+          arch: x86_64
+          script: ./gradlew connectedDebugAndroidTest --continue
+
+      - name: Generate test coverage report
+        run: ./gradlew jacocoTestReport
+
+      - name: Upload test results
+        uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: test-results-api-${{ matrix.api-level }}-${{ matrix.target }}
+          path: |
+            **/build/test-results/
+            **/build/reports/tests/
+            **/build/reports/jacoco/
+          retention-days: 30
+
+      - name: Upload APKs
+        uses: actions/upload-artifact@v4
+        with:
+          name: apks-api-${{ matrix.api-level }}-${{ matrix.target }}
+          path: |
+            **/build/outputs/apk/debug/
+            **/build/outputs/apk/androidTest/debug/
+          retention-days: 30
+
+  # Performance benchmarking
+  performance-benchmark:
+    name: Performance Benchmarking
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    needs: build-test
+    if: github.event_name == 'pull_request' || github.ref == 'refs/heads/main'
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Set up JDK
+        uses: actions/setup-java@v4
+        with:
+          java-version: ${{ env.JAVA_VERSION }}
+          distribution: 'temurin'
+          cache: gradle
+
+      - name: Setup Android SDK
+        uses: android-actions/setup-android@v3
+        with:
+          api-level: 30
+          target: google_apis
+
+      - name: Grant execute permission for gradlew
+        run: chmod +x gradlew
+
+      - name: Run performance benchmarks
+        uses: reactivecircus/android-emulator-runner@v2
+        with:
+          api-level: 30
+          target: google_apis
+          script: |
+            ./gradlew :app:connectedBenchmarkAndroidTest
+            ./gradlew :core-pose:connectedBenchmarkAndroidTest
+            ./gradlew :suggestions-api:connectedBenchmarkAndroidTest
+
+      - name: Process benchmark results
+        run: |
+          # Extract performance metrics and compare with baseline
+          python3 scripts/process_benchmarks.py
+
+      - name: Upload benchmark reports
+        uses: actions/upload-artifact@v4
+        with:
+          name: benchmark-reports
+          path: |
+            **/build/reports/benchmark/
+            benchmark-comparison.json
+          retention-days: 90
+
+  # Code coverage analysis
+  coverage-analysis:
+    name: Code Coverage Analysis
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    needs: build-test
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Download test artifacts
+        uses: actions/download-artifact@v4
+        with:
+          pattern: test-results-*
+          merge-multiple: true
+
+      - name: Set up JDK
+        uses: actions/setup-java@v4
+        with:
+          java-version: ${{ env.JAVA_VERSION }}
+          distribution: 'temurin'
+          cache: gradle
+
+      - name: Grant execute permission for gradlew
+        run: chmod +x gradlew
+
+      - name: Generate merged coverage report
+        run: ./gradlew jacocoMergedReport
+
+      - name: Enforce 80% coverage requirement
+        run: ./gradlew jacocoCoverageVerification
+
+      - name: Upload coverage to Codecov
+        uses: codecov/codecov-action@v4
+        with:
+          file: build/reports/jacoco/jacocoMergedReport/jacocoMergedReport.xml
+          fail_ci_if_error: true
+          token: ${{ secrets.CODECOV_TOKEN }}
+
+      - name: Coverage comment on PR
+        if: github.event_name == 'pull_request'
+        uses: 5monkeys/cobertura-action@master
+        with:
+          path: build/reports/jacoco/jacocoMergedReport/jacocoMergedReport.xml
+          minimum_coverage: 80
+          fail_below_threshold: true
+
+  # Privacy compliance validation
+  privacy-compliance:
+    name: Privacy Compliance Check
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Check for privacy policy compliance
+        run: |
+          # Validate privacy manager implementation
+          if [ ! -f "app/src/main/kotlin/com/posecoach/app/privacy/PrivacyManager.kt" ]; then
+            echo "❌ Privacy Manager not found"
+            exit 1
+          fi
+
+          # Check for data collection consent
+          if ! grep -r "requestPermission" app/src/main/kotlin/; then
+            echo "❌ No permission requests found"
+            exit 1
+          fi
+
+          # Validate encrypted storage
+          if ! grep -r "EncryptedSharedPreferences" app/src/main/kotlin/; then
+            echo "❌ Encrypted storage not implemented"
+            exit 1
+          fi
+
+          echo "✅ Privacy compliance checks passed"
+
+  # Build release APK
+  build-release:
+    name: Build Release APK
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    needs: [coverage-analysis, privacy-compliance]
+    if: github.ref == 'refs/heads/main' || github.event_name == 'workflow_dispatch'
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Set up JDK
+        uses: actions/setup-java@v4
+        with:
+          java-version: ${{ env.JAVA_VERSION }}
+          distribution: 'temurin'
+          cache: gradle
+
+      - name: Setup Android SDK
+        uses: android-actions/setup-android@v3
+
+      - name: Grant execute permission for gradlew
+        run: chmod +x gradlew
+
+      - name: Decode signing keystore
+        env:
+          ENCODED_STRING: ${{ secrets.SIGNING_KEY_STORE_BASE64 }}
+        run: |
+          mkdir -p app/keystore
+          echo $ENCODED_STRING | base64 -di > app/keystore/release.keystore
+
+      - name: Build release APK
+        env:
+          SIGNING_KEY_ALIAS: ${{ secrets.SIGNING_KEY_ALIAS }}
+          SIGNING_KEY_PASSWORD: ${{ secrets.SIGNING_KEY_PASSWORD }}
+          SIGNING_STORE_PASSWORD: ${{ secrets.SIGNING_STORE_PASSWORD }}
+        run: |
+          ./gradlew assembleRelease \
+            -Pandroid.injected.signing.store.file=keystore/release.keystore \
+            -Pandroid.injected.signing.store.password=$SIGNING_STORE_PASSWORD \
+            -Pandroid.injected.signing.key.alias=$SIGNING_KEY_ALIAS \
+            -Pandroid.injected.signing.key.password=$SIGNING_KEY_PASSWORD
+
+      - name: Sign APK
+        uses: r0adkll/sign-android-release@v1
+        with:
+          releaseDirectory: app/build/outputs/apk/release
+          signingKeyBase64: ${{ secrets.SIGNING_KEY_STORE_BASE64 }}
+          alias: ${{ secrets.SIGNING_KEY_ALIAS }}
+          keyStorePassword: ${{ secrets.SIGNING_STORE_PASSWORD }}
+          keyPassword: ${{ secrets.SIGNING_KEY_PASSWORD }}
+
+      - name: Upload release APK
+        uses: actions/upload-artifact@v4
+        with:
+          name: release-apk
+          path: app/build/outputs/apk/release/app-release-signed.apk
+          retention-days: 90
+
+  # Deploy to staging/production
+  deploy:
+    name: Deploy to ${{ github.event.inputs.deploy_env || 'staging' }}
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    needs: build-release
+    if: github.event_name == 'workflow_dispatch' || (github.ref == 'refs/heads/main' && github.event_name == 'push')
+    environment:
+      name: ${{ github.event.inputs.deploy_env || 'staging' }}
+      url: https://play.google.com/console
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Download release APK
+        uses: actions/download-artifact@v4
+        with:
+          name: release-apk
+          path: ./
+
+      - name: Deploy to Google Play Console
+        uses: r0adkll/upload-google-play@v1
+        with:
+          serviceAccountJsonPlainText: ${{ secrets.SERVICE_ACCOUNT_JSON }}
+          packageName: com.posecoach.camera
+          releaseFiles: app-release-signed.apk
+          track: ${{ github.event.inputs.deploy_env == 'production' && 'production' || 'internal' }}
+          status: completed
+
+      - name: Create GitHub release
+        if: github.event.inputs.deploy_env == 'production'
+        uses: actions/create-release@v1
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        with:
+          tag_name: v${{ github.run_number }}
+          release_name: Release v${{ github.run_number }}
+          body: |
+            ## What's Changed
+            - Production release v${{ github.run_number }}
+            - All quality gates passed ✅
+            - Security scans completed ✅
+            - Performance benchmarks within acceptable range ✅
+
+            **Full Changelog**: ${{ github.event.compare }}
+          draft: false
+          prerelease: false
+
+  # Rollback capability
+  rollback:
+    name: Rollback Deployment
+    runs-on: ubuntu-latest
+    if: failure() && needs.deploy.result == 'failure'
+    needs: deploy
+
+    steps:
+      - name: Rollback to previous version
+        uses: r0adkll/upload-google-play@v1
+        with:
+          serviceAccountJsonPlainText: ${{ secrets.SERVICE_ACCOUNT_JSON }}
+          packageName: com.posecoach.camera
+          track: production
+          status: halted
+
+      - name: Notify team of rollback
+        uses: 8398a7/action-slack@v3
+        with:
+          status: failure
+          text: '🚨 Deployment failed and has been rolled back. Please investigate.'
+        env:
+          SLACK_WEBHOOK_URL: ${{ secrets.SLACK_WEBHOOK_URL }}
+
+  # Performance monitoring
+  monitor-production:
+    name: Monitor Production Performance
+    runs-on: ubuntu-latest
+    if: needs.deploy.result == 'success' && github.event.inputs.deploy_env == 'production'
+    needs: deploy
+
+    steps:
+      - name: Wait for deployment to propagate
+        run: sleep 300  # 5 minutes
+
+      - name: Run production smoke tests
+        run: |
+          # Add your production monitoring scripts here
+          echo "Running production health checks..."
+
+      - name: Check app performance metrics
+        run: |
+          # Query your analytics/monitoring service
+          # Verify performance is within acceptable ranges
+          echo "Checking performance metrics..."

@@ -1,0 +1,169 @@
+<?xml version="1.0" encoding="utf-8"?>
+<androidx.coordinatorlayout.widget.CoordinatorLayout
+    xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res/auto"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:background="@color/background_primary"
+    tools:context=".ui.activities.LiveCoachingActivity">
+
+    <!-- Camera Preview for Pose Detection -->
+    <androidx.camera.view.PreviewView
+        android:id="@+id/cameraPreview"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:layout_marginBottom="200dp" />
+
+    <!-- Pose Overlay Canvas -->
+    <com.posecoach.ui.components.PoseOverlayView
+        android:id="@+id/poseOverlay"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:layout_marginBottom="200dp" />
+
+    <!-- Top Status Bar -->
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="horizontal"
+        android:padding="16dp"
+        android:background="@drawable/status_bar_background"
+        android:elevation="4dp">
+
+        <!-- Connection Status -->
+        <com.posecoach.ui.components.ConnectionStatusView
+            android:id="@+id/connectionStatus"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_weight="1" />
+
+        <!-- Session Timer -->
+        <com.posecoach.ui.components.SessionTimerView
+            android:id="@+id/sessionTimer"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginStart="8dp" />
+
+        <!-- Settings Button -->
+        <ImageButton
+            android:id="@+id/settingsButton"
+            android:layout_width="48dp"
+            android:layout_height="48dp"
+            android:layout_marginStart="8dp"
+            android:src="@drawable/ic_settings"
+            android:background="@drawable/circle_button_background"
+            android:contentDescription="@string/settings" />
+
+    </LinearLayout>
+
+    <!-- Bottom Control Panel -->
+    <androidx.cardview.widget.CardView
+        android:layout_width="match_parent"
+        android:layout_height="200dp"
+        android:layout_gravity="bottom"
+        app:cardCornerRadius="16dp"
+        app:cardElevation="8dp"
+        android:layout_marginStart="8dp"
+        android:layout_marginEnd="8dp"
+        android:layout_marginBottom="8dp">
+
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"
+            android:orientation="vertical"
+            android:padding="16dp">
+
+            <!-- Voice Activity Visualization -->
+            <com.posecoach.ui.components.VoiceWaveformView
+                android:id="@+id/voiceWaveform"
+                android:layout_width="match_parent"
+                android:layout_height="40dp"
+                android:layout_marginBottom="8dp" />
+
+            <!-- Real-time Transcription -->
+            <ScrollView
+                android:layout_width="match_parent"
+                android:layout_height="0dp"
+                android:layout_weight="1"
+                android:layout_marginBottom="8dp">
+
+                <TextView
+                    android:id="@+id/transcriptionText"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:textSize="14sp"
+                    android:textColor="@color/text_primary"
+                    android:lineSpacingExtra="2dp"
+                    android:hint="@string/transcription_hint"
+                    android:textColorHint="@color/text_secondary" />
+
+            </ScrollView>
+
+            <!-- Audio Controls -->
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:orientation="horizontal"
+                android:gravity="center">
+
+                <!-- VAD Sensitivity Control -->
+                <ImageButton
+                    android:id="@+id/vadSettingsButton"
+                    android:layout_width="40dp"
+                    android:layout_height="40dp"
+                    android:src="@drawable/ic_mic_sensitivity"
+                    android:background="@drawable/circle_button_background"
+                    android:contentDescription="@string/vad_settings" />
+
+                <!-- Push-to-Talk Button -->
+                <com.posecoach.ui.components.PushToTalkButton
+                    android:id="@+id/pushToTalkButton"
+                    android:layout_width="80dp"
+                    android:layout_height="80dp"
+                    android:layout_marginStart="16dp"
+                    android:layout_marginEnd="16dp" />
+
+                <!-- Audio Device Selector -->
+                <ImageButton
+                    android:id="@+id/audioDeviceButton"
+                    android:layout_width="40dp"
+                    android:layout_height="40dp"
+                    android:src="@drawable/ic_audio_device"
+                    android:background="@drawable/circle_button_background"
+                    android:contentDescription="@string/audio_device" />
+
+            </LinearLayout>
+
+        </LinearLayout>
+
+    </androidx.cardview.widget.CardView>
+
+    <!-- Coaching Suggestions Overlay -->
+    <com.posecoach.ui.components.CoachingSuggestionsView
+        android:id="@+id/coachingSuggestions"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_gravity="center"
+        android:layout_marginStart="16dp"
+        android:layout_marginEnd="16dp"
+        android:visibility="gone" />
+
+    <!-- Tool Execution Indicator -->
+    <com.posecoach.ui.components.ToolExecutionIndicator
+        android:id="@+id/toolExecutionIndicator"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_gravity="top|end"
+        android:layout_marginTop="80dp"
+        android:layout_marginEnd="16dp"
+        android:visibility="gone" />
+
+    <!-- Error/Notification Snackbar Container -->
+    <View
+        android:id="@+id/snackbarContainer"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_gravity="bottom" />
+
+</androidx.coordinatorlayout.widget.CoordinatorLayout>

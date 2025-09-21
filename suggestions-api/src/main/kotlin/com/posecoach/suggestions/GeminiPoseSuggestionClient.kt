@@ -1,5 +1,6 @@
 package com.posecoach.suggestions
 
+import android.content.Context
 import com.google.ai.client.generativeai.GenerativeModel
 import com.google.ai.client.generativeai.type.*
 import com.posecoach.suggestions.models.PoseLandmarksData
@@ -7,11 +8,18 @@ import com.posecoach.suggestions.models.PoseSuggestion
 import com.posecoach.suggestions.models.PoseSuggestionsResponse
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
+import kotlinx.coroutines.withTimeout
 import kotlinx.serialization.json.Json
 import timber.log.Timber
+import java.util.concurrent.CancellationException
 
 class GeminiPoseSuggestionClient(
-    private val apiKey: String
+    private val context: Context,
+    private val apiKeyManager: ApiKeyManager = ApiKeyManager(context),
+    private val rateLimitManager: RateLimitManager = RateLimitManager(),
+    private val cacheManager: ResponseCacheManager = ResponseCacheManager(context),
+    private val privacyManager: PrivacyManager = PrivacyManager(context),
+    private val timeoutMs: Long = 8000L // 8 second timeout
 ) : PoseSuggestionClient {
 
     private val json = Json {
@@ -19,8 +27,8 @@ class GeminiPoseSuggestionClient(
         isLenient = true
     }
 
-    private val generativeModel by lazy {
-        GenerativeModel(
+    private fun createGenerativeModel(apiKey: String): GenerativeModel {
+        return GenerativeModel(
             modelName = "gemini-2.0-flash-exp",
             apiKey = apiKey,
             generationConfig = generationConfig {
@@ -114,22 +122,48 @@ Response must be valid JSON matching the exact schema structure.
     }
 
     override suspend fun getPoseSuggestions(landmarks: PoseLandmarksData): Result<PoseSuggestionsResponse> {
-        if (apiKey.isBlank()) {
+        // Check privacy consent first
+        if (!privacyManager.hasValidConsent()) {
+            Timber.w("No valid privacy consent for pose analysis")
+            return Result.failure(SecurityException("Privacy consent required for pose analysis"))
+        }
+
+        // Check for cached response first
+        val cachedResponse = cacheManager.getCachedSuggestions(landmarks)
+        if (cachedResponse != null) {
+            Timber.d("Returning cached suggestions for pose hash: ${landmarks.hash()}")
+            return Result.success(cachedResponse)
+        }
+
+        // Get API key
+        val apiKey = apiKeyManager.getGeminiApiKey()
+        if (apiKey.isNullOrBlank()) {
             Timber.e("Gemini API key not configured")
             return Result.failure(IllegalStateException("API key not configured"))
         }
 
         return withContext(Dispatchers.IO) {
             try {
-                val landmarksJson = landmarks.toJsonString()
+                // Check rate limits
+                if (!rateLimitManager.canMakeRequest(waitIfLimited = true)) {
+                    Timber.w("Rate limit exceeded, request blocked")
+                    return@withContext Result.failure(IllegalStateException("Rate limit exceeded"))
+                }
 
-                val prompt = buildPrompt(landmarks, landmarksJson)
+                // Anonymize landmarks for privacy
+                val anonymizedLandmarks = privacyManager.anonymizeLandmarks(landmarks, PrivacyLevel.STANDARD)
+                val landmarksJson = anonymizedLandmarks.toJsonString()
+                val prompt = buildPrompt(anonymizedLandmarks, landmarksJson)
 
                 Timber.d("Requesting suggestions from Gemini for pose hash: ${landmarks.hash()}")
 
-                val response = generativeModel.generateContent(prompt)
-                val responseText = response.text ?: throw IllegalStateException("Empty response from Gemini")
+                // Make request with timeout and retry logic
+                val response = withTimeout(timeoutMs) {
+                    val model = createGenerativeModel(apiKey)
+                    model.generateContent(prompt)
+                }
 
+                val responseText = response.text ?: throw IllegalStateException("Empty response from Gemini")
                 val suggestions = json.decodeFromString<PoseSuggestionsResponse>(responseText)
 
                 Timber.d("Received ${suggestions.suggestions.size} suggestions from Gemini")
@@ -137,32 +171,134 @@ Response must be valid JSON matching the exact schema structure.
                 // Validate response structure
                 val validatedSuggestions = validateSuggestions(suggestions)
 
-                Timber.d("Successfully validated ${validatedSuggestions.suggestions.size} suggestions")
+                // Cache the response
+                cacheManager.cacheSuggestions(landmarks, validatedSuggestions)
+
+                // Record successful request
+                rateLimitManager.recordSuccess()
+                apiKeyManager.markApiKeyAsValidated(true)
+
+                Timber.d("Successfully processed ${validatedSuggestions.suggestions.size} suggestions")
                 Result.success(validatedSuggestions)
+
+            } catch (e: CancellationException) {
+                Timber.w("Request timeout after ${timeoutMs}ms")
+                rateLimitManager.recordFailure(e)
+                Result.failure(e)
             } catch (e: Exception) {
                 Timber.e(e, "Error getting suggestions from Gemini")
+                rateLimitManager.recordFailure(e)
+                apiKeyManager.markApiKeyAsValidated(false)
                 Result.failure(e)
             }
         }
     }
 
     override suspend fun isAvailable(): Boolean {
-        return apiKey.isNotBlank() && try {
+        // Check if we have consent and API key
+        if (!privacyManager.hasValidConsent()) {
+            Timber.d("Gemini client not available: no privacy consent")
+            return false
+        }
+
+        val apiKey = apiKeyManager.getGeminiApiKey()
+        if (apiKey.isNullOrBlank()) {
+            Timber.d("Gemini client not available: no API key")
+            return false
+        }
+
+        // Check rate limits
+        val rateLimitStatus = rateLimitManager.getRateLimitStatus()
+        if (rateLimitStatus.isLimited) {
+            Timber.d("Gemini client not available: rate limited")
+            return false
+        }
+
+        // Use cached validation result if recent
+        if (apiKeyManager.isApiKeyRecentlyValidated()) {
+            return true
+        }
+
+        // Test API connectivity
+        return try {
             withContext(Dispatchers.IO) {
-                val testModel = GenerativeModel(
-                    modelName = "gemini-2.0-flash-exp",
-                    apiKey = apiKey
-                )
-                val response = testModel.generateContent("test")
-                response.text != null
+                withTimeout(5000L) { // 5 second timeout for availability check
+                    val testModel = createGenerativeModel(apiKey)
+                    val response = testModel.generateContent("test")
+                    val isAvailable = response.text != null
+
+                    apiKeyManager.markApiKeyAsValidated(isAvailable)
+                    Timber.d("Gemini API availability test: $isAvailable")
+
+                    isAvailable
+                }
             }
         } catch (e: Exception) {
             Timber.e(e, "Gemini API not available")
+            apiKeyManager.markApiKeyAsValidated(false)
             false
         }
     }
 
     override fun requiresApiKey(): Boolean = true
+
+    /**
+     * Get detailed status of the Gemini client
+     */
+    fun getClientStatus(): GeminiClientStatus {
+        val apiKey = apiKeyManager.getGeminiApiKey()
+        val rateLimitStatus = rateLimitManager.getRateLimitStatus()
+        val privacyStatus = privacyManager.getPrivacyStatus()
+
+        return GeminiClientStatus(
+            hasApiKey = !apiKey.isNullOrBlank(),
+            apiKeySource = apiKeyManager.getApiKeySource(),
+            isApiKeyValidated = apiKeyManager.isApiKeyRecentlyValidated(),
+            hasPrivacyConsent = privacyStatus.hasConsent,
+            rateLimitStatus = rateLimitStatus,
+            privacyLevel = PrivacyLevel.STANDARD
+        )
+    }
+
+    /**
+     * Retry failed request with exponential backoff
+     */
+    suspend fun retryWithBackoff(
+        landmarks: PoseLandmarksData,
+        maxRetries: Int = 3
+    ): Result<PoseSuggestionsResponse> {
+        var lastException: Exception? = null
+
+        repeat(maxRetries) { attempt ->
+            try {
+                val result = getPoseSuggestions(landmarks)
+                if (result.isSuccess) {
+                    return result
+                }
+                lastException = result.exceptionOrNull() as? Exception
+            } catch (e: Exception) {
+                lastException = e
+                Timber.w(e, "Retry attempt ${attempt + 1} failed")
+
+                // Exponential backoff: 1s, 2s, 4s
+                if (attempt < maxRetries - 1) {
+                    val delayMs = 1000L * (1 shl attempt)
+                    kotlinx.coroutines.delay(delayMs)
+                }
+            }
+        }
+
+        return Result.failure(lastException ?: Exception("All retry attempts failed"))
+    }
+
+    data class GeminiClientStatus(
+        val hasApiKey: Boolean,
+        val apiKeySource: String,
+        val isApiKeyValidated: Boolean,
+        val hasPrivacyConsent: Boolean,
+        val rateLimitStatus: RateLimitStatus,
+        val privacyLevel: PrivacyLevel
+    )}
 
     private fun buildPrompt(landmarks: PoseLandmarksData, landmarksJson: String): String {
         val poseAnalysis = analyzePoseContext(landmarks)

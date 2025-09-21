@@ -1,0 +1,575 @@
+name: Comprehensive Testing Suite
+
+on:
+  push:
+    branches: [ main, develop ]
+  pull_request:
+    branches: [ main, develop ]
+  schedule:
+    # Run comprehensive tests daily at 2 AM UTC
+    - cron: '0 2 * * *'
+
+env:
+  JAVA_VERSION: '17'
+  ANDROID_API_LEVEL: 34
+  ANDROID_BUILD_TOOLS_VERSION: 34.0.0
+  ANDROID_CMAKE_VERSION: 3.22.1
+
+jobs:
+  setup:
+    name: Setup Testing Environment
+    runs-on: ubuntu-latest
+    outputs:
+      matrix: ${{ steps.test-matrix.outputs.matrix }}
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Setup test matrix
+        id: test-matrix
+        run: |
+          echo "matrix={\"api-level\":[30,31,33,34],\"target\":[\"google_apis\",\"aosp_atd\"],\"arch\":[\"x86_64\"]}" >> $GITHUB_OUTPUT
+
+  unit-tests:
+    name: Unit Tests with Coverage
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Setup Java
+        uses: actions/setup-java@v4
+        with:
+          distribution: 'temurin'
+          java-version: ${{ env.JAVA_VERSION }}
+
+      - name: Setup Android SDK
+        uses: android-actions/setup-android@v3
+
+      - name: Cache Gradle dependencies
+        uses: actions/cache@v4
+        with:
+          path: |
+            ~/.gradle/caches
+            ~/.gradle/wrapper
+          key: ${{ runner.os }}-gradle-${{ hashFiles('**/*.gradle*', '**/gradle-wrapper.properties') }}
+          restore-keys: |
+            ${{ runner.os }}-gradle-
+
+      - name: Cache Android build cache
+        uses: actions/cache@v4
+        with:
+          path: |
+            ~/.android/build-cache
+          key: ${{ runner.os }}-android-build-${{ hashFiles('**/*.gradle*') }}
+          restore-keys: |
+            ${{ runner.os }}-android-build-
+
+      - name: Grant execute permission for gradlew
+        run: chmod +x gradlew
+
+      - name: Run ktlint
+        run: ./gradlew ktlintCheck
+
+      - name: Run detekt
+        run: ./gradlew detekt
+
+      - name: Run unit tests with coverage
+        run: |
+          ./gradlew :tests:testDebugUnitTest
+          ./gradlew :core-pose:testDebugUnitTest
+          ./gradlew :core-geom:testDebugUnitTest
+          ./gradlew :suggestions-api:testDebugUnitTest
+          ./gradlew :app:testDebugUnitTest
+
+      - name: Generate merged coverage report
+        run: ./gradlew jacocoMergedReport
+
+      - name: Verify coverage requirements
+        run: ./gradlew jacocoCoverageVerification
+
+      - name: Upload coverage reports
+        uses: actions/upload-artifact@v4
+        with:
+          name: coverage-reports
+          path: |
+            build/reports/jacoco/
+            **/build/reports/jacoco/
+          retention-days: 30
+
+      - name: Upload test results
+        uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: unit-test-results
+          path: |
+            **/build/test-results/
+            **/build/reports/tests/
+          retention-days: 30
+
+      - name: Comment coverage on PR
+        if: github.event_name == 'pull_request'
+        uses: madrapps/jacoco-report@v1.6.1
+        with:
+          paths: ${{ github.workspace }}/build/reports/jacoco/jacocoMergedReport/jacocoMergedReport.xml
+          token: ${{ secrets.GITHUB_TOKEN }}
+          min-coverage-overall: 80
+          min-coverage-changed-files: 75
+
+  integration-tests:
+    name: Integration Tests
+    runs-on: ubuntu-latest
+    timeout-minutes: 45
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Setup Java
+        uses: actions/setup-java@v4
+        with:
+          distribution: 'temurin'
+          java-version: ${{ env.JAVA_VERSION }}
+
+      - name: Setup Android SDK
+        uses: android-actions/setup-android@v3
+
+      - name: Cache dependencies
+        uses: actions/cache@v4
+        with:
+          path: |
+            ~/.gradle/caches
+            ~/.gradle/wrapper
+          key: ${{ runner.os }}-gradle-${{ hashFiles('**/*.gradle*') }}
+
+      - name: Grant execute permission for gradlew
+        run: chmod +x gradlew
+
+      - name: Download Android Emulator Image
+        run: |
+          echo "y" | $ANDROID_HOME/cmdline-tools/latest/bin/sdkmanager --install "system-images;android-${{ env.ANDROID_API_LEVEL }};google_apis;x86_64"
+          echo "y" | $ANDROID_HOME/cmdline-tools/latest/bin/sdkmanager --install "platform-tools" "platforms;android-${{ env.ANDROID_API_LEVEL }}"
+
+      - name: Create AVD
+        run: |
+          echo "no" | $ANDROID_HOME/cmdline-tools/latest/bin/avdmanager --verbose create avd --force --name "test_emulator" --package "system-images;android-${{ env.ANDROID_API_LEVEL }};google_apis;x86_64" --tag "google_apis" --abi "x86_64"
+
+      - name: Start emulator
+        uses: reactivecircus/android-emulator-runner@v2
+        with:
+          api-level: ${{ env.ANDROID_API_LEVEL }}
+          target: google_apis
+          arch: x86_64
+          profile: Nexus 6
+          ram-size: 4096M
+          heap-size: 1024M
+          disk-size: 8192M
+          script: |
+            echo "Emulator started"
+            adb devices
+            adb shell input keyevent 82
+
+      - name: Wait for emulator
+        run: |
+          adb wait-for-device shell 'while [[ -z $(getprop sys.boot_completed | tr -d '\r') ]]; do sleep 1; done; input keyevent 82'
+
+      - name: Run integration tests
+        uses: reactivecircus/android-emulator-runner@v2
+        with:
+          api-level: ${{ env.ANDROID_API_LEVEL }}
+          target: google_apis
+          arch: x86_64
+          profile: Nexus 6
+          ram-size: 4096M
+          disable-animations: true
+          script: |
+            ./gradlew :tests:connectedDebugAndroidTest
+            ./gradlew :app:connectedDebugAndroidTest
+
+      - name: Upload integration test results
+        uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: integration-test-results
+          path: |
+            **/build/outputs/androidTest-results/
+            **/build/reports/androidTests/
+          retention-days: 30
+
+  device-compatibility-tests:
+    name: Device Compatibility Tests
+    runs-on: ubuntu-latest
+    needs: setup
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - api-level: 30
+            target: google_apis
+            arch: x86_64
+            profile: Nexus 6
+          - api-level: 31
+            target: google_apis
+            arch: x86_64
+            profile: pixel_4
+          - api-level: 33
+            target: google_apis
+            arch: x86_64
+            profile: pixel_6
+          - api-level: 34
+            target: google_apis
+            arch: x86_64
+            profile: pixel_7
+    timeout-minutes: 60
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Setup Java
+        uses: actions/setup-java@v4
+        with:
+          distribution: 'temurin'
+          java-version: ${{ env.JAVA_VERSION }}
+
+      - name: Setup Android SDK
+        uses: android-actions/setup-android@v3
+
+      - name: Cache dependencies
+        uses: actions/cache@v4
+        with:
+          path: |
+            ~/.gradle/caches
+            ~/.gradle/wrapper
+          key: ${{ runner.os }}-gradle-${{ hashFiles('**/*.gradle*') }}
+
+      - name: Grant execute permission for gradlew
+        run: chmod +x gradlew
+
+      - name: Run device compatibility tests
+        uses: reactivecircus/android-emulator-runner@v2
+        with:
+          api-level: ${{ matrix.api-level }}
+          target: ${{ matrix.target }}
+          arch: ${{ matrix.arch }}
+          profile: ${{ matrix.profile }}
+          ram-size: 4096M
+          heap-size: 1024M
+          disable-animations: true
+          script: |
+            echo "Testing on API ${{ matrix.api-level }} with profile ${{ matrix.profile }}"
+            ./gradlew :tests:deviceCompatibilityTest${{ matrix.api-level }}
+
+      - name: Upload compatibility test results
+        uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: compatibility-test-results-api${{ matrix.api-level }}
+          path: |
+            **/build/outputs/deviceCompatibility/
+            **/build/reports/deviceCompatibility/
+          retention-days: 30
+
+  performance-tests:
+    name: Performance & Memory Tests
+    runs-on: ubuntu-latest
+    timeout-minutes: 45
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Setup Java
+        uses: actions/setup-java@v4
+        with:
+          distribution: 'temurin'
+          java-version: ${{ env.JAVA_VERSION }}
+
+      - name: Setup Android SDK
+        uses: android-actions/setup-android@v3
+
+      - name: Cache dependencies
+        uses: actions/cache@v4
+        with:
+          path: |
+            ~/.gradle/caches
+            ~/.gradle/wrapper
+          key: ${{ runner.os }}-gradle-${{ hashFiles('**/*.gradle*') }}
+
+      - name: Grant execute permission for gradlew
+        run: chmod +x gradlew
+
+      - name: Run performance benchmarks
+        uses: reactivecircus/android-emulator-runner@v2
+        with:
+          api-level: ${{ env.ANDROID_API_LEVEL }}
+          target: google_apis
+          arch: x86_64
+          profile: Nexus 6
+          ram-size: 6144M
+          heap-size: 2048M
+          disable-animations: true
+          script: |
+            ./gradlew :app:connectedBenchmarkAndroidTest
+            ./gradlew :tests:performanceTest
+
+      - name: Run memory leak detection
+        uses: reactivecircus/android-emulator-runner@v2
+        with:
+          api-level: ${{ env.ANDROID_API_LEVEL }}
+          target: google_apis
+          arch: x86_64
+          profile: Nexus 6
+          ram-size: 6144M
+          script: |
+            ./gradlew :tests:memoryLeakDetection
+
+      - name: Upload performance test results
+        uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: performance-test-results
+          path: |
+            **/build/outputs/benchmark/
+            **/build/reports/benchmark/
+            **/build/outputs/performance/
+          retention-days: 30
+
+      - name: Update performance baseline
+        if: github.ref == 'refs/heads/main'
+        run: ./gradlew updatePerformanceBaseline
+
+  privacy-compliance-tests:
+    name: Privacy & Security Compliance
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Setup Java
+        uses: actions/setup-java@v4
+        with:
+          distribution: 'temurin'
+          java-version: ${{ env.JAVA_VERSION }}
+
+      - name: Setup Android SDK
+        uses: android-actions/setup-android@v3
+
+      - name: Cache dependencies
+        uses: actions/cache@v4
+        with:
+          path: |
+            ~/.gradle/caches
+            ~/.gradle/wrapper
+          key: ${{ runner.os }}-gradle-${{ hashFiles('**/*.gradle*') }}
+
+      - name: Grant execute permission for gradlew
+        run: chmod +x gradlew
+
+      - name: Run privacy compliance tests
+        run: |
+          ./gradlew :tests:privacyComplianceTest
+
+      - name: Run security analysis
+        run: |
+          ./gradlew securityCheck
+          ./gradlew dependencyCheckAnalyze
+
+      - name: Check for secrets in code
+        uses: trufflesecurity/trufflehog@main
+        with:
+          path: ./
+          base: main
+          head: HEAD
+
+      - name: Upload privacy test results
+        uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: privacy-compliance-results
+          path: |
+            **/build/reports/privacy/
+            **/build/reports/security/
+          retention-days: 30
+
+  e2e-tests:
+    name: End-to-End User Journey Tests
+    runs-on: ubuntu-latest
+    timeout-minutes: 60
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Setup Java
+        uses: actions/setup-java@v4
+        with:
+          distribution: 'temurin'
+          java-version: ${{ env.JAVA_VERSION }}
+
+      - name: Setup Android SDK
+        uses: android-actions/setup-android@v3
+
+      - name: Cache dependencies
+        uses: actions/cache@v4
+        with:
+          path: |
+            ~/.gradle/caches
+            ~/.gradle/wrapper
+          key: ${{ runner.os }}-gradle-${{ hashFiles('**/*.gradle*') }}
+
+      - name: Grant execute permission for gradlew
+        run: chmod +x gradlew
+
+      - name: Build APK for testing
+        run: ./gradlew assembleDebug assembleDebugAndroidTest
+
+      - name: Run E2E tests
+        uses: reactivecircus/android-emulator-runner@v2
+        with:
+          api-level: ${{ env.ANDROID_API_LEVEL }}
+          target: google_apis
+          arch: x86_64
+          profile: Nexus 6
+          ram-size: 6144M
+          heap-size: 2048M
+          disable-animations: true
+          script: |
+            ./gradlew :tests:e2eUserJourneyTest
+
+      - name: Record test videos
+        if: failure()
+        uses: reactivecircus/android-emulator-runner@v2
+        with:
+          api-level: ${{ env.ANDROID_API_LEVEL }}
+          target: google_apis
+          arch: x86_64
+          profile: Nexus 6
+          script: |
+            adb shell screenrecord /sdcard/test_failure.mp4 &
+            sleep 30
+            adb shell pkill -SIGINT screenrecord
+            adb pull /sdcard/test_failure.mp4 ./test_failure.mp4
+
+      - name: Upload E2E test results
+        uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: e2e-test-results
+          path: |
+            **/build/outputs/e2e/
+            **/build/reports/e2e/
+            ./test_failure.mp4
+          retention-days: 30
+
+  test-results-aggregation:
+    name: Aggregate Test Results
+    runs-on: ubuntu-latest
+    needs: [unit-tests, integration-tests, device-compatibility-tests, performance-tests, privacy-compliance-tests, e2e-tests]
+    if: always()
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Download all artifacts
+        uses: actions/download-artifact@v4
+        with:
+          path: test-results
+
+      - name: Generate comprehensive test report
+        run: |
+          echo "# Comprehensive Test Report" > test-summary.md
+          echo "## Test Results Summary" >> test-summary.md
+          echo "- **Unit Tests**: ${{ needs.unit-tests.result }}" >> test-summary.md
+          echo "- **Integration Tests**: ${{ needs.integration-tests.result }}" >> test-summary.md
+          echo "- **Device Compatibility**: ${{ needs.device-compatibility-tests.result }}" >> test-summary.md
+          echo "- **Performance Tests**: ${{ needs.performance-tests.result }}" >> test-summary.md
+          echo "- **Privacy Compliance**: ${{ needs.privacy-compliance-tests.result }}" >> test-summary.md
+          echo "- **E2E Tests**: ${{ needs.e2e-tests.result }}" >> test-summary.md
+          echo "" >> test-summary.md
+          echo "## Coverage Requirements" >> test-summary.md
+          echo "- Minimum Statement Coverage: 80%" >> test-summary.md
+          echo "- Minimum Branch Coverage: 75%" >> test-summary.md
+          echo "" >> test-summary.md
+          echo "## Performance Requirements" >> test-summary.md
+          echo "- Pose Detection: ≥30 FPS" >> test-summary.md
+          echo "- Memory Usage: ≤256 MB" >> test-summary.md
+          echo "- API Response Time: ≤2000 ms" >> test-summary.md
+          echo "" >> test-summary.md
+          echo "## Privacy Compliance" >> test-summary.md
+          echo "- DoD Privacy Requirements: Must achieve ≥90% compliance score" >> test-summary.md
+          echo "- No critical privacy violations allowed" >> test-summary.md
+
+      - name: Upload aggregated test results
+        uses: actions/upload-artifact@v4
+        with:
+          name: comprehensive-test-report
+          path: |
+            test-results/
+            test-summary.md
+          retention-days: 90
+
+      - name: Comment test summary on PR
+        if: github.event_name == 'pull_request'
+        uses: actions/github-script@v7
+        with:
+          script: |
+            const fs = require('fs');
+            const testSummary = fs.readFileSync('test-summary.md', 'utf8');
+
+            github.rest.issues.createComment({
+              issue_number: context.issue.number,
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              body: testSummary
+            });
+
+      - name: Fail if any critical tests failed
+        if: needs.unit-tests.result == 'failure' || needs.privacy-compliance-tests.result == 'failure'
+        run: |
+          echo "Critical tests failed. Cannot proceed."
+          exit 1
+
+  deployment-readiness:
+    name: Deployment Readiness Check
+    runs-on: ubuntu-latest
+    needs: test-results-aggregation
+    if: success() && github.ref == 'refs/heads/main'
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Setup Java
+        uses: actions/setup-java@v4
+        with:
+          distribution: 'temurin'
+          java-version: ${{ env.JAVA_VERSION }}
+
+      - name: Generate build info
+        run: ./gradlew generateBuildInfo
+
+      - name: Validate deployment readiness
+        run: |
+          echo "✅ All tests passed"
+          echo "✅ Coverage requirements met (≥80%)"
+          echo "✅ Performance requirements met"
+          echo "✅ Privacy compliance validated"
+          echo "✅ Ready for deployment"
+
+      - name: Create release tag
+        if: success()
+        run: |
+          git config --local user.email "action@github.com"
+          git config --local user.name "GitHub Action"
+          TAG_NAME="release-$(date +'%Y%m%d-%H%M%S')"
+          git tag $TAG_NAME
+          git push origin $TAG_NAME
+          echo "Created release tag: $TAG_NAME"

@@ -1,0 +1,449 @@
+name: Gemini Live API Testing Suite
+
+on:
+  push:
+    branches: [ main, develop ]
+  pull_request:
+    branches: [ main ]
+  schedule:
+    # Run nightly compliance tests
+    - cron: '0 2 * * *'
+
+env:
+  JAVA_VERSION: '17'
+  ANDROID_API_LEVEL: '34'
+  ANDROID_BUILD_TOOLS: '34.0.0'
+
+jobs:
+  unit-tests:
+    name: Unit Tests
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+
+    - name: Setup JDK
+      uses: actions/setup-java@v4
+      with:
+        java-version: ${{ env.JAVA_VERSION }}
+        distribution: 'temurin'
+
+    - name: Setup Android SDK
+      uses: android-actions/setup-android@v3
+
+    - name: Cache Gradle dependencies
+      uses: actions/cache@v3
+      with:
+        path: |
+          ~/.gradle/caches
+          ~/.gradle/wrapper
+        key: ${{ runner.os }}-gradle-${{ hashFiles('**/*.gradle*', '**/gradle-wrapper.properties') }}
+        restore-keys: |
+          ${{ runner.os }}-gradle-
+
+    - name: Grant execute permission for gradlew
+      run: chmod +x gradlew
+
+    - name: Run WebSocket Protocol Tests
+      run: ./gradlew :tests:testDebugUnitTest --tests "*.websocket.*" --stacktrace
+
+    - name: Run Session Management Tests
+      run: ./gradlew :tests:testDebugUnitTest --tests "*.session.*" --stacktrace
+
+    - name: Run Audio Processing Tests
+      run: ./gradlew :tests:testDebugUnitTest --tests "*.audio.*" --stacktrace
+
+    - name: Run Authentication Tests
+      run: ./gradlew :tests:testDebugUnitTest --tests "*.auth.*" --stacktrace
+
+    - name: Run Tool Integration Tests
+      run: ./gradlew :tests:testDebugUnitTest --tests "*.tools.*" --stacktrace
+
+    - name: Generate Test Reports
+      run: ./gradlew :tests:jacocoTestReport
+
+    - name: Upload Test Results
+      uses: actions/upload-artifact@v3
+      if: always()
+      with:
+        name: unit-test-results
+        path: |
+          tests/build/reports/tests/
+          tests/build/reports/jacoco/
+
+  performance-tests:
+    name: Performance & Load Tests
+    runs-on: ubuntu-latest
+    timeout-minutes: 45
+
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+
+    - name: Setup JDK
+      uses: actions/setup-java@v4
+      with:
+        java-version: ${{ env.JAVA_VERSION }}
+        distribution: 'temurin'
+
+    - name: Setup Android SDK
+      uses: android-actions/setup-android@v3
+
+    - name: Cache Gradle dependencies
+      uses: actions/cache@v3
+      with:
+        path: |
+          ~/.gradle/caches
+          ~/.gradle/wrapper
+        key: ${{ runner.os }}-gradle-${{ hashFiles('**/*.gradle*', '**/gradle-wrapper.properties') }}
+        restore-keys: |
+          ${{ runner.os }}-gradle-
+
+    - name: Run Performance Tests
+      run: ./gradlew :tests:testDebugUnitTest --tests "*.performance.*" --stacktrace
+
+    - name: Run Error Recovery Tests
+      run: ./gradlew :tests:testDebugUnitTest --tests "*.recovery.*" --stacktrace
+
+    - name: Generate Performance Report
+      run: ./gradlew :tests:generatePerformanceReport
+
+    - name: Upload Performance Reports
+      uses: actions/upload-artifact@v3
+      if: always()
+      with:
+        name: performance-test-results
+        path: |
+          tests/build/reports/performance/
+          tests/build/reports/performance-benchmark.json
+
+  integration-tests:
+    name: Integration Tests
+    runs-on: ubuntu-latest
+    timeout-minutes: 60
+
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+
+    - name: Setup JDK
+      uses: actions/setup-java@v4
+      with:
+        java-version: ${{ env.JAVA_VERSION }}
+        distribution: 'temurin'
+
+    - name: Setup Android SDK
+      uses: android-actions/setup-android@v3
+
+    - name: Cache Gradle dependencies
+      uses: actions/cache@v3
+      with:
+        path: |
+          ~/.gradle/caches
+          ~/.gradle/wrapper
+        key: ${{ runner.os }}-gradle-${{ hashFiles('**/*.gradle*', '**/gradle-wrapper.properties') }}
+        restore-keys: |
+          ${{ runner.os }}-gradle-
+
+    - name: Run Complete Integration Test Suite
+      run: ./gradlew :tests:testDebugUnitTest --tests "*.framework.GeminiLiveApiTestFramework" --stacktrace
+
+    - name: Generate Compliance Report
+      run: ./gradlew :tests:generateComplianceReport
+
+    - name: Upload Integration Test Results
+      uses: actions/upload-artifact@v3
+      if: always()
+      with:
+        name: integration-test-results
+        path: |
+          tests/build/reports/gemini-live-api-compliance.html
+          tests/build/reports/production-readiness.html
+
+  android-instrumentation-tests:
+    name: Android Instrumentation Tests
+    runs-on: macos-latest
+    timeout-minutes: 60
+
+    strategy:
+      matrix:
+        api-level: [24, 28, 31, 34]
+
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+
+    - name: Setup JDK
+      uses: actions/setup-java@v4
+      with:
+        java-version: ${{ env.JAVA_VERSION }}
+        distribution: 'temurin'
+
+    - name: Setup Android SDK
+      uses: android-actions/setup-android@v3
+
+    - name: Cache Gradle dependencies
+      uses: actions/cache@v3
+      with:
+        path: |
+          ~/.gradle/caches
+          ~/.gradle/wrapper
+        key: ${{ runner.os }}-gradle-${{ hashFiles('**/*.gradle*', '**/gradle-wrapper.properties') }}
+        restore-keys: |
+          ${{ runner.os }}-gradle-
+
+    - name: AVD cache
+      uses: actions/cache@v3
+      id: avd-cache
+      with:
+        path: |
+          ~/.android/avd/*
+          ~/.android/adb*
+        key: avd-${{ matrix.api-level }}
+
+    - name: Create AVD and generate snapshot for caching
+      if: steps.avd-cache.outputs.cache-hit != 'true'
+      uses: reactivecircus/android-emulator-runner@v2
+      with:
+        api-level: ${{ matrix.api-level }}
+        target: google_apis
+        arch: x86_64
+        force-avd-creation: false
+        emulator-options: -no-window -gpu swiftshader_indirect -noaudio -no-boot-anim -camera-back none
+        disable-animations: false
+        script: echo "Generated AVD snapshot for caching."
+
+    - name: Run Android Instrumentation Tests
+      uses: reactivecircus/android-emulator-runner@v2
+      with:
+        api-level: ${{ matrix.api-level }}
+        target: google_apis
+        arch: x86_64
+        force-avd-creation: false
+        emulator-options: -no-snapshot-save -no-window -gpu swiftshader_indirect -noaudio -no-boot-anim -camera-back none
+        disable-animations: true
+        script: |
+          adb shell settings put global window_animation_scale 0
+          adb shell settings put global transition_animation_scale 0
+          adb shell settings put global animator_duration_scale 0
+          ./gradlew :tests:connectedDebugAndroidTest --stacktrace
+
+    - name: Upload Android Test Results
+      uses: actions/upload-artifact@v3
+      if: always()
+      with:
+        name: android-test-results-api-${{ matrix.api-level }}
+        path: |
+          tests/build/reports/androidTests/
+          tests/build/outputs/androidTest-results/
+
+  security-tests:
+    name: Security & Compliance Tests
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+
+    - name: Setup JDK
+      uses: actions/setup-java@v4
+      with:
+        java-version: ${{ env.JAVA_VERSION }}
+        distribution: 'temurin'
+
+    - name: Run Dependency Check
+      run: |
+        ./gradlew dependencyCheckAnalyze --info
+
+    - name: Run Security Audit
+      run: |
+        ./gradlew :tests:testDebugUnitTest --tests "*Security*" --stacktrace
+
+    - name: Run Token Security Validation
+      run: |
+        ./gradlew :tests:testDebugUnitTest --tests "*auth*security*" --stacktrace
+
+    - name: Upload Security Reports
+      uses: actions/upload-artifact@v3
+      if: always()
+      with:
+        name: security-reports
+        path: |
+          build/reports/dependency-check-report.html
+          tests/build/reports/security/
+
+  stress-tests:
+    name: Stress & Stability Tests
+    runs-on: ubuntu-latest
+    timeout-minutes: 120
+    if: github.event_name == 'schedule' || contains(github.event.head_commit.message, '[stress-test]')
+
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+
+    - name: Setup JDK
+      uses: actions/setup-java@v4
+      with:
+        java-version: ${{ env.JAVA_VERSION }}
+        distribution: 'temurin'
+
+    - name: Setup Android SDK
+      uses: android-actions/setup-android@v3
+
+    - name: Cache Gradle dependencies
+      uses: actions/cache@v3
+      with:
+        path: |
+          ~/.gradle/caches
+          ~/.gradle/wrapper
+        key: ${{ runner.os }}-gradle-${{ hashFiles('**/*.gradle*', '**/gradle-wrapper.properties') }}
+        restore-keys: |
+          ${{ runner.os }}-gradle-
+
+    - name: Run Long-Running Stability Tests
+      run: ./gradlew :tests:testDebugUnitTest --tests "*stability*" --stacktrace
+
+    - name: Run Concurrent User Simulation
+      run: ./gradlew :tests:testDebugUnitTest --tests "*concurrent*simulation*" --stacktrace
+
+    - name: Run Memory Leak Tests
+      run: ./gradlew :tests:testDebugUnitTest --tests "*memory*leak*" --stacktrace
+
+    - name: Upload Stress Test Results
+      uses: actions/upload-artifact@v3
+      if: always()
+      with:
+        name: stress-test-results
+        path: |
+          tests/build/reports/stress/
+          tests/build/reports/stability/
+
+  compliance-validation:
+    name: Gemini Live API Compliance Validation
+    runs-on: ubuntu-latest
+    timeout-minutes: 45
+    needs: [unit-tests, performance-tests, integration-tests]
+
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+
+    - name: Setup JDK
+      uses: actions/setup-java@v4
+      with:
+        java-version: ${{ env.JAVA_VERSION }}
+        distribution: 'temurin'
+
+    - name: Download All Test Artifacts
+      uses: actions/download-artifact@v3
+
+    - name: Run Full Compliance Validation
+      run: |
+        ./gradlew :tests:validateCompliance --stacktrace
+
+    - name: Generate Final Compliance Report
+      run: |
+        ./gradlew :tests:generateFinalComplianceReport
+
+    - name: Check Production Readiness
+      id: readiness-check
+      run: |
+        ./gradlew :tests:checkProductionReadiness
+        echo "ready=$(grep -q 'PRODUCTION READY' tests/build/reports/production-readiness.html && echo 'true' || echo 'false')" >> $GITHUB_OUTPUT
+
+    - name: Comment PR with Compliance Status
+      if: github.event_name == 'pull_request'
+      uses: actions/github-script@v6
+      with:
+        script: |
+          const fs = require('fs');
+          const path = 'tests/build/reports/gemini-live-api-compliance.html';
+
+          if (fs.existsSync(path)) {
+            const report = fs.readFileSync(path, 'utf8');
+            const isCompliant = report.includes('✅ COMPLIANT');
+            const isReady = '${{ steps.readiness-check.outputs.ready }}' === 'true';
+
+            const status = isCompliant && isReady ? '✅ READY FOR PRODUCTION' : '❌ NOT READY';
+            const details = isCompliant ?
+              'All Gemini Live API compliance tests passed.' :
+              'Some compliance tests failed. Check the detailed report.';
+
+            github.rest.issues.createComment({
+              issue_number: context.issue.number,
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              body: `## Gemini Live API Compliance Report\n\n**Status:** ${status}\n\n**Details:** ${details}\n\n[View Detailed Report](https://github.com/${context.repo.owner}/${context.repo.repo}/actions/runs/${context.runId})`
+            });
+          }
+
+    - name: Upload Final Compliance Report
+      uses: actions/upload-artifact@v3
+      if: always()
+      with:
+        name: final-compliance-report
+        path: |
+          tests/build/reports/gemini-live-api-compliance.html
+          tests/build/reports/production-readiness.html
+          tests/build/reports/performance-benchmark.json
+
+    - name: Deploy Reports to GitHub Pages
+      if: github.ref == 'refs/heads/main' && github.event_name == 'push'
+      uses: peaceiris/actions-gh-pages@v3
+      with:
+        github_token: ${{ secrets.GITHUB_TOKEN }}
+        publish_dir: tests/build/reports/
+        destination_dir: test-reports
+
+  notification:
+    name: Notification
+    runs-on: ubuntu-latest
+    needs: [compliance-validation]
+    if: always()
+
+    steps:
+    - name: Notify Slack on Success
+      if: success()
+      uses: rtCamp/action-slack-notify@v2
+      env:
+        SLACK_WEBHOOK: ${{ secrets.SLACK_WEBHOOK }}
+        SLACK_MESSAGE: |
+          ✅ Gemini Live API tests passed successfully!
+
+          🔗 Reports: https://${{ github.repository_owner }}.github.io/${{ github.event.repository.name }}/test-reports/
+          📊 Compliance: All requirements met
+          🚀 Production Ready: Yes
+
+    - name: Notify Slack on Failure
+      if: failure()
+      uses: rtCamp/action-slack-notify@v2
+      env:
+        SLACK_WEBHOOK: ${{ secrets.SLACK_WEBHOOK }}
+        SLACK_MESSAGE: |
+          ❌ Gemini Live API tests failed!
+
+          📋 Action: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}
+          🔍 Please check the test results and fix issues
+          ⚠️ Production deployment blocked
+
+    - name: Create GitHub Issue on Failure
+      if: failure() && github.event_name == 'schedule'
+      uses: actions/github-script@v6
+      with:
+        script: |
+          github.rest.issues.create({
+            owner: context.repo.owner,
+            repo: context.repo.repo,
+            title: 'Nightly Gemini Live API Tests Failed',
+            body: `The nightly Gemini Live API compliance tests have failed.
+
+            **Run:** ${context.serverUrl}/${context.repo.owner}/${context.repo.repo}/actions/runs/${context.runId}
+            **Date:** ${new Date().toISOString()}
+
+            Please investigate and fix the failing tests to ensure production readiness.`,
+            labels: ['bug', 'testing', 'gemini-api', 'high-priority']
+          });

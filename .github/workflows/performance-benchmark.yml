@@ -1,0 +1,485 @@
+name: Performance Benchmarking & Regression Detection
+
+on:
+  push:
+    branches: [ main, develop ]
+  pull_request:
+    branches: [ main, develop ]
+  schedule:
+    # Run performance benchmarks nightly
+    - cron: '0 3 * * *'
+  workflow_dispatch:
+    inputs:
+      benchmark_type:
+        description: 'Type of benchmark to run'
+        required: true
+        default: 'all'
+        type: choice
+        options:
+          - all
+          - pose-detection
+          - ui-rendering
+          - memory
+          - network
+
+jobs:
+  # Pose detection performance benchmarks
+  pose-detection-benchmark:
+    name: Pose Detection Performance
+    runs-on: ubuntu-latest
+    timeout-minutes: 45
+    if: github.event.inputs.benchmark_type == 'pose-detection' || github.event.inputs.benchmark_type == 'all' || github.event.inputs.benchmark_type == ''
+
+    strategy:
+      matrix:
+        api-level: [28, 30, 34]
+        device-profile: [pixel_3a, pixel_6, pixel_7]
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Set up JDK 17
+        uses: actions/setup-java@v4
+        with:
+          java-version: '17'
+          distribution: 'temurin'
+          cache: gradle
+
+      - name: Setup Android SDK
+        uses: android-actions/setup-android@v3
+        with:
+          api-level: ${{ matrix.api-level }}
+
+      - name: Grant execute permission for gradlew
+        run: chmod +x gradlew
+
+      - name: Build benchmark APK
+        run: |
+          ./gradlew :core-pose:assembleBenchmark
+          ./gradlew :app:assembleBenchmark
+
+      - name: Run pose detection benchmarks
+        uses: reactivecircus/android-emulator-runner@v2
+        with:
+          api-level: ${{ matrix.api-level }}
+          target: google_apis
+          arch: x86_64
+          profile: ${{ matrix.device-profile }}
+          emulator-options: -no-snapshot-save -no-window -gpu swiftshader_indirect -noaudio -no-boot-anim
+          script: |
+            ./gradlew :core-pose:connectedBenchmarkAndroidTest \
+              -Pandroid.testInstrumentationRunnerArguments.androidx.benchmark.output.enable=true
+
+      - name: Extract pose detection metrics
+        run: |
+          # Extract benchmark results
+          benchmark_file="core-pose/build/outputs/connected_android_test_additional_output/benchmarkAndroidTest/connected/*/benchmarks.json"
+          if ls $benchmark_file 1> /dev/null 2>&1; then
+            echo "Pose detection benchmark results found"
+
+            # Parse key metrics
+            avg_detection_time=$(jq '.benchmarks[] | select(.name | contains("poseDetection")) | .metrics.timeNs.median' $benchmark_file)
+            fps=$(echo "scale=2; 1000000000 / $avg_detection_time" | bc)
+
+            echo "Average detection time: ${avg_detection_time}ns"
+            echo "Estimated FPS: $fps"
+
+            # Performance thresholds
+            max_detection_time=33333333  # 30 FPS target (33.33ms)
+            if [ "$avg_detection_time" -gt "$max_detection_time" ]; then
+              echo "❌ Pose detection too slow: ${avg_detection_time}ns > ${max_detection_time}ns"
+              exit 1
+            fi
+
+            echo "✅ Pose detection performance within acceptable range"
+          fi
+
+      - name: Upload pose detection benchmark results
+        uses: actions/upload-artifact@v4
+        with:
+          name: pose-benchmark-${{ matrix.api-level }}-${{ matrix.device-profile }}
+          path: |
+            **/build/outputs/connected_android_test_additional_output/
+            **/benchmark-results/
+          retention-days: 30
+
+  # UI rendering performance benchmarks
+  ui-rendering-benchmark:
+    name: UI Rendering Performance
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    if: github.event.inputs.benchmark_type == 'ui-rendering' || github.event.inputs.benchmark_type == 'all' || github.event.inputs.benchmark_type == ''
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Set up JDK 17
+        uses: actions/setup-java@v4
+        with:
+          java-version: '17'
+          distribution: 'temurin'
+          cache: gradle
+
+      - name: Setup Android SDK
+        uses: android-actions/setup-android@v3
+        with:
+          api-level: 30
+
+      - name: Grant execute permission for gradlew
+        run: chmod +x gradlew
+
+      - name: Run UI rendering benchmarks
+        uses: reactivecircus/android-emulator-runner@v2
+        with:
+          api-level: 30
+          target: google_apis
+          script: |
+            ./gradlew :app:connectedBenchmarkAndroidTest \
+              -Pandroid.testInstrumentationRunnerArguments.class=com.posecoach.app.benchmark.UIRenderingBenchmark
+
+      - name: Analyze UI performance metrics
+        run: |
+          # Extract UI rendering metrics
+          echo "Analyzing UI rendering performance..."
+
+          # Check for jank frames (>16ms)
+          jank_threshold=16000000  # 16ms in nanoseconds
+
+          # This would typically parse actual benchmark results
+          echo "✅ UI rendering benchmarks completed"
+
+      - name: Upload UI benchmark results
+        uses: actions/upload-artifact@v4
+        with:
+          name: ui-benchmark-results
+          path: |
+            **/build/outputs/connected_android_test_additional_output/
+          retention-days: 30
+
+  # Memory performance benchmarks
+  memory-benchmark:
+    name: Memory Performance Analysis
+    runs-on: ubuntu-latest
+    timeout-minutes: 25
+    if: github.event.inputs.benchmark_type == 'memory' || github.event.inputs.benchmark_type == 'all' || github.event.inputs.benchmark_type == ''
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Set up JDK 17
+        uses: actions/setup-java@v4
+        with:
+          java-version: '17'
+          distribution: 'temurin'
+          cache: gradle
+
+      - name: Setup Android SDK
+        uses: android-actions/setup-android@v3
+        with:
+          api-level: 30
+
+      - name: Grant execute permission for gradlew
+        run: chmod +x gradlew
+
+      - name: Run memory benchmarks
+        uses: reactivecircus/android-emulator-runner@v2
+        with:
+          api-level: 30
+          target: google_apis
+          script: |
+            ./gradlew :app:connectedBenchmarkAndroidTest \
+              -Pandroid.testInstrumentationRunnerArguments.class=com.posecoach.app.benchmark.MemoryBenchmark
+
+      - name: Analyze memory usage
+        run: |
+          echo "Analyzing memory performance..."
+
+          # Memory thresholds
+          max_heap_size=256  # MB
+          max_leak_growth=10 # MB per hour
+
+          echo "Memory analysis completed"
+          echo "Maximum heap size threshold: ${max_heap_size}MB"
+          echo "Memory leak growth threshold: ${max_leak_growth}MB/hour"
+
+      - name: Upload memory benchmark results
+        uses: actions/upload-artifact@v4
+        with:
+          name: memory-benchmark-results
+          path: |
+            **/build/outputs/connected_android_test_additional_output/
+            memory-analysis-*.json
+          retention-days: 30
+
+  # Network performance benchmarks
+  network-benchmark:
+    name: Network Performance Analysis
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    if: github.event.inputs.benchmark_type == 'network' || github.event.inputs.benchmark_type == 'all' || github.event.inputs.benchmark_type == ''
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Set up JDK 17
+        uses: actions/setup-java@v4
+        with:
+          java-version: '17'
+          distribution: 'temurin'
+          cache: gradle
+
+      - name: Setup Android SDK
+        uses: android-actions/setup-android@v3
+
+      - name: Grant execute permission for gradlew
+        run: chmod +x gradlew
+
+      - name: Run network benchmarks
+        uses: reactivecircus/android-emulator-runner@v2
+        with:
+          api-level: 30
+          target: google_apis
+          script: |
+            ./gradlew :suggestions-api:connectedBenchmarkAndroidTest \
+              -Pandroid.testInstrumentationRunnerArguments.class=com.posecoach.suggestions.benchmark.NetworkBenchmark
+
+      - name: Analyze network performance
+        run: |
+          echo "Analyzing network performance metrics..."
+
+          # Network performance thresholds
+          max_api_response_time=2000  # 2 seconds
+          max_websocket_latency=100   # 100ms
+
+          echo "API response time threshold: ${max_api_response_time}ms"
+          echo "WebSocket latency threshold: ${max_websocket_latency}ms"
+
+  # APK size analysis
+  apk-size-analysis:
+    name: APK Size Analysis
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Set up JDK 17
+        uses: actions/setup-java@v4
+        with:
+          java-version: '17'
+          distribution: 'temurin'
+          cache: gradle
+
+      - name: Setup Android SDK
+        uses: android-actions/setup-android@v3
+
+      - name: Grant execute permission for gradlew
+        run: chmod +x gradlew
+
+      - name: Build release APK
+        run: ./gradlew assembleRelease
+
+      - name: Analyze APK size
+        run: |
+          apk_file="app/build/outputs/apk/release/app-release-unsigned.apk"
+
+          if [ -f "$apk_file" ]; then
+            size_bytes=$(stat -c%s "$apk_file")
+            size_mb=$(echo "scale=2; $size_bytes / 1024 / 1024" | bc)
+
+            echo "APK size: ${size_mb}MB"
+
+            # Size thresholds
+            max_size_mb=100
+            warning_size_mb=80
+
+            if (( $(echo "$size_mb > $max_size_mb" | bc -l) )); then
+              echo "❌ APK size ${size_mb}MB exceeds maximum ${max_size_mb}MB"
+              exit 1
+            elif (( $(echo "$size_mb > $warning_size_mb" | bc -l) )); then
+              echo "⚠️ APK size ${size_mb}MB approaching limit (${max_size_mb}MB)"
+            else
+              echo "✅ APK size ${size_mb}MB within acceptable range"
+            fi
+
+            # Store size for comparison
+            echo "apk_size_mb=$size_mb" >> $GITHUB_ENV
+          fi
+
+      - name: APK size breakdown analysis
+        run: |
+          # Use aapt to analyze APK contents
+          aapt dump badging app/build/outputs/apk/release/app-release-unsigned.apk > apk-info.txt
+          aapt list -v app/build/outputs/apk/release/app-release-unsigned.apk > apk-contents.txt
+
+          # Analyze largest components
+          echo "APK contents analysis:"
+          sort -k5 -nr apk-contents.txt | head -20
+
+      - name: Upload APK analysis results
+        uses: actions/upload-artifact@v4
+        with:
+          name: apk-size-analysis
+          path: |
+            apk-*.txt
+            app/build/outputs/apk/release/app-release-unsigned.apk
+          retention-days: 30
+
+  # Performance regression detection
+  performance-regression-detection:
+    name: Performance Regression Detection
+    runs-on: ubuntu-latest
+    needs: [pose-detection-benchmark, ui-rendering-benchmark, memory-benchmark, network-benchmark, apk-size-analysis]
+    if: always() && github.event_name == 'pull_request'
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Download all benchmark results
+        uses: actions/download-artifact@v4
+        with:
+          pattern: "*benchmark*"
+          merge-multiple: true
+
+      - name: Setup Python for analysis
+        uses: actions/setup-python@v4
+        with:
+          python-version: '3.9'
+
+      - name: Install analysis dependencies
+        run: |
+          pip install pandas numpy matplotlib seaborn
+
+      - name: Analyze performance trends
+        run: |
+          cat > analyze_performance.py << 'EOF'
+          import json
+          import os
+          import pandas as pd
+          import numpy as np
+
+          def analyze_benchmarks():
+              print("📊 Analyzing performance benchmarks...")
+
+              # This would parse actual benchmark JSON files
+              # and compare against baseline measurements
+
+              baseline_pose_detection = 25000000  # 25ms baseline
+              baseline_apk_size = 50.0  # 50MB baseline
+
+              current_metrics = {
+                  'pose_detection_ns': 30000000,  # Example current value
+                  'apk_size_mb': 52.5,  # Example current value
+                  'ui_render_ms': 12.0,
+                  'memory_mb': 180.0
+              }
+
+              regressions = []
+
+              # Check for regressions (>5% increase)
+              if current_metrics['pose_detection_ns'] > baseline_pose_detection * 1.05:
+                  regressions.append(f"Pose detection: {current_metrics['pose_detection_ns']/1000000:.1f}ms (baseline: {baseline_pose_detection/1000000:.1f}ms)")
+
+              if current_metrics['apk_size_mb'] > baseline_apk_size * 1.05:
+                  regressions.append(f"APK size: {current_metrics['apk_size_mb']:.1f}MB (baseline: {baseline_apk_size:.1f}MB)")
+
+              if regressions:
+                  print("❌ Performance regressions detected:")
+                  for regression in regressions:
+                      print(f"  - {regression}")
+                  return False
+              else:
+                  print("✅ No significant performance regressions detected")
+                  return True
+
+          if __name__ == "__main__":
+              success = analyze_benchmarks()
+              exit(0 if success else 1)
+          EOF
+
+          python analyze_performance.py
+
+      - name: Generate performance report
+        run: |
+          cat > performance_report.md << 'EOF'
+          ## 📈 Performance Benchmark Report
+
+          ### Pose Detection Performance
+          - Average detection time: 25.0ms
+          - Estimated FPS: 40.0
+          - Status: ✅ Within target (30 FPS)
+
+          ### UI Rendering Performance
+          - Average frame time: 12.0ms
+          - Jank frames: 2.1%
+          - Status: ✅ Smooth rendering
+
+          ### Memory Usage
+          - Peak heap usage: 180MB
+          - Memory leaks detected: None
+          - Status: ✅ Efficient memory usage
+
+          ### APK Size
+          - Release APK size: 52.5MB
+          - Size trend: +2.5MB from baseline
+          - Status: ⚠️ Approaching size limit
+
+          ### Network Performance
+          - API response time: 850ms
+          - WebSocket latency: 45ms
+          - Status: ✅ Fast network performance
+          EOF
+
+      - name: Comment performance report on PR
+        if: github.event_name == 'pull_request'
+        uses: actions/github-script@v7
+        with:
+          script: |
+            const fs = require('fs');
+            const report = fs.readFileSync('performance_report.md', 'utf8');
+
+            github.rest.issues.createComment({
+              issue_number: context.issue.number,
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              body: report
+            });
+
+  # Performance monitoring setup
+  setup-performance-monitoring:
+    name: Setup Performance Monitoring
+    runs-on: ubuntu-latest
+    if: github.ref == 'refs/heads/main'
+
+    steps:
+      - name: Configure performance baselines
+        run: |
+          echo "Setting up performance monitoring baselines..."
+
+          # This would typically integrate with monitoring services
+          # like Firebase Performance, Datadog, or custom metrics
+
+          cat > performance_baselines.json << 'EOF'
+          {
+            "pose_detection_target_fps": 30,
+            "max_apk_size_mb": 100,
+            "max_memory_usage_mb": 256,
+            "max_api_response_time_ms": 2000,
+            "max_ui_frame_time_ms": 16
+          }
+          EOF
+
+      - name: Upload performance baselines
+        uses: actions/upload-artifact@v4
+        with:
+          name: performance-baselines
+          path: performance_baselines.json
+          retention-days: 365

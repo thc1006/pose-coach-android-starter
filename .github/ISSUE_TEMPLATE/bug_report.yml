@@ -1,0 +1,158 @@
+name: 🐛 Bug Report
+description: Report a bug to help us improve the app
+title: "[BUG] "
+labels: ["bug", "needs-triage"]
+assignees: []
+
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Thank you for taking the time to report a bug! Please fill out this form completely to help us understand and fix the issue.
+
+  - type: checkboxes
+    id: preliminary-checks
+    attributes:
+      label: Preliminary Checks
+      description: Please confirm you have done the following
+      options:
+        - label: I have searched existing issues and this is not a duplicate
+          required: true
+        - label: I am using the latest version of the app
+          required: true
+        - label: I have tried restarting the app
+          required: true
+
+  - type: textarea
+    id: bug-description
+    attributes:
+      label: Bug Description
+      description: A clear and concise description of what the bug is
+      placeholder: Describe what happened and what you expected to happen
+    validations:
+      required: true
+
+  - type: textarea
+    id: reproduction-steps
+    attributes:
+      label: Steps to Reproduce
+      description: Step-by-step instructions to reproduce the bug
+      placeholder: |
+        1. Open the app
+        2. Navigate to camera screen
+        3. Start pose detection
+        4. Error occurs when...
+    validations:
+      required: true
+
+  - type: textarea
+    id: expected-behavior
+    attributes:
+      label: Expected Behavior
+      description: What should have happened instead?
+      placeholder: Describe the expected behavior
+    validations:
+      required: true
+
+  - type: textarea
+    id: actual-behavior
+    attributes:
+      label: Actual Behavior
+      description: What actually happened?
+      placeholder: Describe what actually happened
+    validations:
+      required: true
+
+  - type: dropdown
+    id: severity
+    attributes:
+      label: Severity
+      description: How severe is this bug?
+      options:
+        - Low - Minor inconvenience
+        - Medium - Impacts functionality
+        - High - Prevents core features from working
+        - Critical - App crashes or data loss
+    validations:
+      required: true
+
+  - type: dropdown
+    id: category
+    attributes:
+      label: Bug Category
+      description: Which area of the app is affected?
+      options:
+        - Camera/Pose Detection
+        - UI/User Interface
+        - Performance
+        - Network/API
+        - Privacy/Security
+        - Installation/Setup
+        - Other
+    validations:
+      required: true
+
+  - type: input
+    id: android-version
+    attributes:
+      label: Android Version
+      description: What version of Android are you running?
+      placeholder: e.g., Android 12, API 31
+    validations:
+      required: true
+
+  - type: input
+    id: device-info
+    attributes:
+      label: Device Information
+      description: What device are you using?
+      placeholder: e.g., Google Pixel 6, Samsung Galaxy S21
+    validations:
+      required: true
+
+  - type: input
+    id: app-version
+    attributes:
+      label: App Version
+      description: What version of the app are you using?
+      placeholder: e.g., v1.2.3 (check in app settings)
+    validations:
+      required: true
+
+  - type: textarea
+    id: error-logs
+    attributes:
+      label: Error Logs/Screenshots
+      description: Include any error messages, logs, or screenshots
+      placeholder: |
+        Paste error messages or describe what you see.
+
+        If you have screenshots, you can drag and drop them here.
+
+  - type: textarea
+    id: additional-context
+    attributes:
+      label: Additional Context
+      description: Any other information that might help us understand the issue
+      placeholder: |
+        - Does this happen consistently or intermittently?
+        - Are you using any specific camera settings?
+        - Any other relevant details?
+
+  - type: checkboxes
+    id: testing-environment
+    attributes:
+      label: Testing Environment
+      description: Where did you encounter this bug?
+      options:
+        - label: Production app from Play Store
+        - label: Beta/Internal testing version
+        - label: Debug build from source code
+        - label: Emulator
+
+  - type: textarea
+    id: workaround
+    attributes:
+      label: Workaround
+      description: Have you found any way to work around this issue?
+      placeholder: Describe any temporary solutions you've found

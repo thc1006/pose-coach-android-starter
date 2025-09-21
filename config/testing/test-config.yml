@@ -1,0 +1,289 @@
+# Comprehensive Testing Configuration for PoseCoach Android App
+
+# Coverage Requirements
+coverage:
+  minimum_statement_coverage: 80.0
+  minimum_branch_coverage: 75.0
+  minimum_method_coverage: 80.0
+  minimum_class_coverage: 85.0
+
+  # Exclusions from coverage
+  exclusions:
+    - "**/R.class"
+    - "**/R$*.class"
+    - "**/BuildConfig.*"
+    - "**/Manifest*.*"
+    - "**/*Test*.*"
+    - "**/databinding/**/*.*"
+    - "**/generated/**/*.*"
+    - "**/mock/**/*.*"
+
+# Performance Requirements
+performance:
+  # Pose detection performance
+  pose_detection:
+    target_fps: 30
+    minimum_fps: 24
+    max_detection_latency_ms: 50
+    max_initialization_time_ms: 1000
+
+  # Memory constraints
+  memory:
+    max_heap_usage_mb: 256
+    max_native_heap_mb: 64
+    memory_leak_threshold_mb: 10
+    gc_pressure_threshold: 5.0
+
+  # Network performance
+  network:
+    max_api_response_time_ms: 2000
+    max_suggestion_generation_time_ms: 3000
+    timeout_threshold_ms: 10000
+
+  # UI performance
+  ui:
+    max_frame_time_ms: 16  # 60 FPS
+    jank_threshold_frames: 3
+    startup_time_target_ms: 2000
+
+# Privacy Compliance Requirements
+privacy:
+  # DoD compliance requirements
+  dod_compliance:
+    minimum_compliance_score: 90.0
+    allow_critical_violations: false
+    require_encryption: true
+    require_consent: true
+
+  # Data handling requirements
+  data_handling:
+    require_user_consent_for_sensitive_data: true
+    require_encryption_for_transmission: true
+    require_secure_storage: true
+    data_retention_max_days: 30
+
+  # Permissions
+  permissions:
+    allowed_permissions:
+      - "android.permission.CAMERA"
+      - "android.permission.INTERNET"
+      - "android.permission.ACCESS_NETWORK_STATE"
+      - "android.permission.WAKE_LOCK"
+
+    restricted_permissions:
+      - "android.permission.ACCESS_FINE_LOCATION"
+      - "android.permission.RECORD_AUDIO"
+      - "android.permission.READ_CONTACTS"
+      - "android.permission.READ_SMS"
+
+# Device Compatibility Requirements
+device_compatibility:
+  # Supported API levels
+  api_levels:
+    minimum: 24  # Android 7.0
+    target: 34   # Android 14
+    tested_levels: [24, 28, 30, 31, 33, 34]
+
+  # Screen configurations
+  screen_configurations:
+    - density: 1.0    # mdpi
+      width: 480
+      height: 854
+    - density: 1.5    # hdpi
+      width: 720
+      height: 1280
+    - density: 2.0    # xhdpi
+      width: 1080
+      height: 1920
+    - density: 3.0    # xxhdpi
+      width: 1440
+      height: 2560
+
+  # Hardware requirements
+  hardware:
+    minimum_ram_mb: 2048
+    minimum_cpu_cores: 4
+    require_camera: true
+    require_front_camera: false
+    require_gpu: false
+
+# Test Execution Configuration
+test_execution:
+  # Parallel execution
+  parallel_execution:
+    enabled: true
+    max_workers: 4
+
+  # Test timeouts
+  timeouts:
+    unit_test_timeout_minutes: 5
+    integration_test_timeout_minutes: 15
+    e2e_test_timeout_minutes: 30
+    performance_test_timeout_minutes: 20
+
+  # Retry configuration
+  retry:
+    max_retries: 2
+    retry_on_infrastructure_failure: true
+    retry_delay_seconds: 30
+
+  # Test data
+  test_data:
+    use_mock_services: true
+    generate_test_poses: true
+    test_pose_variations: 10
+    mock_api_responses: true
+
+# Reporting Configuration
+reporting:
+  # Output formats
+  formats:
+    - html
+    - xml
+    - json
+    - junit
+
+  # Report aggregation
+  aggregation:
+    enabled: true
+    merge_coverage_reports: true
+    generate_trend_analysis: true
+
+  # Notifications
+  notifications:
+    slack_webhook: ${SLACK_WEBHOOK_URL}
+    email_recipients: ${EMAIL_RECIPIENTS}
+    notify_on_failure: true
+    notify_on_success: false
+
+# Quality Gates
+quality_gates:
+  # Blocking gates (must pass)
+  blocking:
+    - unit_test_coverage_above_threshold
+    - no_critical_privacy_violations
+    - performance_within_limits
+    - no_memory_leaks
+    - security_scan_passed
+
+  # Warning gates (can proceed with warnings)
+  warning:
+    - integration_test_coverage_above_75
+    - e2e_test_coverage_above_80
+    - code_quality_score_above_80
+
+# Test Environment Configuration
+test_environment:
+  # Emulator configuration
+  emulator:
+    default_api_level: 34
+    default_target: "google_apis"
+    default_arch: "x86_64"
+    ram_size_mb: 4096
+    heap_size_mb: 1024
+    disk_size_mb: 8192
+    enable_gpu: true
+    enable_audio: false
+    enable_animations: false
+
+  # Test application configuration
+  test_app:
+    clear_data_between_tests: true
+    grant_permissions_automatically: true
+    disable_animations: true
+    enable_strict_mode: true
+    log_level: "DEBUG"
+
+# Integration Test Configuration
+integration_tests:
+  # MediaPipe tests
+  mediapipe:
+    test_pose_accuracy: true
+    test_multi_person_detection: true
+    test_different_lighting_conditions: true
+    accuracy_threshold: 0.85
+
+  # CameraX tests
+  camerax:
+    test_camera_initialization: true
+    test_frame_processing: true
+    test_orientation_changes: true
+    test_permission_handling: true
+
+  # API integration tests
+  api_integration:
+    test_gemini_api: true
+    test_error_handling: true
+    test_rate_limiting: true
+    use_mock_responses: true
+
+# End-to-End Test Configuration
+e2e_tests:
+  # User journeys
+  user_journeys:
+    - onboarding_flow
+    - coaching_session
+    - settings_management
+    - privacy_controls
+    - offline_mode
+    - error_recovery
+
+  # Test data
+  test_scenarios:
+    happy_path: true
+    error_scenarios: true
+    edge_cases: true
+    accessibility_scenarios: true
+
+  # Recording
+  recording:
+    capture_screenshots: true
+    record_videos_on_failure: true
+    save_test_artifacts: true
+
+# Security Testing Configuration
+security:
+  # Static analysis
+  static_analysis:
+    enabled: true
+    tools:
+      - "detekt"
+      - "spotbugs"
+      - "semgrep"
+
+  # Dependency scanning
+  dependency_scanning:
+    enabled: true
+    fail_on_high_severity: true
+    fail_on_critical_severity: true
+
+  # Secret detection
+  secret_detection:
+    enabled: true
+    tools:
+      - "trufflehog"
+      - "detect-secrets"
+
+  # Runtime security tests
+  runtime_security:
+    test_data_encryption: true
+    test_network_security: true
+    test_permission_enforcement: true
+
+# Continuous Integration Configuration
+ci_configuration:
+  # Artifact retention
+  artifact_retention_days: 30
+
+  # Parallel matrix
+  test_matrix:
+    api_levels: [30, 31, 33, 34]
+    device_profiles: ["phone", "tablet"]
+    test_types: ["unit", "integration", "e2e"]
+
+  # Cache configuration
+  cache:
+    gradle_cache: true
+    android_build_cache: true
+    dependency_cache: true
+    test_results_cache: false

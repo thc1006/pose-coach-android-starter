@@ -1,0 +1,60 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <!-- Primary colors -->
+    <color name="background_primary">#FFFFFF</color>
+    <color name="text_primary">#212121</color>
+    <color name="text_secondary">#757575</color>
+
+    <!-- Button colors -->
+    <color name="button_default">#2196F3</color>
+    <color name="button_active">#1976D2</color>
+    <color name="button_disabled">#BDBDBD</color>
+    <color name="ripple_color">#4CAF50</color>
+    <color name="border_color">#E0E0E0</color>
+
+    <!-- Status colors -->
+    <color name="status_success">#4CAF50</color>
+    <color name="status_warning">#FF9800</color>
+    <color name="status_error">#F44336</color>
+
+    <!-- Waveform colors -->
+    <color name="waveform_primary">#4CAF50</color>
+    <color name="waveform_secondary">#81C784</color>
+    <color name="waveform_background">#F5F5F5</color>
+    <color name="vad_active">#4CAF50</color>
+    <color name="vad_inactive">#BDBDBD</color>
+
+    <!-- Signal colors -->
+    <color name="signal_active">#4CAF50</color>
+    <color name="signal_inactive">#E0E0E0</color>
+    <color name="signal_animating">#2196F3</color>
+
+    <!-- Timer colors -->
+    <color name="timer_inactive">#BDBDBD</color>
+    <color name="timer_active">#4CAF50</color>
+    <color name="timer_warning">#FF9800</color>
+    <color name="timer_critical">#F44336</color>
+    <color name="timer_resuming">#2196F3</color>
+    <color name="timer_expired">#F44336</color>
+
+    <!-- Pose colors -->
+    <color name="pose_good">#4CAF50</color>
+    <color name="pose_warning">#FF9800</color>
+    <color name="pose_error">#F44336</color>
+    <color name="pose_joint">#2196F3</color>
+    <color name="pose_correction">#FF5722</color>
+
+    <!-- Suggestion colors -->
+    <color name="suggestions_background">#FFFFFF</color>
+    <color name="suggestion_pose">#FF9800</color>
+    <color name="suggestion_breathing">#2196F3</color>
+    <color name="suggestion_form">#9C27B0</color>
+    <color name="suggestion_encouragement">#4CAF50</color>
+    <color name="suggestion_warning">#F44336</color>
+
+    <!-- Tool execution colors -->
+    <color name="tool_starting">#FFC107</color>
+    <color name="tool_running">#2196F3</color>
+    <color name="tool_completed">#4CAF50</color>
+    <color name="tool_failed">#F44336</color>
+</resources>
