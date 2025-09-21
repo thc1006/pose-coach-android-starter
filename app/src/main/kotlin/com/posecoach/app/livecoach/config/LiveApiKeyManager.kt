@@ -11,7 +11,7 @@ class LiveApiKeyManager(private val context: Context) {
     companion object {
         private const val PREFS_NAME = "live_api_secure_prefs"
         private const val KEY_API_KEY = "gemini_api_key"
-        private const val DEFAULT_API_KEY = "AIzaSyDAckkkZGtSOjAnyUJsWvG3hZGFM39TLXI"
+        private const val DEFAULT_API_KEY = "" // API key must be set via setApiKey() or local.properties
     }
 
     private val masterKey by lazy {
