@@ -45,6 +45,15 @@
 - `/scripts` - Utility scripts
 - `/examples` - Example code
 
+### 🚫 Git Commit Rules
+
+**ABSOLUTE PROHIBITIONS in all git commits:**
+- ❌ NEVER include: `🤖 Generated with [Claude Code](https://claude.ai/code)`
+- ❌ NEVER include: `Co-Authored-By: Claude <noreply@anthropic.com>`
+- ❌ NEVER include any AI tool signatures or co-authorship
+- ✅ ONLY use project owner's identity: `thc1006 <84045975+thc1006@users.noreply.github.com>`
+- ✅ Commit messages should contain ONLY technical content and project information
+
 ## Project Overview
 
 This project uses SPARC (Specification, Pseudocode, Architecture, Refinement, Completion) methodology with Claude-Flow orchestration for systematic Test-Driven Development.
