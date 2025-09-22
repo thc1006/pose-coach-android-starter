@@ -104,4 +104,32 @@
 
     </LinearLayout>
 
+    <!-- Live Coach Status (above suggestions panel) -->
+    <TextView
+        android:id="@+id/live_coach_status"
+        android:layout_width="0dp"
+        android:layout_height="wrap_content"
+        android:background="#CC000000"
+        android:padding="12dp"
+        android:textColor="@android:color/white"
+        android:textSize="14sp"
+        android:visibility="gone"
+        android:layout_marginBottom="8dp"
+        app:layout_constraintBottom_toTopOf="@id/suggestions_panel"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintEnd_toEndOf="parent" />
+
+    <!-- Live Coach Toggle Button -->
+    <com.google.android.material.floatingactionbutton.FloatingActionButton
+        android:id="@+id/live_coach_button"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_margin="16dp"
+        android:src="@android:drawable/ic_btn_speak_now"
+        app:backgroundTint="#4CAF50"
+        app:tint="@android:color/white"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintBottom_toTopOf="@id/suggestions_panel"
+        android:contentDescription="Toggle Live Coach" />
+
 </androidx.constraintlayout.widget.ConstraintLayout>

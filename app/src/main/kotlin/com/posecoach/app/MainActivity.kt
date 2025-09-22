@@ -15,12 +15,18 @@ import androidx.core.content.ContextCompat
 import androidx.lifecycle.lifecycleScope
 import com.posecoach.app.pose.PoseDetectionManager
 import com.posecoach.app.overlay.PoseOverlayView
+import com.posecoach.app.overlay.FitMode
 import com.posecoach.app.suggestions.SuggestionManager
 import com.posecoach.app.privacy.ConsentManager
 import com.posecoach.app.R
+import com.posecoach.app.livecoach.LiveCoachManager
+import com.posecoach.app.livecoach.models.SessionState
+import kotlinx.coroutines.flow.collectLatest
 import kotlinx.coroutines.launch
 import java.util.concurrent.ExecutorService
 import java.util.concurrent.Executors
+import com.google.android.material.floatingactionbutton.FloatingActionButton
+import timber.log.Timber
 
 /**
  * Main Activity with CameraX PreviewView for pose detection
@@ -38,11 +44,17 @@ class MainActivity : AppCompatActivity() {
     private lateinit var suggestion2: TextView
     private lateinit var suggestion3: TextView
     private lateinit var statusText: TextView
+    private var liveCoachButton: FloatingActionButton? = null
+    private var liveCoachStatus: TextView? = null
+
+    // LIVE API state
+    private var isLiveCoachActive = false
 
     // Core managers following CLAUDE.md architecture
     private lateinit var poseDetectionManager: PoseDetectionManager
     private lateinit var suggestionManager: SuggestionManager
     private lateinit var consentManager: ConsentManager
+    private var liveCoachManager: LiveCoachManager? = null
 
     // Camera components
     private var imageAnalysis: ImageAnalysis? = null
@@ -99,8 +111,14 @@ class MainActivity : AppCompatActivity() {
         poseDetectionManager = PoseDetectionManager(this, lifecycleScope)
         suggestionManager = SuggestionManager(this, lifecycleScope)
 
+        // Initialize LIVE API manager with API key from BuildConfig
+        initializeLiveCoachManager()
+
         // Setup pose detection callbacks
         setupPoseDetectionCallbacks()
+
+        // Setup LIVE API UI controls
+        setupLiveCoachUI()
 
         // Request camera permissions
         requestCameraPermissions()
@@ -168,15 +186,25 @@ class MainActivity : AppCompatActivity() {
             // Image analysis for pose detection
             imageAnalysis = ImageAnalysis.Builder()
                 .setBackpressureStrategy(ImageAnalysis.STRATEGY_KEEP_ONLY_LATEST)
+                .setOutputImageFormat(ImageAnalysis.OUTPUT_IMAGE_FORMAT_YUV_420_888)
                 .build()
                 .also { analyzer ->
                     analyzer.setAnalyzer(cameraExecutor) { imageProxy ->
+                        // Configure overlay with camera parameters for proper rotation
+                        overlayView.configureCameraDisplay(
+                            cameraWidth = imageProxy.width,
+                            cameraHeight = imageProxy.height,
+                            rotation = imageProxy.imageInfo.rotationDegrees,
+                            frontFacing = cameraSelector == CameraSelector.DEFAULT_FRONT_CAMERA,
+                            aspectFitMode = FitMode.CENTER_CROP
+                        )
+
                         // Process frame with MediaPipe pose detection
                         poseDetectionManager.processFrame(imageProxy)
                     }
                 }
 
-            // Select back camera
+            // Select back camera (changed to var for tracking)
             val cameraSelector = CameraSelector.DEFAULT_BACK_CAMERA
 
             try {
@@ -224,11 +252,200 @@ class MainActivity : AppCompatActivity() {
         Toast.makeText(this, message, Toast.LENGTH_LONG).show()
     }
 
+    // LIVE API Integration Methods
+
+    private fun initializeLiveCoachManager() {
+        try {
+            val apiKey = BuildConfig.GEMINI_LIVE_API_KEY
+            if (apiKey.isNotEmpty()) {
+                liveCoachManager = LiveCoachManager(
+                    context = this,
+                    lifecycleScope = lifecycleScope,
+                    apiKey = apiKey
+                )
+
+                setupLiveCoachCallbacks()
+                Timber.i("LiveCoachManager initialized successfully")
+            } else {
+                Timber.w("Gemini Live API key not configured")
+            }
+        } catch (e: Exception) {
+            Timber.e(e, "Failed to initialize LiveCoachManager")
+            showError("Live coaching not available: ${e.message}")
+        }
+    }
+
+    private fun setupLiveCoachUI() {
+        // Try to find the FAB in layout, or add programmatically if needed
+        liveCoachButton = try {
+            findViewById(R.id.live_coach_button)
+        } catch (e: Exception) {
+            null
+        }
+
+        liveCoachStatus = try {
+            findViewById(R.id.live_coach_status)
+        } catch (e: Exception) {
+            null
+        }
+
+        // Setup click listener for LIVE API toggle
+        liveCoachButton?.setOnClickListener {
+            toggleLiveCoach()
+        }
+
+        // Initially hide the status
+        liveCoachStatus?.visibility = View.GONE
+    }
+
+    private fun setupLiveCoachCallbacks() {
+        liveCoachManager?.let { manager ->
+            // Monitor session state
+            lifecycleScope.launch {
+                manager.sessionState.collectLatest { state ->
+                    updateLiveCoachUI(state)
+                }
+            }
+
+            // Monitor coaching responses
+            lifecycleScope.launch {
+                manager.coachingResponses.collectLatest { response ->
+                    displayLiveCoachResponse(response)
+                }
+            }
+
+            // Monitor transcriptions
+            lifecycleScope.launch {
+                manager.transcriptions.collectLatest { transcription ->
+                    Timber.d("User said: $transcription")
+                    liveCoachStatus?.text = "You: $transcription"
+                }
+            }
+
+            // Monitor errors
+            lifecycleScope.launch {
+                manager.errors.collectLatest { error ->
+                    Timber.e("Live coach error: $error")
+                    showError("Live coach: $error")
+                }
+            }
+
+            // Send pose landmarks to LIVE API when available
+            lifecycleScope.launch {
+                poseDetectionManager.poseLandmarks.collectLatest { landmarks ->
+                    if (isLiveCoachActive) {
+                        manager.updatePoseLandmarks(landmarks)
+                    }
+                }
+            }
+        }
+    }
+
+    private fun toggleLiveCoach() {
+        if (isLiveCoachActive) {
+            stopLiveCoach()
+        } else {
+            startLiveCoach()
+        }
+    }
+
+    private fun startLiveCoach() {
+        liveCoachManager?.let { manager ->
+            lifecycleScope.launch {
+                try {
+                    manager.connect()
+                    isLiveCoachActive = true
+                    liveCoachButton?.setImageResource(android.R.drawable.ic_media_pause)
+                    Toast.makeText(this@MainActivity, "Live coach started", Toast.LENGTH_SHORT).show()
+                } catch (e: Exception) {
+                    Timber.e(e, "Failed to start live coach")
+                    showError("Failed to start live coach: ${e.message}")
+                }
+            }
+        } ?: run {
+            showError("Live coach not available")
+        }
+    }
+
+    private fun stopLiveCoach() {
+        liveCoachManager?.let { manager ->
+            lifecycleScope.launch {
+                try {
+                    manager.disconnect()
+                    isLiveCoachActive = false
+                    liveCoachButton?.setImageResource(android.R.drawable.ic_btn_speak_now)
+                    liveCoachStatus?.visibility = View.GONE
+                    Toast.makeText(this@MainActivity, "Live coach stopped", Toast.LENGTH_SHORT).show()
+                } catch (e: Exception) {
+                    Timber.e(e, "Failed to stop live coach")
+                    showError("Failed to stop live coach: ${e.message}")
+                }
+            }
+        }
+    }
+
+    private fun updateLiveCoachUI(state: SessionState) {
+        when (state) {
+            SessionState.IDLE -> {
+                liveCoachButton?.setImageResource(android.R.drawable.ic_btn_speak_now)
+                liveCoachStatus?.visibility = View.GONE
+            }
+            SessionState.CONNECTING -> {
+                liveCoachStatus?.text = "Connecting to Live API..."
+                liveCoachStatus?.visibility = View.VISIBLE
+            }
+            SessionState.CONNECTED -> {
+                liveCoachButton?.setImageResource(android.R.drawable.ic_media_pause)
+                liveCoachStatus?.text = "Live coach connected"
+                liveCoachStatus?.visibility = View.VISIBLE
+            }
+            SessionState.LISTENING -> {
+                liveCoachStatus?.text = "Listening..."
+                liveCoachStatus?.visibility = View.VISIBLE
+            }
+            SessionState.SPEAKING -> {
+                liveCoachStatus?.text = "Coach speaking..."
+                liveCoachStatus?.visibility = View.VISIBLE
+            }
+            SessionState.INTERRUPTED -> {
+                liveCoachStatus?.text = "Interrupted"
+                liveCoachStatus?.visibility = View.VISIBLE
+            }
+            SessionState.DISCONNECTED -> {
+                liveCoachButton?.setImageResource(android.R.drawable.ic_btn_speak_now)
+                liveCoachStatus?.visibility = View.GONE
+                isLiveCoachActive = false
+            }
+            SessionState.ERROR -> {
+                liveCoachButton?.setImageResource(android.R.drawable.ic_btn_speak_now)
+                liveCoachStatus?.text = "Error"
+                liveCoachStatus?.visibility = View.VISIBLE
+                isLiveCoachActive = false
+            }
+        }
+    }
+
+    private fun displayLiveCoachResponse(response: String) {
+        // Display the coaching response in the UI
+        runOnUiThread {
+            // You could display this in a dedicated area or as an overlay
+            liveCoachStatus?.text = "Coach: $response"
+            liveCoachStatus?.visibility = View.VISIBLE
+
+            // Optionally also show as a toast for important messages
+            if (response.contains("important", ignoreCase = true) ||
+                response.contains("warning", ignoreCase = true)) {
+                Toast.makeText(this, response, Toast.LENGTH_LONG).show()
+            }
+        }
+    }
+
     override fun onDestroy() {
         super.onDestroy()
         cameraExecutor.shutdown()
         if (::poseDetectionManager.isInitialized) {
             poseDetectionManager.cleanup()
         }
+        liveCoachManager?.disconnect()
     }
 }
