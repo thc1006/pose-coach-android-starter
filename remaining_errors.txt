@@ -1,0 +1,40 @@
+e: file:///C:/Users/thc1006/Desktop/dev/pose-coach-android-starter/app/src/main/kotlin/com/posecoach/app/multimodal/pipeline/MultiModalProcessingPipeline.kt:375:28 Unresolved reference: filterMultiModalInput
+e: file:///C:/Users/thc1006/Desktop/dev/pose-coach-android-starter/app/src/main/kotlin/com/posecoach/app/multimodal/processors/AudioIntelligenceProcessor.kt:331:35 Unresolved reference. None of the following candidates is applicable because of receiver type mismatch: 
+e: file:///C:/Users/thc1006/Desktop/dev/pose-coach-android-starter/app/src/main/kotlin/com/posecoach/app/multimodal/processors/EmotionalIntelligenceEngine.kt:195:44 Unresolved reference: confidence
+e: file:///C:/Users/thc1006/Desktop/dev/pose-coach-android-starter/app/src/main/kotlin/com/posecoach/app/multimodal/processors/EmotionalIntelligenceEngine.kt:439:22 Unresolved reference: confidence
+e: file:///C:/Users/thc1006/Desktop/dev/pose-coach-android-starter/app/src/main/kotlin/com/posecoach/app/multimodal/processors/EmotionalIntelligenceEngine.kt:442:41 Unresolved reference: confidence
+e: file:///C:/Users/thc1006/Desktop/dev/pose-coach-android-starter/app/src/main/kotlin/com/posecoach/app/multimodal/processors/EmotionalIntelligenceEngine.kt:512:61 Unresolved reference: confidence
+e: file:///C:/Users/thc1006/Desktop/dev/pose-coach-android-starter/app/src/main/kotlin/com/posecoach/app/multimodal/processors/EmotionalIntelligenceEngine.kt:531:68 Unresolved reference: confidence
+e: file:///C:/Users/thc1006/Desktop/dev/pose-coach-android-starter/app/src/main/kotlin/com/posecoach/app/multimodal/processors/EmotionalIntelligenceEngine.kt:728:26 Unresolved reference: confidence
+e: file:///C:/Users/thc1006/Desktop/dev/pose-coach-android-starter/app/src/main/kotlin/com/posecoach/app/multimodal/processors/MultiModalPrivacyManager.kt:73:27 Serializer has not been found for type 'Any?'. To use context serializer as fallback, explicitly annotate type or property with @Contextual
+e: file:///C:/Users/thc1006/Desktop/dev/pose-coach-android-starter/app/src/main/kotlin/com/posecoach/app/multimodal/processors/TemporalSynchronizationProcessor.kt:404:67 Unresolved reference: confidence
+e: file:///C:/Users/thc1006/Desktop/dev/pose-coach-android-starter/app/src/main/kotlin/com/posecoach/app/multimodal/processors/TemporalSynchronizationProcessor.kt:406:34 Type mismatch: inferred type is List<Unit> but List<Float> was expected
+e: file:///C:/Users/thc1006/Desktop/dev/pose-coach-android-starter/app/src/main/kotlin/com/posecoach/app/multimodal/processors/TemporalSynchronizationProcessor.kt:431:67 Unresolved reference: confidence
+e: file:///C:/Users/thc1006/Desktop/dev/pose-coach-android-starter/app/src/main/kotlin/com/posecoach/app/multimodal/processors/TemporalSynchronizationProcessor.kt:432:48 Type mismatch: inferred type is Double but Float was expected
+e: file:///C:/Users/thc1006/Desktop/dev/pose-coach-android-starter/app/src/main/kotlin/com/posecoach/app/multimodal/processors/TemporalSynchronizationProcessor.kt:433:38 Unresolved reference. None of the following candidates is applicable because of receiver type mismatch: 
+e: file:///C:/Users/thc1006/Desktop/dev/pose-coach-android-starter/app/src/main/kotlin/com/posecoach/app/multimodal/processors/TemporalSynchronizationProcessor.kt:434:52 Unresolved reference. None of the following candidates is applicable because of receiver type mismatch: 
+e: file:///C:/Users/thc1006/Desktop/dev/pose-coach-android-starter/app/src/main/kotlin/com/posecoach/app/overlay/PoseOverlayEffect.kt:10:46 Unresolved reference: Companion
+e: file:///C:/Users/thc1006/Desktop/dev/pose-coach-android-starter/app/src/main/kotlin/com/posecoach/app/overlay/PoseOverlayEffect.kt:23:32 Unresolved reference: Surface
+e: file:///C:/Users/thc1006/Desktop/dev/pose-coach-android-starter/app/src/main/kotlin/com/posecoach/app/overlay/PoseOverlayEffect.kt:74:17 Incompatible types: Int and SurfaceOutput.Event!
+e: file:///C:/Users/thc1006/Desktop/dev/pose-coach-android-starter/app/src/main/kotlin/com/posecoach/app/overlay/PoseOverlayEffect.kt:82:45 Type mismatch: inferred type is Matrix but FloatArray was expected
+e: file:///C:/Users/thc1006/Desktop/dev/pose-coach-android-starter/app/src/main/kotlin/com/posecoach/app/overlay/PoseOverlayEffect.kt:82:82 The floating-point literal does not conform to the expected type FloatArray
+e: file:///C:/Users/thc1006/Desktop/dev/pose-coach-android-starter/app/src/main/kotlin/com/posecoach/app/overlay/PoseOverlayEffect.kt:93:25 Unresolved reference: lockHardwareCanvas
+e: file:///C:/Users/thc1006/Desktop/dev/pose-coach-android-starter/app/src/main/kotlin/com/posecoach/app/overlay/PoseOverlayEffect.kt:95:25 Unresolved reference: lockCanvas
+e: file:///C:/Users/thc1006/Desktop/dev/pose-coach-android-starter/app/src/main/kotlin/com/posecoach/app/overlay/PoseOverlayEffect.kt:99:29 Unresolved reference: it
+e: file:///C:/Users/thc1006/Desktop/dev/pose-coach-android-starter/app/src/main/kotlin/com/posecoach/app/overlay/PoseOverlayEffect.kt:100:25 Unresolved reference: unlockCanvasAndPost
+e: file:///C:/Users/thc1006/Desktop/dev/pose-coach-android-starter/app/src/main/kotlin/com/posecoach/app/overlay/PoseOverlayEffect.kt:100:45 Unresolved reference: it
+e: file:///C:/Users/thc1006/Desktop/dev/pose-coach-android-starter/app/src/main/kotlin/com/posecoach/app/overlay/PoseOverlayManager.kt:80:13 Unresolved reference: setCoordinateMapper
+e: file:///C:/Users/thc1006/Desktop/dev/pose-coach-android-starter/app/src/main/kotlin/com/posecoach/app/overlay/PoseOverlayManager.kt:82:13 Unresolved reference. None of the following candidates is applicable because of receiver type mismatch: 
+e: file:///C:/Users/thc1006/Desktop/dev/pose-coach-android-starter/app/src/main/kotlin/com/posecoach/app/overlay/PoseOverlayManager.kt:87:13 Unresolved reference: setCoordinateMapper
+e: file:///C:/Users/thc1006/Desktop/dev/pose-coach-android-starter/app/src/main/kotlin/com/posecoach/app/overlay/PoseOverlayManager.kt:100:22 Unresolved reference: setPrivacyManager
+e: file:///C:/Users/thc1006/Desktop/dev/pose-coach-android-starter/app/src/main/kotlin/com/posecoach/app/overlay/PoseOverlayManager.kt:101:24 Unresolved reference: setPrivacyManager
+e: file:///C:/Users/thc1006/Desktop/dev/pose-coach-android-starter/app/src/main/kotlin/com/posecoach/app/overlay/PoseOverlayManager.kt:134:22 Unresolved reference: setCoordinateMapper
+e: file:///C:/Users/thc1006/Desktop/dev/pose-coach-android-starter/app/src/main/kotlin/com/posecoach/app/overlay/PoseOverlayManager.kt:135:24 Unresolved reference: setCoordinateMapper
+e: file:///C:/Users/thc1006/Desktop/dev/pose-coach-android-starter/app/src/main/kotlin/com/posecoach/app/overlay/PoseOverlayManager.kt:155:22 Unresolved reference: enableMultiPersonMode
+e: file:///C:/Users/thc1006/Desktop/dev/pose-coach-android-starter/app/src/main/kotlin/com/posecoach/app/overlay/PoseOverlayManager.kt:163:22 Unresolved reference: selectPerson
+e: file:///C:/Users/thc1006/Desktop/dev/pose-coach-android-starter/app/src/main/kotlin/com/posecoach/app/overlay/PoseOverlayManager.kt:164:24 Unresolved reference: selectPerson
+e: file:///C:/Users/thc1006/Desktop/dev/pose-coach-android-starter/app/src/main/kotlin/com/posecoach/app/overlay/PoseOverlayManager.kt:209:22 Unresolved reference: updateMultiPersonPoses
+e: file:///C:/Users/thc1006/Desktop/dev/pose-coach-android-starter/app/src/main/kotlin/com/posecoach/app/overlay/PoseOverlayManager.kt:210:24 Unresolved reference: updateMultiPersonPoses
+e: file:///C:/Users/thc1006/Desktop/dev/pose-coach-android-starter/app/src/main/kotlin/com/posecoach/app/overlay/PoseOverlayManager.kt:238:22 Unresolved reference. None of the following candidates is applicable because of receiver type mismatch: 
+e: file:///C:/Users/thc1006/Desktop/dev/pose-coach-android-starter/app/src/main/kotlin/com/posecoach/app/overlay/PoseOverlayManager.kt:270:13 Unresolved reference: setShowPerformance
+e: file:///C:/Users/thc1006/Desktop/dev/pose-coach-android-starter/app/src/main/kotlin/com/posecoach/app/overlay/PoseOverlayManager.kt:271:13 Unresolved reference: setShowDebugInfo

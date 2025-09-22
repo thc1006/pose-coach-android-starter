@@ -104,3 +104,4 @@ lint/outputs/
 lint/tmp/
 lint-results*.xml
 CLAUDE.md
+.gradle/buildOutputCleanup/buildOutputCleanup.lock
