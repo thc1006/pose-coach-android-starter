@@ -434,7 +434,7 @@ jobs:
 
     steps:
     - name: Notify Slack on Success
-      if: success() && secrets.SLACK_WEBHOOK != ''
+      if: success() && secrets.SLACK_WEBHOOK
       uses: rtCamp/action-slack-notify@v2
       env:
         SLACK_WEBHOOK: ${{ secrets.SLACK_WEBHOOK }}
@@ -446,7 +446,7 @@ jobs:
           🚀 Production Ready: Yes
 
     - name: Notify Slack on Failure
-      if: failure() && secrets.SLACK_WEBHOOK != ''
+      if: failure() && secrets.SLACK_WEBHOOK
       uses: rtCamp/action-slack-notify@v2
       env:
         SLACK_WEBHOOK: ${{ secrets.SLACK_WEBHOOK }}

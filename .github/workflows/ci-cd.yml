@@ -124,7 +124,7 @@ jobs:
           out: 'dependency-check-reports'
         env:
           # Make OWASP check resilient to missing NVD API key
-          NVD_API_KEY: ${{ secrets.NVD_API_KEY || '' }}
+          NVD_API_KEY: ${{ secrets.NVD_API_KEY }}
         continue-on-error: true
 
       - name: Upload OWASP Dependency Check results
@@ -168,7 +168,7 @@ jobs:
       - name: Enable KVM group permissions
         run: |
           echo 'KERNEL=="kvm", GROUP="kvm", MODE="0666", OPTIONS+="static_node=kvm"' | sudo tee /etc/udev/rules.d/99-kvm4all.rules
-          sudo udev-reload-rules
+          sudo udevadm control --reload-rules
           sudo udevadm trigger --name-match=kvm
 
       - name: Setup Android SDK
@@ -322,7 +322,7 @@ jobs:
 
       - name: Upload coverage to Codecov
         uses: codecov/codecov-action@v4
-        if: secrets.CODECOV_TOKEN != ''
+        if: secrets.CODECOV_TOKEN
         with:
           file: build/reports/jacoco/jacocoMergedReport/jacocoMergedReport.xml
           fail_ci_if_error: false
@@ -394,12 +394,12 @@ jobs:
         uses: android-actions/setup-android@v3
 
       - name: Decode signing keystore
-        if: secrets.SIGNING_KEY_STORE_BASE64 != ''
+        if: secrets.SIGNING_KEY_STORE_BASE64
         env:
           ENCODED_STRING: ${{ secrets.SIGNING_KEY_STORE_BASE64 }}
         run: |
           mkdir -p app/keystore
-          echo $ENCODED_STRING | base64 -di > app/keystore/release.keystore
+          echo $ENCODED_STRING | base64 -d > app/keystore/release.keystore
 
       - name: Build release APK
         env:
@@ -420,7 +420,7 @@ jobs:
 
       - name: Sign APK
         uses: r0adkll/sign-android-release@v1
-        if: secrets.SIGNING_KEY_STORE_BASE64 != ''
+        if: secrets.SIGNING_KEY_STORE_BASE64
         with:
           releaseDirectory: app/build/outputs/apk/release
           signingKeyBase64: ${{ secrets.SIGNING_KEY_STORE_BASE64 }}
@@ -458,7 +458,7 @@ jobs:
 
       - name: Deploy to Google Play Console
         uses: r0adkll/upload-google-play@v1
-        if: secrets.SERVICE_ACCOUNT_JSON != ''
+        if: secrets.SERVICE_ACCOUNT_JSON
         with:
           serviceAccountJsonPlainText: ${{ secrets.SERVICE_ACCOUNT_JSON }}
           packageName: com.posecoach.camera
@@ -495,7 +495,7 @@ jobs:
     steps:
       - name: Rollback to previous version
         uses: r0adkll/upload-google-play@v1
-        if: secrets.SERVICE_ACCOUNT_JSON != ''
+        if: secrets.SERVICE_ACCOUNT_JSON
         with:
           serviceAccountJsonPlainText: ${{ secrets.SERVICE_ACCOUNT_JSON }}
           packageName: com.posecoach.camera
@@ -504,7 +504,7 @@ jobs:
 
       - name: Notify team of rollback
         uses: 8398a7/action-slack@v3
-        if: secrets.SLACK_WEBHOOK_URL != ''
+        if: secrets.SLACK_WEBHOOK_URL
         with:
           status: failure
           text: '🚨 Deployment failed and has been rolled back. Please investigate.'
