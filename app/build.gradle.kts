@@ -4,6 +4,16 @@ plugins {
     id("org.jetbrains.kotlin.plugin.serialization") version "1.9.25"
 }
 
+import java.util.Properties
+import java.io.FileInputStream
+
+// Load local.properties file
+val localProperties = Properties()
+val localPropertiesFile = rootProject.file("local.properties")
+if (localPropertiesFile.exists()) {
+    localProperties.load(FileInputStream(localPropertiesFile))
+}
+
 android {
     namespace = "com.posecoach.app"
     compileSdk = 35  // Android 15 for 16KB page size support
@@ -17,6 +27,12 @@ android {
         versionName = "1.0"
 
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
+
+        // Add API keys from local.properties as BuildConfig fields
+        buildConfigField("String", "GEMINI_API_KEY",
+            "\"${localProperties.getProperty("gemini.api.key", "")}\"")
+        buildConfigField("String", "GEMINI_LIVE_API_KEY",
+            "\"${localProperties.getProperty("gemini.live.api.key", "")}\"")
     }
 
     buildTypes {
