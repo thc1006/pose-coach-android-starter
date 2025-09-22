@@ -30,6 +30,9 @@ jobs:
     - name: Checkout code
       uses: actions/checkout@v4
 
+    - name: Configure git safe directory
+      run: git config --global --add safe.directory "$GITHUB_WORKSPACE"
+
     - name: Setup JDK
       uses: actions/setup-java@v4
       with:
@@ -43,7 +46,7 @@ jobs:
       uses: android-actions/setup-android@v3
 
     - name: Cache Gradle dependencies
-      uses: actions/cache@v3
+      uses: actions/cache@v4
       with:
         path: |
           ~/.gradle/caches
@@ -51,9 +54,6 @@ jobs:
         key: ${{ runner.os }}-gradle-${{ hashFiles('**/*.gradle*', '**/gradle-wrapper.properties') }}
         restore-keys: |
           ${{ runner.os }}-gradle-
-
-    - name: Grant execute permission for gradlew
-      run: chmod +x gradlew
 
     - name: Run WebSocket Protocol Tests
       run: ./gradlew :tests:testDebugUnitTest --tests "*.websocket.*" --stacktrace
@@ -74,7 +74,7 @@ jobs:
       run: ./gradlew :tests:jacocoTestReport
 
     - name: Upload Test Results
-      uses: actions/upload-artifact@v3
+      uses: actions/upload-artifact@v4
       if: always()
       with:
         name: unit-test-results
@@ -91,6 +91,9 @@ jobs:
     - name: Checkout code
       uses: actions/checkout@v4
 
+    - name: Configure git safe directory
+      run: git config --global --add safe.directory "$GITHUB_WORKSPACE"
+
     - name: Setup JDK
       uses: actions/setup-java@v4
       with:
@@ -104,7 +107,7 @@ jobs:
       uses: android-actions/setup-android@v3
 
     - name: Cache Gradle dependencies
-      uses: actions/cache@v3
+      uses: actions/cache@v4
       with:
         path: |
           ~/.gradle/caches
@@ -123,7 +126,7 @@ jobs:
       run: ./gradlew :tests:generatePerformanceReport
 
     - name: Upload Performance Reports
-      uses: actions/upload-artifact@v3
+      uses: actions/upload-artifact@v4
       if: always()
       with:
         name: performance-test-results
@@ -140,6 +143,9 @@ jobs:
     - name: Checkout code
       uses: actions/checkout@v4
 
+    - name: Configure git safe directory
+      run: git config --global --add safe.directory "$GITHUB_WORKSPACE"
+
     - name: Setup JDK
       uses: actions/setup-java@v4
       with:
@@ -153,7 +159,7 @@ jobs:
       uses: android-actions/setup-android@v3
 
     - name: Cache Gradle dependencies
-      uses: actions/cache@v3
+      uses: actions/cache@v4
       with:
         path: |
           ~/.gradle/caches
@@ -169,7 +175,7 @@ jobs:
       run: ./gradlew :tests:generateComplianceReport
 
     - name: Upload Integration Test Results
-      uses: actions/upload-artifact@v3
+      uses: actions/upload-artifact@v4
       if: always()
       with:
         name: integration-test-results
@@ -190,6 +196,9 @@ jobs:
     - name: Checkout code
       uses: actions/checkout@v4
 
+    - name: Configure git safe directory
+      run: git config --global --add safe.directory "$GITHUB_WORKSPACE"
+
     - name: Setup JDK
       uses: actions/setup-java@v4
       with:
@@ -203,7 +212,7 @@ jobs:
       uses: android-actions/setup-android@v3
 
     - name: Cache Gradle dependencies
-      uses: actions/cache@v3
+      uses: actions/cache@v4
       with:
         path: |
           ~/.gradle/caches
@@ -213,7 +222,7 @@ jobs:
           ${{ runner.os }}-gradle-
 
     - name: AVD cache
-      uses: actions/cache@v3
+      uses: actions/cache@v4
       id: avd-cache
       with:
         path: |
@@ -249,7 +258,7 @@ jobs:
           ./gradlew :tests:connectedDebugAndroidTest --stacktrace
 
     - name: Upload Android Test Results
-      uses: actions/upload-artifact@v3
+      uses: actions/upload-artifact@v4
       if: always()
       with:
         name: android-test-results-api-${{ matrix.api-level }}
@@ -265,6 +274,9 @@ jobs:
     steps:
     - name: Checkout code
       uses: actions/checkout@v4
+
+    - name: Configure git safe directory
+      run: git config --global --add safe.directory "$GITHUB_WORKSPACE"
 
     - name: Setup JDK
       uses: actions/setup-java@v4
@@ -288,7 +300,7 @@ jobs:
         ./gradlew :tests:testDebugUnitTest --tests "*auth*security*" --stacktrace
 
     - name: Upload Security Reports
-      uses: actions/upload-artifact@v3
+      uses: actions/upload-artifact@v4
       if: always()
       with:
         name: security-reports
@@ -306,6 +318,9 @@ jobs:
     - name: Checkout code
       uses: actions/checkout@v4
 
+    - name: Configure git safe directory
+      run: git config --global --add safe.directory "$GITHUB_WORKSPACE"
+
     - name: Setup JDK
       uses: actions/setup-java@v4
       with:
@@ -319,7 +334,7 @@ jobs:
       uses: android-actions/setup-android@v3
 
     - name: Cache Gradle dependencies
-      uses: actions/cache@v3
+      uses: actions/cache@v4
       with:
         path: |
           ~/.gradle/caches
@@ -338,7 +353,7 @@ jobs:
       run: ./gradlew :tests:testDebugUnitTest --tests "*memory*leak*" --stacktrace
 
     - name: Upload Stress Test Results
-      uses: actions/upload-artifact@v3
+      uses: actions/upload-artifact@v4
       if: always()
       with:
         name: stress-test-results
@@ -356,6 +371,9 @@ jobs:
     - name: Checkout code
       uses: actions/checkout@v4
 
+    - name: Configure git safe directory
+      run: git config --global --add safe.directory "$GITHUB_WORKSPACE"
+
     - name: Setup JDK
       uses: actions/setup-java@v4
       with:
@@ -366,7 +384,10 @@ jobs:
       run: chmod +x gradlew
 
     - name: Download All Test Artifacts
-      uses: actions/download-artifact@v3
+      uses: actions/download-artifact@v4
+      with:
+        pattern: "*test-results*"
+        merge-multiple: true
 
     - name: Run Full Compliance Validation
       run: |
@@ -409,7 +430,7 @@ jobs:
           }
 
     - name: Upload Final Compliance Report
-      uses: actions/upload-artifact@v3
+      uses: actions/upload-artifact@v4
       if: always()
       with:
         name: final-compliance-report
