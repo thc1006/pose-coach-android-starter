@@ -43,7 +43,7 @@ class EnhancedCoordinateMapper(
     }
 
     /**
-     * Convert normalized coordinates to pixel coordinates with sub-pixel accuracy
+     * Convert normalized coordinates to pixel coordinates with sub-pixel accuracy including rotation
      */
     fun normalizedToPixel(normalizedX: Float, normalizedY: Float): Pair<Float, Float> {
         transformationCount++
@@ -52,21 +52,17 @@ class EnhancedCoordinateMapper(
         val x = if (isFrontFacing) 1f - normalizedX else normalizedX
         val y = normalizedY
 
-        // Fast path for common transformations
-        return when (fitMode) {
-            FitMode.FILL -> {
-                Pair(
-                    x * viewWidth,
-                    y * viewHeight
-                )
-            }
-            FitMode.CENTER_CROP, FitMode.CENTER_INSIDE -> {
-                // Use cached scale and offset for performance
-                Pair(
-                    x * scaleX + offsetX,
-                    y * scaleY + offsetY
-                )
-            }
+        // Apply scaling and offset first
+        val scaledX = x * scaleX + offsetX
+        val scaledY = y * scaleY + offsetY
+
+        // Apply rotation transformation if needed
+        return if (rotation != 0) {
+            val point = floatArrayOf(scaledX, scaledY)
+            transform.mapPoints(point)
+            Pair(point[0], point[1])
+        } else {
+            Pair(scaledX, scaledY)
         }
     }
 
@@ -76,26 +72,27 @@ class EnhancedCoordinateMapper(
     fun batchNormalizedToPixel(landmarks: List<Pair<Float, Float>>): List<Pair<Float, Float>> {
         if (landmarks.isEmpty()) return emptyList()
 
-        val result = ArrayList<Pair<Float, Float>>(landmarks.size)
+        val count = landmarks.size
+        val points = FloatArray(count * 2)
 
-        // Optimize for front camera mirroring
-        if (isFrontFacing) {
-            for (landmark in landmarks) {
-                val x = 1f - landmark.first
-                val y = landmark.second
+        // Apply mirroring and scaling in batch
+        landmarks.forEachIndexed { index, (landmarkX, landmarkY) ->
+            val x = if (isFrontFacing) 1f - landmarkX else landmarkX
+            val y = landmarkY
 
-                result.add(Pair(
-                    x * scaleX + offsetX,
-                    y * scaleY + offsetY
-                ))
-            }
-        } else {
-            for (landmark in landmarks) {
-                result.add(Pair(
-                    landmark.first * scaleX + offsetX,
-                    landmark.second * scaleY + offsetY
-                ))
-            }
+            points[index * 2] = x * scaleX + offsetX
+            points[index * 2 + 1] = y * scaleY + offsetY
+        }
+
+        // Apply rotation transformation if needed
+        if (rotation != 0) {
+            transform.mapPoints(points)
+        }
+
+        // Convert back to pairs
+        val result = ArrayList<Pair<Float, Float>>(count)
+        for (i in 0 until count) {
+            result.add(Pair(points[i * 2], points[i * 2 + 1]))
         }
 
         transformationCount += landmarks.size
