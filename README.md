@@ -15,7 +15,7 @@
 - 🤖 **AI 姿勢建議**：透過 Gemini 2.5 Structured Output 提供 3 條可執行的姿勢改善建議
 - 🎙️ **語音互動** (進階功能)：整合 Gemini Live API 實現即時語音指導
 - 🔐 **隱私優先**：所有影像處理皆在裝置端完成，僅在使用者同意時上傳姿態地標 JSON
-- ⚡ **高效能**：支援 Android 15 的 16KB 記憶體頁面對齊，優化效能與記憶體使用
+- ⚡ **高效能**：支援 Android 15+ 的 16KB 記憶體頁面對齊，優化效能與記憶體使用
 
 ## 🏗️ 系統架構
 
@@ -230,7 +230,7 @@ npx claude-flow sparc tdd "新功能描述"
 
 ## 📝 授權
 
-本專案採用 MIT 授權 - 詳見 [LICENSE](LICENSE) 檔案
+本專案採用  Apache-2.0 license 授權 - 詳見 [LICENSE](LICENSE) 檔案
 
 ## 🔗 相關資源
 
@@ -241,10 +241,6 @@ npx claude-flow sparc tdd "新功能描述"
 
 ## 📧 聯絡資訊
 
-專案維護者: thc1006 <84045975+thc1006@users.noreply.github.com>
+專案維護者: thc1006 <hctsai@linux.com>
 
 專案連結: [https://github.com/thc1006/pose-coach-android-starter](https://github.com/thc1006/pose-coach-android-starter)
-
----
-
-*本專案使用 SPARC 方法論與 Claude-Flow 協作框架開發*
