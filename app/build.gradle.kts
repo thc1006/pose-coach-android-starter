@@ -7,7 +7,7 @@ plugins {
 android {
     namespace = "com.posecoach.app"
     compileSdk = 35  // Android 15 for 16KB page size support
-    ndkVersion = "28.0.12433566" // NDK r28+ compiles 16KB-aligned by default
+    ndkVersion = "28.0.12433566" // NDK r28 compiles 16KB-aligned by default
 
     defaultConfig {
         applicationId = "com.posecoach.camera"
@@ -17,15 +17,6 @@ android {
         versionName = "1.0"
 
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
-
-        // NDK r28+ automatically handles 16KB alignment
-        // No explicit configuration needed with NDK r28+
-        // The following is only needed if you want to disable flexible page sizes
-        // externalNativeBuild {
-        //     cmake {
-        //         arguments += "-DANDROID_SUPPORT_FLEXIBLE_PAGE_SIZES=OFF"
-        //     }
-        // }
     }
 
     buildTypes {
@@ -77,8 +68,7 @@ android {
             excludes += "COPYRIGHT.txt"
         }
         jniLibs {
-            // With AGP 8.5.1+ and NDK r28+, 16KB alignment is automatic
-            // useLegacyPackaging = false ensures libraries are uncompressed and aligned
+            // Force 16KB alignment with AGP 8.13+ and NDK r28
             useLegacyPackaging = false
 
             // Keep debug symbols for critical libraries
@@ -89,7 +79,7 @@ android {
                 "**/libtensorflowlite_jni.so"
             )
 
-            // Handle duplicate libraries
+            // Handle duplicate libraries with force alignment
             pickFirsts += listOf(
                 "**/libimage_processing_util_jni.so",
                 "**/libmediapipe_tasks_vision_jni.so",
@@ -108,6 +98,49 @@ android {
         checkDependencies = true
         abortOnError = false
         warningsAsErrors = false
+    }
+
+}
+
+// Custom 16KB alignment task (outside android block)
+afterEvaluate {
+    tasks.register("align16KDebug") {
+        dependsOn("packageDebug")
+        group = "build"
+        description = "Align debug APKs to 16KB boundaries for compatibility"
+
+        doLast {
+            val apkDir = File(layout.buildDirectory.asFile.get(), "outputs/apk/debug")
+            val apkFiles = apkDir.listFiles { _, name ->
+                name.endsWith("-debug.apk")
+            }
+
+            apkFiles?.forEach { inputApk ->
+                val outputApk = File(inputApk.parent, inputApk.name.replace(".apk", "-16kb-aligned.apk"))
+                val sdkDir = android.sdkDirectory
+                val buildToolsVersion = android.buildToolsVersion
+                val zipalignPath = if (System.getProperty("os.name").lowercase().contains("windows")) {
+                    "$sdkDir/build-tools/$buildToolsVersion/zipalign.exe"
+                } else {
+                    "$sdkDir/build-tools/$buildToolsVersion/zipalign"
+                }
+
+                // Use zipalign with 16KB alignment
+                project.exec {
+                    commandLine(zipalignPath, "-f", "-p", "16", inputApk.absolutePath, outputApk.absolutePath)
+                }
+
+                // Replace original APK with aligned version
+                inputApk.delete()
+                outputApk.renameTo(inputApk)
+
+                println("✅ Applied 16KB alignment to: ${inputApk.name}")
+            }
+        }
+    }
+
+    tasks.named("assembleDebug").configure {
+        finalizedBy("align16KDebug")
     }
 }
 
