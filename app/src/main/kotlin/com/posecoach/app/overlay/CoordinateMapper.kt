@@ -151,13 +151,9 @@ class CoordinateMapper(
             x = 1.0f - x
         }
 
-        // High-precision coordinate transformation
-        var pixelX = (x * scaleX + offsetX * SUB_PIXEL_PRECISION) / SUB_PIXEL_PRECISION + offsetX * (1f - 1f/SUB_PIXEL_PRECISION)
-        var pixelY = (y * scaleY + offsetY * SUB_PIXEL_PRECISION) / SUB_PIXEL_PRECISION + offsetY * (1f - 1f/SUB_PIXEL_PRECISION)
-
         // Simplified high precision calculation
-        pixelX = x * scaleX + offsetX
-        pixelY = y * scaleY + offsetY
+        var pixelX = x * scaleX + offsetX
+        var pixelY = y * scaleY + offsetY
 
         // Apply rotation transformation if needed
         if (rotation != 0) {

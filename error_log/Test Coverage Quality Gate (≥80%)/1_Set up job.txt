@@ -1,0 +1,32 @@
+﻿2025-09-22T19:45:42.1440072Z Current runner version: '2.328.0'
+2025-09-22T19:45:42.1464667Z ##[group]Runner Image Provisioner
+2025-09-22T19:45:42.1465790Z Hosted Compute Agent
+2025-09-22T19:45:42.1466391Z Version: 20250829.383
+2025-09-22T19:45:42.1467054Z Commit: 27cb235aab5b0e52e153a26cd86b4742e89dac5d
+2025-09-22T19:45:42.1467737Z Build Date: 2025-08-29T13:48:48Z
+2025-09-22T19:45:42.1468330Z ##[endgroup]
+2025-09-22T19:45:42.1468846Z ##[group]Operating System
+2025-09-22T19:45:42.1469482Z Ubuntu
+2025-09-22T19:45:42.1469936Z 24.04.3
+2025-09-22T19:45:42.1470391Z LTS
+2025-09-22T19:45:42.1470879Z ##[endgroup]
+2025-09-22T19:45:42.1471374Z ##[group]Runner Image
+2025-09-22T19:45:42.1471937Z Image: ubuntu-24.04
+2025-09-22T19:45:42.1472475Z Version: 20250907.24.1
+2025-09-22T19:45:42.1473470Z Included Software: https://github.com/actions/runner-images/blob/ubuntu24/20250907.24/images/ubuntu/Ubuntu2404-Readme.md
+2025-09-22T19:45:42.1474765Z Image Release: https://github.com/actions/runner-images/releases/tag/ubuntu24%2F20250907.24
+2025-09-22T19:45:42.1476232Z ##[endgroup]
+2025-09-22T19:45:42.1477364Z ##[group]GITHUB_TOKEN Permissions
+2025-09-22T19:45:42.1479471Z Contents: read
+2025-09-22T19:45:42.1480054Z Metadata: read
+2025-09-22T19:45:42.1480598Z Packages: read
+2025-09-22T19:45:42.1481119Z ##[endgroup]
+2025-09-22T19:45:42.1483045Z Secret source: Actions
+2025-09-22T19:45:42.1483836Z Prepare workflow directory
+2025-09-22T19:45:42.1806459Z Prepare all required actions
+2025-09-22T19:45:42.1844619Z Getting action download info
+2025-09-22T19:45:42.5711691Z Download action repository 'actions/checkout@v4' (SHA:08eba0b27e820071cde6df949e0beb9ba4906955)
+2025-09-22T19:45:42.7592978Z Download action repository 'actions/setup-java@v4' (SHA:c5195efecf7bdfc987ee8bae7a71cb8b11521c00)
+2025-09-22T19:45:43.3495643Z Download action repository 'android-actions/setup-android@v3' (SHA:9fc6c4e9069bf8d3d10b2204b1fb8f6ef7065407)
+2025-09-22T19:45:43.7272080Z Download action repository 'actions/upload-artifact@v4' (SHA:ea165f8d65b6e75b540449e92b4886f43607fa02)
+2025-09-22T19:45:43.9450163Z Complete job name: Test Coverage Quality Gate (≥80%)

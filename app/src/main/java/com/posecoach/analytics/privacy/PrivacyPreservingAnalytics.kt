@@ -55,7 +55,10 @@ class PrivacyPreservingAnalytics @Inject constructor(
         data.map { item ->
             when (item) {
                 is UserPerformanceMetrics -> applyDPToUserMetrics(item, epsilon)
-                is Map<*, *> -> applyDPToMap(item @Suppress("UNCHECKED_CAST") as Map<String, Any>, epsilon)
+                is Map<*, *> -> {
+                    @Suppress("UNCHECKED_CAST")
+                    applyDPToMap(item as Map<String, Any>, epsilon)
+                }
                 is Number -> addLaplaceNoise(item.toDouble(), epsilon, 1.0).toFloat()
                 else -> item
             }

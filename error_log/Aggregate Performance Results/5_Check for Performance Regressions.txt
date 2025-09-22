@@ -1,0 +1,40 @@
+﻿2025-09-22T19:46:18.5753008Z ##[group]Run echo "🔍 Checking for Performance Regressions"
+2025-09-22T19:46:18.5753464Z [36;1mecho "🔍 Checking for Performance Regressions"[0m
+2025-09-22T19:46:18.5753770Z [36;1mecho "======================================="[0m
+2025-09-22T19:46:18.5754021Z [36;1m[0m
+2025-09-22T19:46:18.5754253Z [36;1m# Simple heuristic for detecting potential issues[0m
+2025-09-22T19:46:18.5754546Z [36;1mPOTENTIAL_ISSUES=0[0m
+2025-09-22T19:46:18.5754753Z [36;1m[0m
+2025-09-22T19:46:18.5754939Z [36;1m# Check for any benchmark failures[0m
+2025-09-22T19:46:18.5755563Z [36;1mif find all-results/ -name "*.txt" -exec grep -l "FAILURE\|ERROR\|Exception" {} \; | head -1; then[0m
+2025-09-22T19:46:18.5756005Z [36;1m  echo "❌ Benchmark failures detected"[0m
+2025-09-22T19:46:18.5756309Z [36;1m  POTENTIAL_ISSUES=$((POTENTIAL_ISSUES + 1))[0m
+2025-09-22T19:46:18.5756569Z [36;1mfi[0m
+2025-09-22T19:46:18.5756736Z [36;1m[0m
+2025-09-22T19:46:18.5756987Z [36;1m# Check for extremely long execution times (basic heuristic)[0m
+2025-09-22T19:46:18.5757467Z [36;1mif find all-results/ -name "*.txt" -exec grep -l "timeout\|Timeout" {} \; | head -1; then[0m
+2025-09-22T19:46:18.5757920Z [36;1m  echo "⚠️ Potential timeout issues detected"[0m
+2025-09-22T19:46:18.5758569Z [36;1m  POTENTIAL_ISSUES=$((POTENTIAL_ISSUES + 1))[0m
+2025-09-22T19:46:18.5758986Z [36;1mfi[0m
+2025-09-22T19:46:18.5759209Z [36;1m[0m
+2025-09-22T19:46:18.5759408Z [36;1mif [ $POTENTIAL_ISSUES -eq 0 ]; then[0m
+2025-09-22T19:46:18.5759708Z [36;1m  echo "✅ No obvious performance issues detected"[0m
+2025-09-22T19:46:18.5759991Z [36;1melse[0m
+2025-09-22T19:46:18.5760266Z [36;1m  echo "⚠️ $POTENTIAL_ISSUES potential performance issues detected"[0m
+2025-09-22T19:46:18.5760662Z [36;1m  echo "Please review the detailed benchmark results"[0m
+2025-09-22T19:46:18.5760937Z [36;1mfi[0m
+2025-09-22T19:46:18.5761098Z [36;1m[0m
+2025-09-22T19:46:18.5761329Z [36;1mecho "POTENTIAL_ISSUES=$POTENTIAL_ISSUES" >> $GITHUB_ENV[0m
+2025-09-22T19:46:18.5790229Z shell: /usr/bin/bash -e {0}
+2025-09-22T19:46:18.5790480Z env:
+2025-09-22T19:46:18.5790663Z   BASELINE_BRANCH: main
+2025-09-22T19:46:18.5790878Z   PERFORMANCE_THRESHOLD: 10
+2025-09-22T19:46:18.5791084Z ##[endgroup]
+2025-09-22T19:46:18.5835824Z 🔍 Checking for Performance Regressions
+2025-09-22T19:46:18.5848725Z find: ‘all-results/’: No such file or directory
+2025-09-22T19:46:18.5849221Z =======================================
+2025-09-22T19:46:18.5854216Z ❌ Benchmark failures detected
+2025-09-22T19:46:18.5866576Z find: ‘all-results/’: No such file or directory
+2025-09-22T19:46:18.5869225Z ⚠️ Potential timeout issues detected
+2025-09-22T19:46:18.5869722Z ⚠️ 2 potential performance issues detected
+2025-09-22T19:46:18.5870036Z Please review the detailed benchmark results

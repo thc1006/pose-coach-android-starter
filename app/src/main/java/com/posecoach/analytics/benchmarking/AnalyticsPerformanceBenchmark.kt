@@ -794,9 +794,9 @@ class AnalyticsPerformanceBenchmark @Inject constructor(
             maxMemoryMB = runtime.maxMemory() / 1024 / 1024,
             totalMemoryMB = runtime.totalMemory() / 1024 / 1024,
             freeMemoryMB = runtime.freeMemory() / 1024 / 1024,
-            javaVersion = System.getProperty("java.version"),
-            osName = System.getProperty("os.name"),
-            osVersion = System.getProperty("os.version")
+            javaVersion = System.getProperty("java.version") ?: "unknown",
+            osName = System.getProperty("os.name") ?: "unknown",
+            osVersion = System.getProperty("os.version") ?: "unknown"
         )
     }
 

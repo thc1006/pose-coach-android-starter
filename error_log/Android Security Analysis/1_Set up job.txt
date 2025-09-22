@@ -1,0 +1,33 @@
+﻿2025-09-22T19:45:46.9889469Z Current runner version: '2.328.0'
+2025-09-22T19:45:46.9925854Z ##[group]Runner Image Provisioner
+2025-09-22T19:45:46.9927243Z Hosted Compute Agent
+2025-09-22T19:45:46.9928203Z Version: 20250829.383
+2025-09-22T19:45:46.9929293Z Commit: 27cb235aab5b0e52e153a26cd86b4742e89dac5d
+2025-09-22T19:45:46.9930682Z Build Date: 2025-08-29T13:48:48Z
+2025-09-22T19:45:46.9931598Z ##[endgroup]
+2025-09-22T19:45:46.9932623Z ##[group]Operating System
+2025-09-22T19:45:46.9933521Z Ubuntu
+2025-09-22T19:45:46.9934298Z 24.04.3
+2025-09-22T19:45:46.9935194Z LTS
+2025-09-22T19:45:46.9936003Z ##[endgroup]
+2025-09-22T19:45:46.9936772Z ##[group]Runner Image
+2025-09-22T19:45:46.9937805Z Image: ubuntu-24.04
+2025-09-22T19:45:46.9938617Z Version: 20250907.24.1
+2025-09-22T19:45:46.9940474Z Included Software: https://github.com/actions/runner-images/blob/ubuntu24/20250907.24/images/ubuntu/Ubuntu2404-Readme.md
+2025-09-22T19:45:46.9942999Z Image Release: https://github.com/actions/runner-images/releases/tag/ubuntu24%2F20250907.24
+2025-09-22T19:45:46.9945025Z ##[endgroup]
+2025-09-22T19:45:46.9947023Z ##[group]GITHUB_TOKEN Permissions
+2025-09-22T19:45:46.9949708Z Actions: read
+2025-09-22T19:45:46.9950784Z Contents: read
+2025-09-22T19:45:46.9951651Z Metadata: read
+2025-09-22T19:45:46.9953025Z SecurityEvents: write
+2025-09-22T19:45:46.9953890Z ##[endgroup]
+2025-09-22T19:45:46.9957094Z Secret source: Actions
+2025-09-22T19:45:46.9958714Z Prepare workflow directory
+2025-09-22T19:45:47.0434003Z Prepare all required actions
+2025-09-22T19:45:47.0490980Z Getting action download info
+2025-09-22T19:45:47.3209144Z Download action repository 'actions/checkout@v4' (SHA:08eba0b27e820071cde6df949e0beb9ba4906955)
+2025-09-22T19:45:47.3866873Z Download action repository 'actions/setup-java@v4' (SHA:c5195efecf7bdfc987ee8bae7a71cb8b11521c00)
+2025-09-22T19:45:47.7115908Z Download action repository 'android-actions/setup-android@v3' (SHA:9fc6c4e9069bf8d3d10b2204b1fb8f6ef7065407)
+2025-09-22T19:45:47.9198088Z Download action repository 'fundacaocerti/mobsf-action@v1.7.1' (SHA:96f53daa4d68a2caaeb5caf23ded96a10ebaf87b)
+2025-09-22T19:45:48.3190575Z Complete job name: Android Security Analysis

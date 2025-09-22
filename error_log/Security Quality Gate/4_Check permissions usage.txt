@@ -1,0 +1,36 @@
+﻿2025-09-22T19:45:43.3345850Z ##[group]Run # Verify only necessary permissions are used
+2025-09-22T19:45:43.3347509Z [36;1m# Verify only necessary permissions are used[0m
+2025-09-22T19:45:43.3348863Z [36;1mrequired_permissions=([0m
+2025-09-22T19:45:43.3350267Z [36;1m  "android.permission.CAMERA"[0m
+2025-09-22T19:45:43.3351546Z [36;1m  "android.permission.INTERNET"[0m
+2025-09-22T19:45:43.3352947Z [36;1m  "android.permission.WRITE_EXTERNAL_STORAGE"[0m
+2025-09-22T19:45:43.3354235Z [36;1m)[0m
+2025-09-22T19:45:43.3354967Z [36;1m[0m
+2025-09-22T19:45:43.3355974Z [36;1mmanifest_file="app/src/main/AndroidManifest.xml"[0m
+2025-09-22T19:45:43.3357402Z [36;1mif [ -f "$manifest_file" ]; then[0m
+2025-09-22T19:45:43.3358778Z [36;1m  for permission in "${required_permissions[@]}"; do[0m
+2025-09-22T19:45:43.3360593Z [36;1m    if ! grep -q "$permission" "$manifest_file"; then[0m
+2025-09-22T19:45:43.3362176Z [36;1m      echo "⚠️ Expected permission $permission not found"[0m
+2025-09-22T19:45:43.3363530Z [36;1m    fi[0m
+2025-09-22T19:45:43.3364382Z [36;1m  done[0m
+2025-09-22T19:45:43.3365161Z [36;1m[0m
+2025-09-22T19:45:43.3365985Z [36;1m  # Check for dangerous permissions[0m
+2025-09-22T19:45:43.3367204Z [36;1m  dangerous_permissions=([0m
+2025-09-22T19:45:43.3368379Z [36;1m    "android.permission.READ_CONTACTS"[0m
+2025-09-22T19:45:43.3370023Z [36;1m    "android.permission.ACCESS_FINE_LOCATION"[0m
+2025-09-22T19:45:43.3371434Z [36;1m    "android.permission.RECORD_AUDIO"[0m
+2025-09-22T19:45:43.3372598Z [36;1m  )[0m
+2025-09-22T19:45:43.3373348Z [36;1m[0m
+2025-09-22T19:45:43.3374352Z [36;1m  for permission in "${dangerous_permissions[@]}"; do[0m
+2025-09-22T19:45:43.3375905Z [36;1m    if grep -q "$permission" "$manifest_file"; then[0m
+2025-09-22T19:45:43.3377715Z [36;1m      echo "❌ Dangerous permission $permission found without justification"[0m
+2025-09-22T19:45:43.3379347Z [36;1m      exit 1[0m
+2025-09-22T19:45:43.3380397Z [36;1m    fi[0m
+2025-09-22T19:45:43.3381239Z [36;1m  done[0m
+2025-09-22T19:45:43.3382008Z [36;1mfi[0m
+2025-09-22T19:45:43.3382748Z [36;1m[0m
+2025-09-22T19:45:43.3383589Z [36;1mecho "✅ Permissions check passed"[0m
+2025-09-22T19:45:43.3413341Z shell: /usr/bin/bash -e {0}
+2025-09-22T19:45:43.3414313Z ##[endgroup]
+2025-09-22T19:45:43.3548896Z ❌ Dangerous permission android.permission.RECORD_AUDIO found without justification
+2025-09-22T19:45:43.3561433Z ##[error]Process completed with exit code 1.

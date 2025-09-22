@@ -1,0 +1,337 @@
+﻿2025-09-22T19:46:13.8284842Z Current runner version: '2.328.0'
+2025-09-22T19:46:13.8307419Z ##[group]Runner Image Provisioner
+2025-09-22T19:46:13.8308513Z Hosted Compute Agent
+2025-09-22T19:46:13.8309118Z Version: 20250829.383
+2025-09-22T19:46:13.8309712Z Commit: 27cb235aab5b0e52e153a26cd86b4742e89dac5d
+2025-09-22T19:46:13.8310500Z Build Date: 2025-08-29T13:48:48Z
+2025-09-22T19:46:13.8311075Z ##[endgroup]
+2025-09-22T19:46:13.8311600Z ##[group]Operating System
+2025-09-22T19:46:13.8312109Z Ubuntu
+2025-09-22T19:46:13.8312657Z 24.04.3
+2025-09-22T19:46:13.8313080Z LTS
+2025-09-22T19:46:13.8313549Z ##[endgroup]
+2025-09-22T19:46:13.8314078Z ##[group]Runner Image
+2025-09-22T19:46:13.8314613Z Image: ubuntu-24.04
+2025-09-22T19:46:13.8315083Z Version: 20250907.24.1
+2025-09-22T19:46:13.8316125Z Included Software: https://github.com/actions/runner-images/blob/ubuntu24/20250907.24/images/ubuntu/Ubuntu2404-Readme.md
+2025-09-22T19:46:13.8317775Z Image Release: https://github.com/actions/runner-images/releases/tag/ubuntu24%2F20250907.24
+2025-09-22T19:46:13.8319126Z ##[endgroup]
+2025-09-22T19:46:13.8320168Z ##[group]GITHUB_TOKEN Permissions
+2025-09-22T19:46:13.8322023Z Contents: read
+2025-09-22T19:46:13.8322530Z Metadata: read
+2025-09-22T19:46:13.8323070Z Packages: read
+2025-09-22T19:46:13.8323562Z ##[endgroup]
+2025-09-22T19:46:13.8325531Z Secret source: Actions
+2025-09-22T19:46:13.8326185Z Prepare workflow directory
+2025-09-22T19:46:13.9049203Z Prepare all required actions
+2025-09-22T19:46:13.9085718Z Getting action download info
+2025-09-22T19:46:14.3309206Z Download action repository 'actions/checkout@v4' (SHA:08eba0b27e820071cde6df949e0beb9ba4906955)
+2025-09-22T19:46:14.5194589Z Download action repository 'actions/download-artifact@v4' (SHA:d3f86a106a0bac45b974a628896c90dbdf5c8093)
+2025-09-22T19:46:15.3845062Z Download action repository 'actions/upload-artifact@v4' (SHA:ea165f8d65b6e75b540449e92b4886f43607fa02)
+2025-09-22T19:46:15.4943655Z Download action repository 'actions/github-script@v7' (SHA:f28e40c7f34bde8b3046d885e986cb6290c5673b)
+2025-09-22T19:46:16.3640766Z Complete job name: Aggregate Performance Results
+2025-09-22T19:46:16.4424641Z ##[group]Run actions/checkout@v4
+2025-09-22T19:46:16.4425877Z with:
+2025-09-22T19:46:16.4426655Z   repository: thc1006/pose-coach-android-starter
+2025-09-22T19:46:16.4427981Z   token: ***
+2025-09-22T19:46:16.4428824Z   ssh-strict: true
+2025-09-22T19:46:16.4429530Z   ssh-user: git
+2025-09-22T19:46:16.4430249Z   persist-credentials: true
+2025-09-22T19:46:16.4431057Z   clean: true
+2025-09-22T19:46:16.4431789Z   sparse-checkout-cone-mode: true
+2025-09-22T19:46:16.4432681Z   fetch-depth: 1
+2025-09-22T19:46:16.4433390Z   fetch-tags: false
+2025-09-22T19:46:16.4434113Z   show-progress: true
+2025-09-22T19:46:16.4434853Z   lfs: false
+2025-09-22T19:46:16.4435507Z   submodules: false
+2025-09-22T19:46:16.4436247Z   set-safe-directory: true
+2025-09-22T19:46:16.4437294Z env:
+2025-09-22T19:46:16.4437929Z   BASELINE_BRANCH: main
+2025-09-22T19:46:16.4438843Z   PERFORMANCE_THRESHOLD: 10
+2025-09-22T19:46:16.4439640Z ##[endgroup]
+2025-09-22T19:46:16.5524233Z Syncing repository: thc1006/pose-coach-android-starter
+2025-09-22T19:46:16.5526979Z ##[group]Getting Git version info
+2025-09-22T19:46:16.5528961Z Working directory is '/home/runner/work/pose-coach-android-starter/pose-coach-android-starter'
+2025-09-22T19:46:16.5531366Z [command]/usr/bin/git version
+2025-09-22T19:46:16.5602136Z git version 2.51.0
+2025-09-22T19:46:16.5630175Z ##[endgroup]
+2025-09-22T19:46:16.5647399Z Temporarily overriding HOME='/home/runner/work/_temp/a568d88d-b2d5-4579-a037-dde9442ef730' before making global git config changes
+2025-09-22T19:46:16.5652161Z Adding repository directory to the temporary git global config as a safe directory
+2025-09-22T19:46:16.5662823Z [command]/usr/bin/git config --global --add safe.directory /home/runner/work/pose-coach-android-starter/pose-coach-android-starter
+2025-09-22T19:46:16.5702336Z Deleting the contents of '/home/runner/work/pose-coach-android-starter/pose-coach-android-starter'
+2025-09-22T19:46:16.5706363Z ##[group]Initializing the repository
+2025-09-22T19:46:16.5711747Z [command]/usr/bin/git init /home/runner/work/pose-coach-android-starter/pose-coach-android-starter
+2025-09-22T19:46:16.5811529Z hint: Using 'master' as the name for the initial branch. This default branch name
+2025-09-22T19:46:16.5813601Z hint: is subject to change. To configure the initial branch name to use in all
+2025-09-22T19:46:16.5816470Z hint: of your new repositories, which will suppress this warning, call:
+2025-09-22T19:46:16.5818850Z hint:
+2025-09-22T19:46:16.5820271Z hint: 	git config --global init.defaultBranch <name>
+2025-09-22T19:46:16.5822145Z hint:
+2025-09-22T19:46:16.5823835Z hint: Names commonly chosen instead of 'master' are 'main', 'trunk' and
+2025-09-22T19:46:16.5826691Z hint: 'development'. The just-created branch can be renamed via this command:
+2025-09-22T19:46:16.5829236Z hint:
+2025-09-22T19:46:16.5830351Z hint: 	git branch -m <name>
+2025-09-22T19:46:16.5831652Z hint:
+2025-09-22T19:46:16.5833408Z hint: Disable this message with "git config set advice.defaultBranchName false"
+2025-09-22T19:46:16.5836947Z Initialized empty Git repository in /home/runner/work/pose-coach-android-starter/pose-coach-android-starter/.git/
+2025-09-22T19:46:16.5840814Z [command]/usr/bin/git remote add origin https://github.com/thc1006/pose-coach-android-starter
+2025-09-22T19:46:16.5869463Z ##[endgroup]
+2025-09-22T19:46:16.5871579Z ##[group]Disabling automatic garbage collection
+2025-09-22T19:46:16.5873619Z [command]/usr/bin/git config --local gc.auto 0
+2025-09-22T19:46:16.5906725Z ##[endgroup]
+2025-09-22T19:46:16.5908909Z ##[group]Setting up auth
+2025-09-22T19:46:16.5914971Z [command]/usr/bin/git config --local --name-only --get-regexp core\.sshCommand
+2025-09-22T19:46:16.5947589Z [command]/usr/bin/git submodule foreach --recursive sh -c "git config --local --name-only --get-regexp 'core\.sshCommand' && git config --local --unset-all 'core.sshCommand' || :"
+2025-09-22T19:46:16.6284815Z [command]/usr/bin/git config --local --name-only --get-regexp http\.https\:\/\/github\.com\/\.extraheader
+2025-09-22T19:46:16.6319180Z [command]/usr/bin/git submodule foreach --recursive sh -c "git config --local --name-only --get-regexp 'http\.https\:\/\/github\.com\/\.extraheader' && git config --local --unset-all 'http.https://github.com/.extraheader' || :"
+2025-09-22T19:46:16.6540124Z [command]/usr/bin/git config --local http.https://github.com/.extraheader AUTHORIZATION: basic ***
+2025-09-22T19:46:16.6583641Z ##[endgroup]
+2025-09-22T19:46:16.6585960Z ##[group]Fetching the repository
+2025-09-22T19:46:16.6595410Z [command]/usr/bin/git -c protocol.version=2 fetch --no-tags --prune --no-recurse-submodules --depth=1 origin +685d758d9ae8c729893935dc590157eded077a04:refs/remotes/origin/main
+2025-09-22T19:46:17.9637892Z From https://github.com/thc1006/pose-coach-android-starter
+2025-09-22T19:46:17.9638997Z  * [new ref]         685d758d9ae8c729893935dc590157eded077a04 -> origin/main
+2025-09-22T19:46:17.9672251Z ##[endgroup]
+2025-09-22T19:46:17.9677011Z ##[group]Determining the checkout info
+2025-09-22T19:46:17.9677806Z ##[endgroup]
+2025-09-22T19:46:17.9681632Z [command]/usr/bin/git sparse-checkout disable
+2025-09-22T19:46:17.9721221Z [command]/usr/bin/git config --local --unset-all extensions.worktreeConfig
+2025-09-22T19:46:17.9749512Z ##[group]Checking out the ref
+2025-09-22T19:46:17.9753563Z [command]/usr/bin/git checkout --progress --force -B main refs/remotes/origin/main
+2025-09-22T19:46:18.0577827Z Switched to a new branch 'main'
+2025-09-22T19:46:18.0579796Z branch 'main' set up to track 'origin/main'.
+2025-09-22T19:46:18.0589468Z ##[endgroup]
+2025-09-22T19:46:18.0629780Z [command]/usr/bin/git log -1 --format=%H
+2025-09-22T19:46:18.0652937Z 685d758d9ae8c729893935dc590157eded077a04
+2025-09-22T19:46:18.0845476Z ##[group]Run actions/download-artifact@v4
+2025-09-22T19:46:18.0845803Z with:
+2025-09-22T19:46:18.0845993Z   pattern: performance-results-*
+2025-09-22T19:46:18.0846233Z   path: all-results/
+2025-09-22T19:46:18.0846424Z   merge-multiple: true
+2025-09-22T19:46:18.0846662Z   repository: thc1006/pose-coach-android-starter
+2025-09-22T19:46:18.0847128Z   run-id: 17926648367
+2025-09-22T19:46:18.0847303Z env:
+2025-09-22T19:46:18.0847467Z   BASELINE_BRANCH: main
+2025-09-22T19:46:18.0847674Z   PERFORMANCE_THRESHOLD: 10
+2025-09-22T19:46:18.0847909Z ##[endgroup]
+2025-09-22T19:46:18.5318109Z Found 0 artifact(s)
+2025-09-22T19:46:18.5319158Z Filtering artifacts by pattern 'performance-results-*'
+2025-09-22T19:46:18.5336404Z Total of 0 artifact(s) downloaded
+2025-09-22T19:46:18.5344133Z Download artifact has finished successfully
+2025-09-22T19:46:18.5466463Z ##[group]Run mkdir -p final-report
+2025-09-22T19:46:18.5466879Z [36;1mmkdir -p final-report[0m
+2025-09-22T19:46:18.5467119Z [36;1m[0m
+2025-09-22T19:46:18.5467424Z [36;1mcat > final-report/comprehensive-performance-report.md << EOF[0m
+2025-09-22T19:46:18.5467805Z [36;1m# Comprehensive Performance Report[0m
+2025-09-22T19:46:18.5468058Z [36;1m[0m
+2025-09-22T19:46:18.5468435Z [36;1m## Executive Summary[0m
+2025-09-22T19:46:18.5468697Z [36;1m- **Test Date**: $(date)[0m
+2025-09-22T19:46:18.5468996Z [36;1m- **Commit**: 685d758d9ae8c729893935dc590157eded077a04[0m
+2025-09-22T19:46:18.5469302Z [36;1m- **Branch**: main[0m
+2025-09-22T19:46:18.5469550Z [36;1m- **Trigger**: push[0m
+2025-09-22T19:46:18.5469752Z [36;1m[0m
+2025-09-22T19:46:18.5469940Z [36;1m## Performance Categories Tested[0m
+2025-09-22T19:46:18.5470252Z [36;1m$(ls all-results/ | grep -E "\\.md$" | while read file; do[0m
+2025-09-22T19:46:18.5470668Z [36;1m  echo "- $(basename "$file" .md | sed 's/-/ /g' | sed 's/\b\w/\U&/g')"[0m
+2025-09-22T19:46:18.5470988Z [36;1mdone)[0m
+2025-09-22T19:46:18.5471158Z [36;1m[0m
+2025-09-22T19:46:18.5471317Z [36;1m## Detailed Results[0m
+2025-09-22T19:46:18.5471546Z [36;1m$(for file in all-results/*.md; do[0m
+2025-09-22T19:46:18.5471790Z [36;1m  if [ -f "$file" ]; then[0m
+2025-09-22T19:46:18.5472099Z [36;1m    echo "### $(basename "$file" .md | sed 's/-/ /g' | sed 's/\b\w/\U&/g')"[0m
+2025-09-22T19:46:18.5472419Z [36;1m    echo ""[0m
+2025-09-22T19:46:18.5472618Z [36;1m    cat "$file"[0m
+2025-09-22T19:46:18.5472804Z [36;1m    echo ""[0m
+2025-09-22T19:46:18.5472994Z [36;1m    echo "---"[0m
+2025-09-22T19:46:18.5473182Z [36;1m    echo ""[0m
+2025-09-22T19:46:18.5473350Z [36;1m  fi[0m
+2025-09-22T19:46:18.5473519Z [36;1mdone)[0m
+2025-09-22T19:46:18.5473679Z [36;1m[0m
+2025-09-22T19:46:18.5537600Z [36;1m## Performance Metrics Archive[0m
+2025-09-22T19:46:18.5538076Z [36;1mAll raw benchmark data is available in the workflow artifacts.[0m
+2025-09-22T19:46:18.5538632Z [36;1m[0m
+2025-09-22T19:46:18.5538818Z [36;1m## Recommendations[0m
+2025-09-22T19:46:18.5539145Z [36;1m1. Monitor trends over time for performance regressions[0m
+2025-09-22T19:46:18.5539584Z [36;1m2. Set up alerting for significant performance degradations[0m
+2025-09-22T19:46:18.5539979Z [36;1m3. Implement automated baseline comparisons[0m
+2025-09-22T19:46:18.5540332Z [36;1m4. Consider A/B testing for performance-critical changes[0m
+2025-09-22T19:46:18.5540628Z [36;1m[0m
+2025-09-22T19:46:18.5540864Z [36;1mGenerated by: GitHub Actions Performance Monitoring[0m
+2025-09-22T19:46:18.5541195Z [36;1mEOF[0m
+2025-09-22T19:46:18.5594917Z shell: /usr/bin/bash -e {0}
+2025-09-22T19:46:18.5595164Z env:
+2025-09-22T19:46:18.5595342Z   BASELINE_BRANCH: main
+2025-09-22T19:46:18.5595549Z   PERFORMANCE_THRESHOLD: 10
+2025-09-22T19:46:18.5595770Z ##[endgroup]
+2025-09-22T19:46:18.5705521Z ls: cannot access 'all-results/': No such file or directory
+2025-09-22T19:46:18.5753023Z ##[group]Run echo "🔍 Checking for Performance Regressions"
+2025-09-22T19:46:18.5753470Z [36;1mecho "🔍 Checking for Performance Regressions"[0m
+2025-09-22T19:46:18.5753774Z [36;1mecho "======================================="[0m
+2025-09-22T19:46:18.5754025Z [36;1m[0m
+2025-09-22T19:46:18.5754262Z [36;1m# Simple heuristic for detecting potential issues[0m
+2025-09-22T19:46:18.5754549Z [36;1mPOTENTIAL_ISSUES=0[0m
+2025-09-22T19:46:18.5754756Z [36;1m[0m
+2025-09-22T19:46:18.5754942Z [36;1m# Check for any benchmark failures[0m
+2025-09-22T19:46:18.5755567Z [36;1mif find all-results/ -name "*.txt" -exec grep -l "FAILURE\|ERROR\|Exception" {} \; | head -1; then[0m
+2025-09-22T19:46:18.5756009Z [36;1m  echo "❌ Benchmark failures detected"[0m
+2025-09-22T19:46:18.5756312Z [36;1m  POTENTIAL_ISSUES=$((POTENTIAL_ISSUES + 1))[0m
+2025-09-22T19:46:18.5756579Z [36;1mfi[0m
+2025-09-22T19:46:18.5756739Z [36;1m[0m
+2025-09-22T19:46:18.5757019Z [36;1m# Check for extremely long execution times (basic heuristic)[0m
+2025-09-22T19:46:18.5757471Z [36;1mif find all-results/ -name "*.txt" -exec grep -l "timeout\|Timeout" {} \; | head -1; then[0m
+2025-09-22T19:46:18.5757924Z [36;1m  echo "⚠️ Potential timeout issues detected"[0m
+2025-09-22T19:46:18.5758578Z [36;1m  POTENTIAL_ISSUES=$((POTENTIAL_ISSUES + 1))[0m
+2025-09-22T19:46:18.5758992Z [36;1mfi[0m
+2025-09-22T19:46:18.5759213Z [36;1m[0m
+2025-09-22T19:46:18.5759412Z [36;1mif [ $POTENTIAL_ISSUES -eq 0 ]; then[0m
+2025-09-22T19:46:18.5759713Z [36;1m  echo "✅ No obvious performance issues detected"[0m
+2025-09-22T19:46:18.5759995Z [36;1melse[0m
+2025-09-22T19:46:18.5760270Z [36;1m  echo "⚠️ $POTENTIAL_ISSUES potential performance issues detected"[0m
+2025-09-22T19:46:18.5760665Z [36;1m  echo "Please review the detailed benchmark results"[0m
+2025-09-22T19:46:18.5760940Z [36;1mfi[0m
+2025-09-22T19:46:18.5761101Z [36;1m[0m
+2025-09-22T19:46:18.5761338Z [36;1mecho "POTENTIAL_ISSUES=$POTENTIAL_ISSUES" >> $GITHUB_ENV[0m
+2025-09-22T19:46:18.5790251Z shell: /usr/bin/bash -e {0}
+2025-09-22T19:46:18.5790484Z env:
+2025-09-22T19:46:18.5790666Z   BASELINE_BRANCH: main
+2025-09-22T19:46:18.5790881Z   PERFORMANCE_THRESHOLD: 10
+2025-09-22T19:46:18.5791087Z ##[endgroup]
+2025-09-22T19:46:18.5835844Z 🔍 Checking for Performance Regressions
+2025-09-22T19:46:18.5848746Z find: ‘all-results/’: No such file or directory
+2025-09-22T19:46:18.5849227Z =======================================
+2025-09-22T19:46:18.5854227Z ❌ Benchmark failures detected
+2025-09-22T19:46:18.5866596Z find: ‘all-results/’: No such file or directory
+2025-09-22T19:46:18.5869242Z ⚠️ Potential timeout issues detected
+2025-09-22T19:46:18.5869735Z ⚠️ 2 potential performance issues detected
+2025-09-22T19:46:18.5870040Z Please review the detailed benchmark results
+2025-09-22T19:46:18.5920246Z ##[group]Run actions/upload-artifact@v4
+2025-09-22T19:46:18.5920535Z with:
+2025-09-22T19:46:18.5920732Z   name: comprehensive-performance-report
+2025-09-22T19:46:18.5920993Z   path: final-report/
+2025-09-22T19:46:18.5921194Z   retention-days: 180
+2025-09-22T19:46:18.5921387Z   if-no-files-found: warn
+2025-09-22T19:46:18.5921593Z   compression-level: 6
+2025-09-22T19:46:18.5921775Z   overwrite: false
+2025-09-22T19:46:18.5921970Z   include-hidden-files: false
+2025-09-22T19:46:18.5922170Z env:
+2025-09-22T19:46:18.5922332Z   BASELINE_BRANCH: main
+2025-09-22T19:46:18.5922525Z   PERFORMANCE_THRESHOLD: 10
+2025-09-22T19:46:18.5922730Z   POTENTIAL_ISSUES: 2
+2025-09-22T19:46:18.5922904Z ##[endgroup]
+2025-09-22T19:46:18.8041028Z With the provided path, there will be 1 file uploaded
+2025-09-22T19:46:18.8046594Z Artifact name is valid!
+2025-09-22T19:46:18.8047947Z Root directory input is valid!
+2025-09-22T19:46:18.8093663Z ##[warning]Retention days cannot be greater than the maximum allowed retention set within the repository. Using 90 instead.
+2025-09-22T19:46:19.0801227Z Beginning upload of artifact content to blob storage
+2025-09-22T19:46:19.4035332Z Uploaded bytes 578
+2025-09-22T19:46:19.4901520Z Finished uploading artifact content to blob storage!
+2025-09-22T19:46:19.4904708Z SHA256 digest of uploaded artifact zip is c1b792add1475213b8be06ace0cd6107e2482c267dfc132c28006021e2a4c6cf
+2025-09-22T19:46:19.4906835Z Finalizing artifact upload
+2025-09-22T19:46:19.6252580Z Artifact comprehensive-performance-report.zip successfully finalized. Artifact ID 4075992418
+2025-09-22T19:46:19.6253913Z Artifact comprehensive-performance-report has been successfully uploaded! Final size is 578 bytes. Artifact ID is 4075992418
+2025-09-22T19:46:19.6261158Z Artifact download URL: https://github.com/thc1006/pose-coach-android-starter/actions/runs/17926648367/artifacts/4075992418
+2025-09-22T19:46:19.6410229Z ##[group]Run actions/github-script@v7
+2025-09-22T19:46:19.6410506Z with:
+2025-09-22T19:46:19.6412836Z   script: github.rest.issues.create({
+  owner: context.repo.owner,
+  repo: context.repo.repo,
+  title: `⚠️ Performance Issues Detected - ${context.sha.substring(0, 7)}`,
+  body: `
+  ## Performance Alert
+
+  The performance monitoring workflow has detected potential issues:
+
+  - **Commit**: ${context.sha}
+  - **Branch**: ${context.ref}
+  - **Issues Detected**: ${process.env.POTENTIAL_ISSUES}
+
+  Please review the performance benchmark results and investigate any regressions.
+
+  **Action Items:**
+  1. Review benchmark artifacts from run #${context.runNumber}
+  2. Compare with baseline performance metrics
+  3. Investigate any significant regressions
+  4. Consider optimization if needed
+
+  ---
+  *Auto-generated by Performance Monitoring Workflow*
+  `,
+  labels: ['performance', 'investigation-needed']
+});
+2025-09-22T19:46:19.6415361Z   github-token: ***
+2025-09-22T19:46:19.6415583Z   debug: false
+2025-09-22T19:46:19.6415773Z   user-agent: actions/github-script
+2025-09-22T19:46:19.6416013Z   result-encoding: json
+2025-09-22T19:46:19.6416208Z   retries: 0
+2025-09-22T19:46:19.6416418Z   retry-exempt-status-codes: 400,401,403,404,422
+2025-09-22T19:46:19.6416668Z env:
+2025-09-22T19:46:19.6416833Z   BASELINE_BRANCH: main
+2025-09-22T19:46:19.6417037Z   PERFORMANCE_THRESHOLD: 10
+2025-09-22T19:46:19.6417247Z   POTENTIAL_ISSUES: 2
+2025-09-22T19:46:19.6417435Z ##[endgroup]
+2025-09-22T19:46:20.0277879Z RequestError [HttpError]: Resource not accessible by integration
+2025-09-22T19:46:20.0278976Z     at /home/runner/work/_actions/actions/github-script/v7/dist/index.js:9537:21
+2025-09-22T19:46:20.0279841Z     at process.processTicksAndRejections (node:internal/process/task_queues:95:5) {
+2025-09-22T19:46:20.0280531Z   status: 403,
+2025-09-22T19:46:20.0280854Z   response: {
+2025-09-22T19:46:20.0281392Z     url: 'https://api.github.com/repos/thc1006/pose-coach-android-starter/issues',
+2025-09-22T19:46:20.0282119Z     status: 403,
+2025-09-22T19:46:20.0282457Z     headers: {
+2025-09-22T19:46:20.0282805Z       'access-control-allow-origin': '*',
+2025-09-22T19:46:20.0284045Z       'access-control-expose-headers': 'ETag, Link, Location, Retry-After, X-GitHub-OTP, X-RateLimit-Limit, X-RateLimit-Remaining, X-RateLimit-Used, X-RateLimit-Resource, X-RateLimit-Reset, X-OAuth-Scopes, X-Accepted-OAuth-Scopes, X-Poll-Interval, X-GitHub-Media-Type, X-GitHub-SSO, X-GitHub-Request-Id, Deprecation, Sunset',
+2025-09-22T19:46:20.0285191Z       'content-encoding': 'gzip',
+2025-09-22T19:46:20.0285483Z       'content-security-policy': "default-src 'none'",
+2025-09-22T19:46:20.0285808Z       'content-type': 'application/json; charset=utf-8',
+2025-09-22T19:46:20.0286098Z       date: 'Mon, 22 Sep 2025 19:46:19 GMT',
+2025-09-22T19:46:20.0286485Z       'referrer-policy': 'origin-when-cross-origin, strict-origin-when-cross-origin',
+2025-09-22T19:46:20.0286868Z       server: 'github.com',
+2025-09-22T19:46:20.0287217Z       'strict-transport-security': 'max-age=31536000; includeSubdomains; preload',
+2025-09-22T19:46:20.0287599Z       'transfer-encoding': 'chunked',
+2025-09-22T19:46:20.0287886Z       vary: 'Accept-Encoding, Accept, X-Requested-With',
+2025-09-22T19:46:20.0288202Z       'x-accepted-github-permissions': 'issues=write',
+2025-09-22T19:46:20.0288749Z       'x-content-type-options': 'nosniff',
+2025-09-22T19:46:20.0289013Z       'x-frame-options': 'deny',
+2025-09-22T19:46:20.0289265Z       'x-github-api-version-selected': '2022-11-28',
+2025-09-22T19:46:20.0289567Z       'x-github-media-type': 'github.v3; format=json',
+2025-09-22T19:46:20.0289902Z       'x-github-request-id': '5422:1D69EE:A77EA9:251AE3C:68D1A78B',
+2025-09-22T19:46:20.0290216Z       'x-ratelimit-limit': '5000',
+2025-09-22T19:46:20.0290471Z       'x-ratelimit-remaining': '4987',
+2025-09-22T19:46:20.0290720Z       'x-ratelimit-reset': '1758573950',
+2025-09-22T19:46:20.0291304Z       'x-ratelimit-resource': 'core',
+2025-09-22T19:46:20.0291545Z       'x-ratelimit-used': '13',
+2025-09-22T19:46:20.0291954Z       'x-xss-protection': '0'
+2025-09-22T19:46:20.0292168Z     },
+2025-09-22T19:46:20.0292321Z     data: {
+2025-09-22T19:46:20.0292537Z       message: 'Resource not accessible by integration',
+2025-09-22T19:46:20.0292972Z       documentation_url: 'https://docs.github.com/rest/issues/issues#create-an-issue',
+2025-09-22T19:46:20.0293345Z       status: '403'
+2025-09-22T19:46:20.0293517Z     }
+2025-09-22T19:46:20.0293666Z   },
+2025-09-22T19:46:20.0293811Z   request: {
+2025-09-22T19:46:20.0293981Z     method: 'POST',
+2025-09-22T19:46:20.0294296Z     url: 'https://api.github.com/repos/thc1006/pose-coach-android-starter/issues',
+2025-09-22T19:46:20.0294641Z     headers: {
+2025-09-22T19:46:20.0294846Z       accept: 'application/vnd.github.v3+json',
+2025-09-22T19:46:20.0295261Z       'user-agent': 'actions/github-script octokit-core.js/5.0.1 Node.js/20.19.4 (linux; x64)',
+2025-09-22T19:46:20.0295668Z       authorization: 'token [REDACTED]',
+2025-09-22T19:46:20.0295954Z       'content-type': 'application/json; charset=utf-8'
+2025-09-22T19:46:20.0296211Z     },
+2025-09-22T19:46:20.0299060Z     body: '{"title":"⚠️ Performance Issues Detected - 685d758","body":"\\n  ## Performance Alert\\n\\n  The performance monitoring workflow has detected potential issues:\\n\\n  - **Commit**: 685d758d9ae8c729893935dc590157eded077a04\\n  - **Branch**: refs/heads/main\\n  - **Issues Detected**: 2\\n\\n  Please review the performance benchmark results and investigate any regressions.\\n\\n  **Action Items:**\\n  1. Review benchmark artifacts from run #12\\n  2. Compare with baseline performance metrics\\n  3. Investigate any significant regressions\\n  4. Consider optimization if needed\\n\\n  ---\\n  *Auto-generated by Performance Monitoring Workflow*\\n  ","labels":["performance","investigation-needed"]}',
+2025-09-22T19:46:20.0301087Z     request: {
+2025-09-22T19:46:20.0301261Z       agent: [Agent],
+2025-09-22T19:46:20.0301473Z       fetch: [Function: proxyFetch],
+2025-09-22T19:46:20.0301732Z       hook: [Function: bound bound register]
+2025-09-22T19:46:20.0301965Z     }
+2025-09-22T19:46:20.0302109Z   }
+2025-09-22T19:46:20.0302269Z }
+2025-09-22T19:46:20.0305373Z ##[error]Unhandled error: HttpError: Resource not accessible by integration
+2025-09-22T19:46:20.0980170Z Post job cleanup.
+2025-09-22T19:46:20.1915915Z [command]/usr/bin/git version
+2025-09-22T19:46:20.1951794Z git version 2.51.0
+2025-09-22T19:46:20.1994842Z Temporarily overriding HOME='/home/runner/work/_temp/11208eca-b34c-49dd-9fa7-10e6fa7f60c7' before making global git config changes
+2025-09-22T19:46:20.1995773Z Adding repository directory to the temporary git global config as a safe directory
+2025-09-22T19:46:20.2000820Z [command]/usr/bin/git config --global --add safe.directory /home/runner/work/pose-coach-android-starter/pose-coach-android-starter
+2025-09-22T19:46:20.2035917Z [command]/usr/bin/git config --local --name-only --get-regexp core\.sshCommand
+2025-09-22T19:46:20.2069179Z [command]/usr/bin/git submodule foreach --recursive sh -c "git config --local --name-only --get-regexp 'core\.sshCommand' && git config --local --unset-all 'core.sshCommand' || :"
+2025-09-22T19:46:20.2281861Z fatal: No url found for submodule path 'pose-coach-skeleton' in .gitmodules
+2025-09-22T19:46:20.2310584Z ##[warning]The process '/usr/bin/git' failed with exit code 128
+2025-09-22T19:46:20.2398881Z Cleaning up orphan processes

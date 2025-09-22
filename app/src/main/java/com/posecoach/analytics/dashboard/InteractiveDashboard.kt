@@ -423,7 +423,10 @@ fun WidgetContent(
 ) {
     when (content) {
         is ChartVisualization -> ChartWidget(content, modifier)
-        is Map<*, *> -> MetricsWidget(content @Suppress("UNCHECKED_CAST") as Map<String, Any>, modifier)
+        is Map<*, *> -> {
+            @Suppress("UNCHECKED_CAST")
+            MetricsWidget(content as Map<String, Any>, modifier)
+        }
         is List<*> -> ListWidget(content, modifier)
         is Pose3DVisualization -> Pose3DWidget(content, modifier)
         is HeatmapVisualization -> HeatmapWidget(content, modifier)

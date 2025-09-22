@@ -1,0 +1,23 @@
+﻿2025-09-22T19:45:43.2995490Z ##[group]Run # Check for hardcoded secrets
+2025-09-22T19:45:43.2997041Z [36;1m# Check for hardcoded secrets[0m
+2025-09-22T19:45:43.2998864Z [36;1mif grep -r "password\s*=\s*[\"']" --include="*.kt" --include="*.java" app/; then[0m
+2025-09-22T19:45:43.3001090Z [36;1m  echo "❌ Hardcoded passwords found"[0m
+2025-09-22T19:45:43.3002414Z [36;1m  exit 1[0m
+2025-09-22T19:45:43.3003302Z [36;1mfi[0m
+2025-09-22T19:45:43.3004139Z [36;1m[0m
+2025-09-22T19:45:43.3005011Z [36;1m# Check for API keys in code[0m
+2025-09-22T19:45:43.3006684Z [36;1mif grep -r "api_key\s*=\s*[\"']" --include="*.kt" --include="*.java" app/; then[0m
+2025-09-22T19:45:43.3008497Z [36;1m  echo "❌ Hardcoded API keys found"[0m
+2025-09-22T19:45:43.3009913Z [36;1m  exit 1[0m
+2025-09-22T19:45:43.3010798Z [36;1mfi[0m
+2025-09-22T19:45:43.3011639Z [36;1m[0m
+2025-09-22T19:45:43.3012789Z [36;1m# Check for debug flags in release[0m
+2025-09-22T19:45:43.3014749Z [36;1mif grep -r "BuildConfig.DEBUG\s*=\s*true" --include="*.kt" --include="*.java" app/; then[0m
+2025-09-22T19:45:43.3016895Z [36;1m  echo "❌ Debug flags found in release code"[0m
+2025-09-22T19:45:43.3018221Z [36;1m  exit 1[0m
+2025-09-22T19:45:43.3019057Z [36;1mfi[0m
+2025-09-22T19:45:43.3019983Z [36;1m[0m
+2025-09-22T19:45:43.3020852Z [36;1mecho "✅ Security checks passed"[0m
+2025-09-22T19:45:43.3071176Z shell: /usr/bin/bash -e {0}
+2025-09-22T19:45:43.3072283Z ##[endgroup]
+2025-09-22T19:45:43.3279142Z ✅ Security checks passed

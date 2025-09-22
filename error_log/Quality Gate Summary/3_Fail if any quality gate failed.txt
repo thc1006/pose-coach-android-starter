@@ -1,0 +1,7 @@
+﻿2025-09-22T19:46:19.2709862Z ##[group]Run echo "❌ One or more quality gates failed"
+2025-09-22T19:46:19.2710817Z [36;1mecho "❌ One or more quality gates failed"[0m
+2025-09-22T19:46:19.2711458Z [36;1mexit 1[0m
+2025-09-22T19:46:19.2743019Z shell: /usr/bin/bash -e {0}
+2025-09-22T19:46:19.2743575Z ##[endgroup]
+2025-09-22T19:46:19.2801346Z ❌ One or more quality gates failed
+2025-09-22T19:46:19.2813887Z ##[error]Process completed with exit code 1.

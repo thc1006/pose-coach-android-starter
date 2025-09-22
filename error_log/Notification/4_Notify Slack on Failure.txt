@@ -1,0 +1,31 @@
+﻿2025-09-22T19:45:56.6736856Z ##[group]Run rtCamp/action-slack-notify@v2
+2025-09-22T19:45:56.6737164Z env:
+2025-09-22T19:45:56.6737511Z   JAVA_VERSION: 17
+2025-09-22T19:45:56.6737695Z   ANDROID_API_LEVEL: 34
+2025-09-22T19:45:56.6737899Z   ANDROID_BUILD_TOOLS: 34.0.0
+2025-09-22T19:45:56.6738102Z   SLACK_WEBHOOK: 
+2025-09-22T19:45:56.6738886Z   SLACK_MESSAGE: ❌ Gemini Live API tests failed!
+
+📋 Action: https://github.com/thc1006/pose-coach-android-starter/actions/runs/17926648364
+🔍 Please check the test results and fix issues
+⚠️ Production deployment blocked
+
+2025-09-22T19:45:56.6739716Z ##[endgroup]
+2025-09-22T19:45:56.6776436Z ##[group]Run docker://ghcr.io/rtcamp/action-slack-notify:v2.3.3
+2025-09-22T19:45:56.6776769Z env:
+2025-09-22T19:45:56.6776928Z   JAVA_VERSION: 17
+2025-09-22T19:45:56.6777116Z   ANDROID_API_LEVEL: 34
+2025-09-22T19:45:56.6777309Z   ANDROID_BUILD_TOOLS: 34.0.0
+2025-09-22T19:45:56.6777532Z   SLACK_WEBHOOK: 
+2025-09-22T19:45:56.6778274Z   SLACK_MESSAGE: ❌ Gemini Live API tests failed!
+
+📋 Action: https://github.com/thc1006/pose-coach-android-starter/actions/runs/17926648364
+🔍 Please check the test results and fix issues
+⚠️ Production deployment blocked
+
+2025-09-22T19:45:56.6779303Z   GITHUB_RUN: https://github.com/thc1006/pose-coach-android-starter/actions/runs/17926648364
+2025-09-22T19:45:56.6779691Z ##[endgroup]
+2025-09-22T19:45:56.6788388Z ##[command]/usr/bin/docker run --name ghcriortcampactionslacknotifyv233_f1b9cf --label 0e0ce2 --workdir /github/workspace --rm -e "JAVA_VERSION" -e "ANDROID_API_LEVEL" -e "ANDROID_BUILD_TOOLS" -e "SLACK_WEBHOOK" -e "SLACK_MESSAGE" -e "GITHUB_RUN" -e "HOME" -e "GITHUB_JOB" -e "GITHUB_REF" -e "GITHUB_SHA" -e "GITHUB_REPOSITORY" -e "GITHUB_REPOSITORY_OWNER" -e "GITHUB_REPOSITORY_OWNER_ID" -e "GITHUB_RUN_ID" -e "GITHUB_RUN_NUMBER" -e "GITHUB_RETENTION_DAYS" -e "GITHUB_RUN_ATTEMPT" -e "GITHUB_ACTOR_ID" -e "GITHUB_ACTOR" -e "GITHUB_WORKFLOW" -e "GITHUB_HEAD_REF" -e "GITHUB_BASE_REF" -e "GITHUB_EVENT_NAME" -e "GITHUB_SERVER_URL" -e "GITHUB_API_URL" -e "GITHUB_GRAPHQL_URL" -e "GITHUB_REF_NAME" -e "GITHUB_REF_PROTECTED" -e "GITHUB_REF_TYPE" -e "GITHUB_WORKFLOW_REF" -e "GITHUB_WORKFLOW_SHA" -e "GITHUB_REPOSITORY_ID" -e "GITHUB_TRIGGERING_ACTOR" -e "GITHUB_WORKSPACE" -e "GITHUB_ACTION" -e "GITHUB_EVENT_PATH" -e "GITHUB_ACTION_REPOSITORY" -e "GITHUB_ACTION_REF" -e "GITHUB_PATH" -e "GITHUB_ENV" -e "GITHUB_STEP_SUMMARY" -e "GITHUB_STATE" -e "GITHUB_OUTPUT" -e "GITHUB_ACTION_PATH" -e "RUNNER_OS" -e "RUNNER_ARCH" -e "RUNNER_NAME" -e "RUNNER_ENVIRONMENT" -e "RUNNER_TOOL_CACHE" -e "RUNNER_TEMP" -e "RUNNER_WORKSPACE" -e "ACTIONS_RUNTIME_URL" -e "ACTIONS_RUNTIME_TOKEN" -e "ACTIONS_CACHE_URL" -e "ACTIONS_RESULTS_URL" -e GITHUB_ACTIONS=true -e CI=true -v "/var/run/docker.sock":"/var/run/docker.sock" -v "/home/runner/work/_temp/_github_home":"/github/home" -v "/home/runner/work/_temp/_github_workflow":"/github/workflow" -v "/home/runner/work/_temp/_runner_file_commands":"/github/file_commands" -v "/home/runner/work/pose-coach-android-starter/pose-coach-android-starter":"/github/workspace" ghcr.io/rtcamp/action-slack-notify:v2.3.3
+2025-09-22T19:45:56.8160390Z [[0;31mERROR[0m] Secret `SLACK_WEBHOOK` is missing. Alternatively, a pair of `SLACK_TOKEN` and `SLACK_CHANNEL` can be provided. Please add it to this action for proper execution.
+2025-09-22T19:45:56.8164307Z Refer https://github.com/rtCamp/action-slack-notify for more information.
+2025-09-22T19:45:56.8165076Z 

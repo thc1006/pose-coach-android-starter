@@ -1,0 +1,79 @@
+﻿2025-09-22T19:45:43.1248203Z ##[group]Run actions/checkout@v4
+2025-09-22T19:45:43.1249099Z with:
+2025-09-22T19:45:43.1249542Z   fetch-depth: 0
+2025-09-22T19:45:43.1250048Z   repository: thc1006/pose-coach-android-starter
+2025-09-22T19:45:43.1250821Z   token: ***
+2025-09-22T19:45:43.1251262Z   ssh-strict: true
+2025-09-22T19:45:43.1251695Z   ssh-user: git
+2025-09-22T19:45:43.1252142Z   persist-credentials: true
+2025-09-22T19:45:43.1252629Z   clean: true
+2025-09-22T19:45:43.1253069Z   sparse-checkout-cone-mode: true
+2025-09-22T19:45:43.1253607Z   fetch-tags: false
+2025-09-22T19:45:43.1254046Z   show-progress: true
+2025-09-22T19:45:43.1254500Z   lfs: false
+2025-09-22T19:45:43.1254917Z   submodules: false
+2025-09-22T19:45:43.1255359Z   set-safe-directory: true
+2025-09-22T19:45:43.1256208Z env:
+2025-09-22T19:45:43.1257025Z   GRADLE_OPTS: -Dorg.gradle.daemon=false -Dorg.gradle.parallel=true -Dorg.gradle.configureondemand=true
+2025-09-22T19:45:43.1257932Z   JAVA_VERSION: 17
+2025-09-22T19:45:43.1258380Z   ANDROID_COMPILE_SDK: 34
+2025-09-22T19:45:43.1258895Z   ANDROID_BUILD_TOOLS: 34.0.0
+2025-09-22T19:45:43.1259399Z   ANDROID_SDK_TOOLS: 9477386
+2025-09-22T19:45:43.1259878Z ##[endgroup]
+2025-09-22T19:45:43.2349385Z Syncing repository: thc1006/pose-coach-android-starter
+2025-09-22T19:45:43.2353117Z ##[group]Getting Git version info
+2025-09-22T19:45:43.2355017Z Working directory is '/home/runner/work/pose-coach-android-starter/pose-coach-android-starter'
+2025-09-22T19:45:43.2357070Z [command]/usr/bin/git version
+2025-09-22T19:45:43.2378790Z git version 2.51.0
+2025-09-22T19:45:43.2405276Z ##[endgroup]
+2025-09-22T19:45:43.2426926Z Temporarily overriding HOME='/home/runner/work/_temp/73e7301e-1016-4e97-aad8-107a854ff79c' before making global git config changes
+2025-09-22T19:45:43.2428439Z Adding repository directory to the temporary git global config as a safe directory
+2025-09-22T19:45:43.2433939Z [command]/usr/bin/git config --global --add safe.directory /home/runner/work/pose-coach-android-starter/pose-coach-android-starter
+2025-09-22T19:45:43.2467219Z Deleting the contents of '/home/runner/work/pose-coach-android-starter/pose-coach-android-starter'
+2025-09-22T19:45:43.2470715Z ##[group]Initializing the repository
+2025-09-22T19:45:43.2475862Z [command]/usr/bin/git init /home/runner/work/pose-coach-android-starter/pose-coach-android-starter
+2025-09-22T19:45:43.2546268Z hint: Using 'master' as the name for the initial branch. This default branch name
+2025-09-22T19:45:43.2547962Z hint: is subject to change. To configure the initial branch name to use in all
+2025-09-22T19:45:43.2549516Z hint: of your new repositories, which will suppress this warning, call:
+2025-09-22T19:45:43.2550702Z hint:
+2025-09-22T19:45:43.2551550Z hint: 	git config --global init.defaultBranch <name>
+2025-09-22T19:45:43.2552493Z hint:
+2025-09-22T19:45:43.2553184Z hint: Names commonly chosen instead of 'master' are 'main', 'trunk' and
+2025-09-22T19:45:43.2554389Z hint: 'development'. The just-created branch can be renamed via this command:
+2025-09-22T19:45:43.2555590Z hint:
+2025-09-22T19:45:43.2556527Z hint: 	git branch -m <name>
+2025-09-22T19:45:43.2557145Z hint:
+2025-09-22T19:45:43.2557857Z hint: Disable this message with "git config set advice.defaultBranchName false"
+2025-09-22T19:45:43.2559454Z Initialized empty Git repository in /home/runner/work/pose-coach-android-starter/pose-coach-android-starter/.git/
+2025-09-22T19:45:43.2562460Z [command]/usr/bin/git remote add origin https://github.com/thc1006/pose-coach-android-starter
+2025-09-22T19:45:43.2592345Z ##[endgroup]
+2025-09-22T19:45:43.2593927Z ##[group]Disabling automatic garbage collection
+2025-09-22T19:45:43.2595124Z [command]/usr/bin/git config --local gc.auto 0
+2025-09-22T19:45:43.2630098Z ##[endgroup]
+2025-09-22T19:45:43.2631931Z ##[group]Setting up auth
+2025-09-22T19:45:43.2633304Z [command]/usr/bin/git config --local --name-only --get-regexp core\.sshCommand
+2025-09-22T19:45:43.2661957Z [command]/usr/bin/git submodule foreach --recursive sh -c "git config --local --name-only --get-regexp 'core\.sshCommand' && git config --local --unset-all 'core.sshCommand' || :"
+2025-09-22T19:45:43.2930176Z [command]/usr/bin/git config --local --name-only --get-regexp http\.https\:\/\/github\.com\/\.extraheader
+2025-09-22T19:45:43.2959986Z [command]/usr/bin/git submodule foreach --recursive sh -c "git config --local --name-only --get-regexp 'http\.https\:\/\/github\.com\/\.extraheader' && git config --local --unset-all 'http.https://github.com/.extraheader' || :"
+2025-09-22T19:45:43.3178114Z [command]/usr/bin/git config --local http.https://github.com/.extraheader AUTHORIZATION: basic ***
+2025-09-22T19:45:43.3212967Z ##[endgroup]
+2025-09-22T19:45:43.3214449Z ##[group]Fetching the repository
+2025-09-22T19:45:43.3221293Z [command]/usr/bin/git -c protocol.version=2 fetch --prune --no-recurse-submodules origin +refs/heads/*:refs/remotes/origin/* +refs/tags/*:refs/tags/*
+2025-09-22T19:45:44.2878247Z From https://github.com/thc1006/pose-coach-android-starter
+2025-09-22T19:45:44.2879807Z  * [new branch]      main       -> origin/main
+2025-09-22T19:45:44.2915579Z [command]/usr/bin/git branch --list --remote origin/main
+2025-09-22T19:45:44.2938607Z   origin/main
+2025-09-22T19:45:44.2948635Z [command]/usr/bin/git rev-parse refs/remotes/origin/main
+2025-09-22T19:45:44.2968864Z 685d758d9ae8c729893935dc590157eded077a04
+2025-09-22T19:45:44.2975605Z ##[endgroup]
+2025-09-22T19:45:44.2977362Z ##[group]Determining the checkout info
+2025-09-22T19:45:44.2979227Z ##[endgroup]
+2025-09-22T19:45:44.2980345Z [command]/usr/bin/git sparse-checkout disable
+2025-09-22T19:45:44.3016755Z [command]/usr/bin/git config --local --unset-all extensions.worktreeConfig
+2025-09-22T19:45:44.3043381Z ##[group]Checking out the ref
+2025-09-22T19:45:44.3047131Z [command]/usr/bin/git checkout --progress --force -B main refs/remotes/origin/main
+2025-09-22T19:45:44.3881761Z Switched to a new branch 'main'
+2025-09-22T19:45:44.3884557Z branch 'main' set up to track 'origin/main'.
+2025-09-22T19:45:44.3896574Z ##[endgroup]
+2025-09-22T19:45:44.3929936Z [command]/usr/bin/git log -1 --format=%H
+2025-09-22T19:45:44.3951719Z 685d758d9ae8c729893935dc590157eded077a04

@@ -1,0 +1,135 @@
+﻿2025-09-22T19:45:50.3384214Z Current runner version: '2.328.0'
+2025-09-22T19:45:50.3417870Z ##[group]Runner Image Provisioner
+2025-09-22T19:45:50.3419342Z Hosted Compute Agent
+2025-09-22T19:45:50.3420233Z Version: 20250829.383
+2025-09-22T19:45:50.3421346Z Commit: 27cb235aab5b0e52e153a26cd86b4742e89dac5d
+2025-09-22T19:45:50.3422625Z Build Date: 2025-08-29T13:48:48Z
+2025-09-22T19:45:50.3423838Z ##[endgroup]
+2025-09-22T19:45:50.3424650Z ##[group]Operating System
+2025-09-22T19:45:50.3425876Z Ubuntu
+2025-09-22T19:45:50.3426674Z 24.04.3
+2025-09-22T19:45:50.3427387Z LTS
+2025-09-22T19:45:50.3428290Z ##[endgroup]
+2025-09-22T19:45:50.3429107Z ##[group]Runner Image
+2025-09-22T19:45:50.3429978Z Image: ubuntu-24.04
+2025-09-22T19:45:50.3430787Z Version: 20250907.24.1
+2025-09-22T19:45:50.3432690Z Included Software: https://github.com/actions/runner-images/blob/ubuntu24/20250907.24/images/ubuntu/Ubuntu2404-Readme.md
+2025-09-22T19:45:50.3435727Z Image Release: https://github.com/actions/runner-images/releases/tag/ubuntu24%2F20250907.24
+2025-09-22T19:45:50.3437588Z ##[endgroup]
+2025-09-22T19:45:50.3439406Z ##[group]GITHUB_TOKEN Permissions
+2025-09-22T19:45:50.3442171Z Contents: read
+2025-09-22T19:45:50.3443086Z Metadata: read
+2025-09-22T19:45:50.3443846Z Packages: read
+2025-09-22T19:45:50.3445007Z ##[endgroup]
+2025-09-22T19:45:50.3448037Z Secret source: Actions
+2025-09-22T19:45:50.3449215Z Prepare workflow directory
+2025-09-22T19:45:50.3958029Z Prepare all required actions
+2025-09-22T19:45:50.4012659Z Getting action download info
+2025-09-22T19:45:50.7164106Z Download action repository 'rtCamp/action-slack-notify@v2' (SHA:e31e87e03dd19038e411e38ae27cbad084a90661)
+2025-09-22T19:45:51.4280691Z Download action repository 'actions/github-script@v6' (SHA:d7906e4ad0b1822421a7e6a35d5ca353c962f410)
+2025-09-22T19:45:51.9036610Z Getting action download info
+2025-09-22T19:45:52.0362621Z Download action repository 'LoveToKnow/slackify-markdown-action@698a1d4d0ff1794152a93c03ee8ca5e03a310d4e' (SHA:698a1d4d0ff1794152a93c03ee8ca5e03a310d4e)
+2025-09-22T19:45:52.5857165Z Getting action download info
+2025-09-22T19:45:52.7767062Z Complete job name: Notification
+2025-09-22T19:45:52.8195165Z ##[group]Pull down action image 'ghcr.io/rtcamp/action-slack-notify:v2.3.3'
+2025-09-22T19:45:52.8244021Z ##[command]/usr/bin/docker pull ghcr.io/rtcamp/action-slack-notify:v2.3.3
+2025-09-22T19:45:53.6514957Z v2.3.3: Pulling from rtcamp/action-slack-notify
+2025-09-22T19:45:53.7864305Z 43c4264eed91: Pulling fs layer
+2025-09-22T19:45:53.7864608Z d2ffb1f53d95: Pulling fs layer
+2025-09-22T19:45:53.7865110Z 9a3469c34bee: Pulling fs layer
+2025-09-22T19:45:53.7865460Z 668005e24564: Pulling fs layer
+2025-09-22T19:45:53.7865853Z 2c69aaeb7992: Pulling fs layer
+2025-09-22T19:45:53.7866312Z f37893a31575: Pulling fs layer
+2025-09-22T19:45:53.7866682Z 2fa8e688e01c: Pulling fs layer
+2025-09-22T19:45:53.7867057Z 2c69aaeb7992: Waiting
+2025-09-22T19:45:53.7867355Z f37893a31575: Waiting
+2025-09-22T19:45:53.7867606Z 2fa8e688e01c: Waiting
+2025-09-22T19:45:53.7867789Z 668005e24564: Waiting
+2025-09-22T19:45:54.0276943Z 43c4264eed91: Verifying Checksum
+2025-09-22T19:45:54.0278687Z 43c4264eed91: Download complete
+2025-09-22T19:45:54.1184347Z 9a3469c34bee: Verifying Checksum
+2025-09-22T19:45:54.1188520Z 9a3469c34bee: Download complete
+2025-09-22T19:45:54.1631776Z 43c4264eed91: Pull complete
+2025-09-22T19:45:54.1697596Z d2ffb1f53d95: Verifying Checksum
+2025-09-22T19:45:54.1698172Z d2ffb1f53d95: Download complete
+2025-09-22T19:45:54.2660002Z 2c69aaeb7992: Verifying Checksum
+2025-09-22T19:45:54.2660536Z 2c69aaeb7992: Download complete
+2025-09-22T19:45:54.3052175Z f37893a31575: Verifying Checksum
+2025-09-22T19:45:54.3053279Z f37893a31575: Download complete
+2025-09-22T19:45:54.4342977Z 668005e24564: Verifying Checksum
+2025-09-22T19:45:54.4343452Z 668005e24564: Download complete
+2025-09-22T19:45:54.4835119Z 2fa8e688e01c: Verifying Checksum
+2025-09-22T19:45:54.4835721Z 2fa8e688e01c: Download complete
+2025-09-22T19:45:54.6574350Z d2ffb1f53d95: Pull complete
+2025-09-22T19:45:55.8543422Z 9a3469c34bee: Pull complete
+2025-09-22T19:45:56.2578170Z 668005e24564: Pull complete
+2025-09-22T19:45:56.2695006Z 2c69aaeb7992: Pull complete
+2025-09-22T19:45:56.2805362Z f37893a31575: Pull complete
+2025-09-22T19:45:56.2928655Z 2fa8e688e01c: Pull complete
+2025-09-22T19:45:56.2976193Z Digest: sha256:acc1c430721b27030d3dacf4273eec569388ad650e127bb9f1292f33cd9cd9bd
+2025-09-22T19:45:56.2996460Z Status: Downloaded newer image for ghcr.io/rtcamp/action-slack-notify:v2.3.3
+2025-09-22T19:45:56.3007675Z ghcr.io/rtcamp/action-slack-notify:v2.3.3
+2025-09-22T19:45:56.3032996Z ##[endgroup]
+2025-09-22T19:45:56.3302084Z ##[group]Run rtCamp/action-slack-notify@v2
+2025-09-22T19:45:56.3302783Z env:
+2025-09-22T19:45:56.3302974Z   JAVA_VERSION: 17
+2025-09-22T19:45:56.3303201Z   ANDROID_API_LEVEL: 34
+2025-09-22T19:45:56.3303407Z   ANDROID_BUILD_TOOLS: 34.0.0
+2025-09-22T19:45:56.3303622Z   SLACK_WEBHOOK: 
+2025-09-22T19:45:56.3304435Z   SLACK_MESSAGE: ✅ Gemini Live API tests passed successfully!
+
+🔗 Reports: https://thc1006.github.io/pose-coach-android-starter/test-reports/
+📊 Compliance: All requirements met
+🚀 Production Ready: Yes
+
+2025-09-22T19:45:56.3305487Z ##[endgroup]
+2025-09-22T19:45:56.3435738Z ##[group]Run docker://ghcr.io/rtcamp/action-slack-notify:v2.3.3
+2025-09-22T19:45:56.3436092Z env:
+2025-09-22T19:45:56.3436261Z   JAVA_VERSION: 17
+2025-09-22T19:45:56.3436450Z   ANDROID_API_LEVEL: 34
+2025-09-22T19:45:56.3436655Z   ANDROID_BUILD_TOOLS: 34.0.0
+2025-09-22T19:45:56.3436861Z   SLACK_WEBHOOK: 
+2025-09-22T19:45:56.3437645Z   SLACK_MESSAGE: ✅ Gemini Live API tests passed successfully!
+
+🔗 Reports: https://thc1006.github.io/pose-coach-android-starter/test-reports/
+📊 Compliance: All requirements met
+🚀 Production Ready: Yes
+
+2025-09-22T19:45:56.3438594Z   GITHUB_RUN: https://github.com/thc1006/pose-coach-android-starter/actions/runs/17926648364
+2025-09-22T19:45:56.3439007Z ##[endgroup]
+2025-09-22T19:45:56.3551375Z ##[command]/usr/bin/docker run --name ghcriortcampactionslacknotifyv233_29e5de --label 0e0ce2 --workdir /github/workspace --rm -e "JAVA_VERSION" -e "ANDROID_API_LEVEL" -e "ANDROID_BUILD_TOOLS" -e "SLACK_WEBHOOK" -e "SLACK_MESSAGE" -e "GITHUB_RUN" -e "HOME" -e "GITHUB_JOB" -e "GITHUB_REF" -e "GITHUB_SHA" -e "GITHUB_REPOSITORY" -e "GITHUB_REPOSITORY_OWNER" -e "GITHUB_REPOSITORY_OWNER_ID" -e "GITHUB_RUN_ID" -e "GITHUB_RUN_NUMBER" -e "GITHUB_RETENTION_DAYS" -e "GITHUB_RUN_ATTEMPT" -e "GITHUB_ACTOR_ID" -e "GITHUB_ACTOR" -e "GITHUB_WORKFLOW" -e "GITHUB_HEAD_REF" -e "GITHUB_BASE_REF" -e "GITHUB_EVENT_NAME" -e "GITHUB_SERVER_URL" -e "GITHUB_API_URL" -e "GITHUB_GRAPHQL_URL" -e "GITHUB_REF_NAME" -e "GITHUB_REF_PROTECTED" -e "GITHUB_REF_TYPE" -e "GITHUB_WORKFLOW_REF" -e "GITHUB_WORKFLOW_SHA" -e "GITHUB_REPOSITORY_ID" -e "GITHUB_TRIGGERING_ACTOR" -e "GITHUB_WORKSPACE" -e "GITHUB_ACTION" -e "GITHUB_EVENT_PATH" -e "GITHUB_ACTION_REPOSITORY" -e "GITHUB_ACTION_REF" -e "GITHUB_PATH" -e "GITHUB_ENV" -e "GITHUB_STEP_SUMMARY" -e "GITHUB_STATE" -e "GITHUB_OUTPUT" -e "GITHUB_ACTION_PATH" -e "RUNNER_OS" -e "RUNNER_ARCH" -e "RUNNER_NAME" -e "RUNNER_ENVIRONMENT" -e "RUNNER_TOOL_CACHE" -e "RUNNER_TEMP" -e "RUNNER_WORKSPACE" -e "ACTIONS_RUNTIME_URL" -e "ACTIONS_RUNTIME_TOKEN" -e "ACTIONS_CACHE_URL" -e "ACTIONS_RESULTS_URL" -e GITHUB_ACTIONS=true -e CI=true -v "/var/run/docker.sock":"/var/run/docker.sock" -v "/home/runner/work/_temp/_github_home":"/github/home" -v "/home/runner/work/_temp/_github_workflow":"/github/workflow" -v "/home/runner/work/_temp/_runner_file_commands":"/github/file_commands" -v "/home/runner/work/pose-coach-android-starter/pose-coach-android-starter":"/github/workspace" ghcr.io/rtcamp/action-slack-notify:v2.3.3
+2025-09-22T19:45:56.5946367Z [[0;31mERROR[0m] Secret `SLACK_WEBHOOK` is missing. Alternatively, a pair of `SLACK_TOKEN` and `SLACK_CHANNEL` can be provided. Please add it to this action for proper execution.
+2025-09-22T19:45:56.5947814Z Refer https://github.com/rtCamp/action-slack-notify for more information.
+2025-09-22T19:45:56.5948300Z 
+2025-09-22T19:45:56.6736879Z ##[group]Run rtCamp/action-slack-notify@v2
+2025-09-22T19:45:56.6737169Z env:
+2025-09-22T19:45:56.6737515Z   JAVA_VERSION: 17
+2025-09-22T19:45:56.6737699Z   ANDROID_API_LEVEL: 34
+2025-09-22T19:45:56.6737902Z   ANDROID_BUILD_TOOLS: 34.0.0
+2025-09-22T19:45:56.6738105Z   SLACK_WEBHOOK: 
+2025-09-22T19:45:56.6738904Z   SLACK_MESSAGE: ❌ Gemini Live API tests failed!
+
+📋 Action: https://github.com/thc1006/pose-coach-android-starter/actions/runs/17926648364
+🔍 Please check the test results and fix issues
+⚠️ Production deployment blocked
+
+2025-09-22T19:45:56.6739720Z ##[endgroup]
+2025-09-22T19:45:56.6776448Z ##[group]Run docker://ghcr.io/rtcamp/action-slack-notify:v2.3.3
+2025-09-22T19:45:56.6776773Z env:
+2025-09-22T19:45:56.6776932Z   JAVA_VERSION: 17
+2025-09-22T19:45:56.6777119Z   ANDROID_API_LEVEL: 34
+2025-09-22T19:45:56.6777312Z   ANDROID_BUILD_TOOLS: 34.0.0
+2025-09-22T19:45:56.6777535Z   SLACK_WEBHOOK: 
+2025-09-22T19:45:56.6778340Z   SLACK_MESSAGE: ❌ Gemini Live API tests failed!
+
+📋 Action: https://github.com/thc1006/pose-coach-android-starter/actions/runs/17926648364
+🔍 Please check the test results and fix issues
+⚠️ Production deployment blocked
+
+2025-09-22T19:45:56.6779307Z   GITHUB_RUN: https://github.com/thc1006/pose-coach-android-starter/actions/runs/17926648364
+2025-09-22T19:45:56.6779695Z ##[endgroup]
+2025-09-22T19:45:56.6788417Z ##[command]/usr/bin/docker run --name ghcriortcampactionslacknotifyv233_f1b9cf --label 0e0ce2 --workdir /github/workspace --rm -e "JAVA_VERSION" -e "ANDROID_API_LEVEL" -e "ANDROID_BUILD_TOOLS" -e "SLACK_WEBHOOK" -e "SLACK_MESSAGE" -e "GITHUB_RUN" -e "HOME" -e "GITHUB_JOB" -e "GITHUB_REF" -e "GITHUB_SHA" -e "GITHUB_REPOSITORY" -e "GITHUB_REPOSITORY_OWNER" -e "GITHUB_REPOSITORY_OWNER_ID" -e "GITHUB_RUN_ID" -e "GITHUB_RUN_NUMBER" -e "GITHUB_RETENTION_DAYS" -e "GITHUB_RUN_ATTEMPT" -e "GITHUB_ACTOR_ID" -e "GITHUB_ACTOR" -e "GITHUB_WORKFLOW" -e "GITHUB_HEAD_REF" -e "GITHUB_BASE_REF" -e "GITHUB_EVENT_NAME" -e "GITHUB_SERVER_URL" -e "GITHUB_API_URL" -e "GITHUB_GRAPHQL_URL" -e "GITHUB_REF_NAME" -e "GITHUB_REF_PROTECTED" -e "GITHUB_REF_TYPE" -e "GITHUB_WORKFLOW_REF" -e "GITHUB_WORKFLOW_SHA" -e "GITHUB_REPOSITORY_ID" -e "GITHUB_TRIGGERING_ACTOR" -e "GITHUB_WORKSPACE" -e "GITHUB_ACTION" -e "GITHUB_EVENT_PATH" -e "GITHUB_ACTION_REPOSITORY" -e "GITHUB_ACTION_REF" -e "GITHUB_PATH" -e "GITHUB_ENV" -e "GITHUB_STEP_SUMMARY" -e "GITHUB_STATE" -e "GITHUB_OUTPUT" -e "GITHUB_ACTION_PATH" -e "RUNNER_OS" -e "RUNNER_ARCH" -e "RUNNER_NAME" -e "RUNNER_ENVIRONMENT" -e "RUNNER_TOOL_CACHE" -e "RUNNER_TEMP" -e "RUNNER_WORKSPACE" -e "ACTIONS_RUNTIME_URL" -e "ACTIONS_RUNTIME_TOKEN" -e "ACTIONS_CACHE_URL" -e "ACTIONS_RESULTS_URL" -e GITHUB_ACTIONS=true -e CI=true -v "/var/run/docker.sock":"/var/run/docker.sock" -v "/home/runner/work/_temp/_github_home":"/github/home" -v "/home/runner/work/_temp/_github_workflow":"/github/workflow" -v "/home/runner/work/_temp/_runner_file_commands":"/github/file_commands" -v "/home/runner/work/pose-coach-android-starter/pose-coach-android-starter":"/github/workspace" ghcr.io/rtcamp/action-slack-notify:v2.3.3
+2025-09-22T19:45:56.8160441Z [[0;31mERROR[0m] Secret `SLACK_WEBHOOK` is missing. Alternatively, a pair of `SLACK_TOKEN` and `SLACK_CHANNEL` can be provided. Please add it to this action for proper execution.
+2025-09-22T19:45:56.8164319Z Refer https://github.com/rtCamp/action-slack-notify for more information.
+2025-09-22T19:45:56.8165084Z 
+2025-09-22T19:45:56.8868381Z Cleaning up orphan processes

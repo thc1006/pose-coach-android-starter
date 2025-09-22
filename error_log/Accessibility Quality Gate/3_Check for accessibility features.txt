@@ -1,0 +1,24 @@
+﻿2025-09-22T19:45:44.4450592Z ##[group]Run # Check for content descriptions
+2025-09-22T19:45:44.4452230Z [36;1m# Check for content descriptions[0m
+2025-09-22T19:45:44.4454043Z [36;1mif ! grep -r "contentDescription" app/src/main/res/layout/; then[0m
+2025-09-22T19:45:44.4456318Z [36;1m  echo "❌ Missing content descriptions for accessibility"[0m
+2025-09-22T19:45:44.4457920Z [36;1m  exit 1[0m
+2025-09-22T19:45:44.4458890Z [36;1mfi[0m
+2025-09-22T19:45:44.4459818Z [36;1m[0m
+2025-09-22T19:45:44.4460817Z [36;1m# Check for accessibility services[0m
+2025-09-22T19:45:44.4462433Z [36;1mif ! grep -r "accessibility" app/src/main/kotlin/; then[0m
+2025-09-22T19:45:44.4464145Z [36;1m  echo "⚠️ No accessibility services found"[0m
+2025-09-22T19:45:44.4465616Z [36;1mfi[0m
+2025-09-22T19:45:44.4466668Z [36;1m[0m
+2025-09-22T19:45:44.4467701Z [36;1mecho "✅ Accessibility checks passed"[0m
+2025-09-22T19:45:44.4524343Z shell: /usr/bin/bash -e {0}
+2025-09-22T19:45:44.4525528Z ##[endgroup]
+2025-09-22T19:45:44.4617025Z app/src/main/res/layout/activity_main.xml:        android:contentDescription="Toggle Live Coach" />
+2025-09-22T19:45:44.4620461Z app/src/main/res/layout/activity_live_coaching.xml:            android:contentDescription="@string/settings" />
+2025-09-22T19:45:44.4623818Z app/src/main/res/layout/activity_live_coaching.xml:                    android:contentDescription="@string/vad_settings" />
+2025-09-22T19:45:44.4627403Z app/src/main/res/layout/activity_live_coaching.xml:                    android:contentDescription="@string/audio_device" />
+2025-09-22T19:45:44.4651426Z app/src/main/kotlin/com/posecoach/app/intelligence/PersonalizedFeedbackManager.kt:        val accessibilityNeeds: List<AccessibilityNeed> = emptyList(),
+2025-09-22T19:45:44.4658021Z app/src/main/kotlin/com/posecoach/app/intelligence/PersonalizedFeedbackManager.kt:            accessibilityNeeds = preferences.accessibilityNeeds,
+2025-09-22T19:45:44.4663075Z app/src/main/kotlin/com/posecoach/app/intelligence/PersonalizedFeedbackManager.kt:        val accessibilityNeeds: List<AccessibilityNeed>,
+2025-09-22T19:45:44.4667403Z app/src/main/kotlin/com/posecoach/app/privacy/PrivacyIndicatorView.kt:        // Set up accessibility
+2025-09-22T19:45:44.4669918Z ✅ Accessibility checks passed

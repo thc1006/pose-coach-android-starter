@@ -1,0 +1,168 @@
+﻿2025-09-22T19:45:41.7024523Z Current runner version: '2.328.0'
+2025-09-22T19:45:41.7049369Z ##[group]Runner Image Provisioner
+2025-09-22T19:45:41.7050542Z Hosted Compute Agent
+2025-09-22T19:45:41.7051058Z Version: 20250829.383
+2025-09-22T19:45:41.7051644Z Commit: 27cb235aab5b0e52e153a26cd86b4742e89dac5d
+2025-09-22T19:45:41.7052380Z Build Date: 2025-08-29T13:48:48Z
+2025-09-22T19:45:41.7052973Z ##[endgroup]
+2025-09-22T19:45:41.7053498Z ##[group]Operating System
+2025-09-22T19:45:41.7054169Z Ubuntu
+2025-09-22T19:45:41.7054620Z 24.04.3
+2025-09-22T19:45:41.7055090Z LTS
+2025-09-22T19:45:41.7055549Z ##[endgroup]
+2025-09-22T19:45:41.7056057Z ##[group]Runner Image
+2025-09-22T19:45:41.7056617Z Image: ubuntu-24.04
+2025-09-22T19:45:41.7057118Z Version: 20250907.24.1
+2025-09-22T19:45:41.7058123Z Included Software: https://github.com/actions/runner-images/blob/ubuntu24/20250907.24/images/ubuntu/Ubuntu2404-Readme.md
+2025-09-22T19:45:41.7059591Z Image Release: https://github.com/actions/runner-images/releases/tag/ubuntu24%2F20250907.24
+2025-09-22T19:45:41.7060907Z ##[endgroup]
+2025-09-22T19:45:41.7061965Z ##[group]GITHUB_TOKEN Permissions
+2025-09-22T19:45:41.7064573Z Contents: read
+2025-09-22T19:45:41.7065481Z Metadata: read
+2025-09-22T19:45:41.7066305Z Packages: read
+2025-09-22T19:45:41.7067324Z ##[endgroup]
+2025-09-22T19:45:41.7070194Z Secret source: Actions
+2025-09-22T19:45:41.7071610Z Prepare workflow directory
+2025-09-22T19:45:41.7530373Z Prepare all required actions
+2025-09-22T19:45:41.7587238Z Getting action download info
+2025-09-22T19:45:42.0290682Z Download action repository 'actions/checkout@v4' (SHA:08eba0b27e820071cde6df949e0beb9ba4906955)
+2025-09-22T19:45:42.1558016Z Complete job name: Security Quality Gate
+2025-09-22T19:45:42.2337235Z ##[group]Run actions/checkout@v4
+2025-09-22T19:45:42.2338044Z with:
+2025-09-22T19:45:42.2338487Z   repository: thc1006/pose-coach-android-starter
+2025-09-22T19:45:42.2339196Z   token: ***
+2025-09-22T19:45:42.2339568Z   ssh-strict: true
+2025-09-22T19:45:42.2340130Z   ssh-user: git
+2025-09-22T19:45:42.2340525Z   persist-credentials: true
+2025-09-22T19:45:42.2340974Z   clean: true
+2025-09-22T19:45:42.2341368Z   sparse-checkout-cone-mode: true
+2025-09-22T19:45:42.2341829Z   fetch-depth: 1
+2025-09-22T19:45:42.2342206Z   fetch-tags: false
+2025-09-22T19:45:42.2342590Z   show-progress: true
+2025-09-22T19:45:42.2342982Z   lfs: false
+2025-09-22T19:45:42.2343340Z   submodules: false
+2025-09-22T19:45:42.2343733Z   set-safe-directory: true
+2025-09-22T19:45:42.2344399Z ##[endgroup]
+2025-09-22T19:45:42.3387731Z Syncing repository: thc1006/pose-coach-android-starter
+2025-09-22T19:45:42.3389496Z ##[group]Getting Git version info
+2025-09-22T19:45:42.3390793Z Working directory is '/home/runner/work/pose-coach-android-starter/pose-coach-android-starter'
+2025-09-22T19:45:42.3391938Z [command]/usr/bin/git version
+2025-09-22T19:45:42.3422856Z git version 2.51.0
+2025-09-22T19:45:42.3448013Z ##[endgroup]
+2025-09-22T19:45:42.3462264Z Temporarily overriding HOME='/home/runner/work/_temp/254b9fad-0e56-444e-8d22-bf138bea48a6' before making global git config changes
+2025-09-22T19:45:42.3463622Z Adding repository directory to the temporary git global config as a safe directory
+2025-09-22T19:45:42.3474190Z [command]/usr/bin/git config --global --add safe.directory /home/runner/work/pose-coach-android-starter/pose-coach-android-starter
+2025-09-22T19:45:42.3513978Z Deleting the contents of '/home/runner/work/pose-coach-android-starter/pose-coach-android-starter'
+2025-09-22T19:45:42.3517029Z ##[group]Initializing the repository
+2025-09-22T19:45:42.3521162Z [command]/usr/bin/git init /home/runner/work/pose-coach-android-starter/pose-coach-android-starter
+2025-09-22T19:45:42.3576319Z hint: Using 'master' as the name for the initial branch. This default branch name
+2025-09-22T19:45:42.3578143Z hint: is subject to change. To configure the initial branch name to use in all
+2025-09-22T19:45:42.3580002Z hint: of your new repositories, which will suppress this warning, call:
+2025-09-22T19:45:42.3580791Z hint:
+2025-09-22T19:45:42.3581294Z hint: 	git config --global init.defaultBranch <name>
+2025-09-22T19:45:42.3582326Z hint:
+2025-09-22T19:45:42.3582914Z hint: Names commonly chosen instead of 'master' are 'main', 'trunk' and
+2025-09-22T19:45:42.3584014Z hint: 'development'. The just-created branch can be renamed via this command:
+2025-09-22T19:45:42.3585143Z hint:
+2025-09-22T19:45:42.3585517Z hint: 	git branch -m <name>
+2025-09-22T19:45:42.3585959Z hint:
+2025-09-22T19:45:42.3586534Z hint: Disable this message with "git config set advice.defaultBranchName false"
+2025-09-22T19:45:42.3587794Z Initialized empty Git repository in /home/runner/work/pose-coach-android-starter/pose-coach-android-starter/.git/
+2025-09-22T19:45:42.3590464Z [command]/usr/bin/git remote add origin https://github.com/thc1006/pose-coach-android-starter
+2025-09-22T19:45:42.3621105Z ##[endgroup]
+2025-09-22T19:45:42.3622188Z ##[group]Disabling automatic garbage collection
+2025-09-22T19:45:42.3624619Z [command]/usr/bin/git config --local gc.auto 0
+2025-09-22T19:45:42.3651727Z ##[endgroup]
+2025-09-22T19:45:42.3652398Z ##[group]Setting up auth
+2025-09-22T19:45:42.3657985Z [command]/usr/bin/git config --local --name-only --get-regexp core\.sshCommand
+2025-09-22T19:45:42.3687464Z [command]/usr/bin/git submodule foreach --recursive sh -c "git config --local --name-only --get-regexp 'core\.sshCommand' && git config --local --unset-all 'core.sshCommand' || :"
+2025-09-22T19:45:42.3935008Z [command]/usr/bin/git config --local --name-only --get-regexp http\.https\:\/\/github\.com\/\.extraheader
+2025-09-22T19:45:42.3964687Z [command]/usr/bin/git submodule foreach --recursive sh -c "git config --local --name-only --get-regexp 'http\.https\:\/\/github\.com\/\.extraheader' && git config --local --unset-all 'http.https://github.com/.extraheader' || :"
+2025-09-22T19:45:42.4180419Z [command]/usr/bin/git config --local http.https://github.com/.extraheader AUTHORIZATION: basic ***
+2025-09-22T19:45:42.4214076Z ##[endgroup]
+2025-09-22T19:45:42.4215327Z ##[group]Fetching the repository
+2025-09-22T19:45:42.4231633Z [command]/usr/bin/git -c protocol.version=2 fetch --no-tags --prune --no-recurse-submodules --depth=1 origin +685d758d9ae8c729893935dc590157eded077a04:refs/remotes/origin/main
+2025-09-22T19:45:43.1784267Z From https://github.com/thc1006/pose-coach-android-starter
+2025-09-22T19:45:43.1787967Z  * [new ref]         685d758d9ae8c729893935dc590157eded077a04 -> origin/main
+2025-09-22T19:45:43.1812645Z ##[endgroup]
+2025-09-22T19:45:43.1813969Z ##[group]Determining the checkout info
+2025-09-22T19:45:43.1815343Z ##[endgroup]
+2025-09-22T19:45:43.1818873Z [command]/usr/bin/git sparse-checkout disable
+2025-09-22T19:45:43.1855554Z [command]/usr/bin/git config --local --unset-all extensions.worktreeConfig
+2025-09-22T19:45:43.1882352Z ##[group]Checking out the ref
+2025-09-22T19:45:43.1885407Z [command]/usr/bin/git checkout --progress --force -B main refs/remotes/origin/main
+2025-09-22T19:45:43.2703365Z Switched to a new branch 'main'
+2025-09-22T19:45:43.2704998Z branch 'main' set up to track 'origin/main'.
+2025-09-22T19:45:43.2714709Z ##[endgroup]
+2025-09-22T19:45:43.2753350Z [command]/usr/bin/git log -1 --format=%H
+2025-09-22T19:45:43.2774974Z 685d758d9ae8c729893935dc590157eded077a04
+2025-09-22T19:45:43.2995519Z ##[group]Run # Check for hardcoded secrets
+2025-09-22T19:45:43.2997047Z [36;1m# Check for hardcoded secrets[0m
+2025-09-22T19:45:43.2998871Z [36;1mif grep -r "password\s*=\s*[\"']" --include="*.kt" --include="*.java" app/; then[0m
+2025-09-22T19:45:43.3001101Z [36;1m  echo "❌ Hardcoded passwords found"[0m
+2025-09-22T19:45:43.3002419Z [36;1m  exit 1[0m
+2025-09-22T19:45:43.3003306Z [36;1mfi[0m
+2025-09-22T19:45:43.3004144Z [36;1m[0m
+2025-09-22T19:45:43.3005015Z [36;1m# Check for API keys in code[0m
+2025-09-22T19:45:43.3006690Z [36;1mif grep -r "api_key\s*=\s*[\"']" --include="*.kt" --include="*.java" app/; then[0m
+2025-09-22T19:45:43.3008502Z [36;1m  echo "❌ Hardcoded API keys found"[0m
+2025-09-22T19:45:43.3009917Z [36;1m  exit 1[0m
+2025-09-22T19:45:43.3010802Z [36;1mfi[0m
+2025-09-22T19:45:43.3011644Z [36;1m[0m
+2025-09-22T19:45:43.3012795Z [36;1m# Check for debug flags in release[0m
+2025-09-22T19:45:43.3014806Z [36;1mif grep -r "BuildConfig.DEBUG\s*=\s*true" --include="*.kt" --include="*.java" app/; then[0m
+2025-09-22T19:45:43.3016901Z [36;1m  echo "❌ Debug flags found in release code"[0m
+2025-09-22T19:45:43.3018225Z [36;1m  exit 1[0m
+2025-09-22T19:45:43.3019061Z [36;1mfi[0m
+2025-09-22T19:45:43.3019989Z [36;1m[0m
+2025-09-22T19:45:43.3020858Z [36;1mecho "✅ Security checks passed"[0m
+2025-09-22T19:45:43.3071201Z shell: /usr/bin/bash -e {0}
+2025-09-22T19:45:43.3072288Z ##[endgroup]
+2025-09-22T19:45:43.3279178Z ✅ Security checks passed
+2025-09-22T19:45:43.3345871Z ##[group]Run # Verify only necessary permissions are used
+2025-09-22T19:45:43.3347514Z [36;1m# Verify only necessary permissions are used[0m
+2025-09-22T19:45:43.3348868Z [36;1mrequired_permissions=([0m
+2025-09-22T19:45:43.3350273Z [36;1m  "android.permission.CAMERA"[0m
+2025-09-22T19:45:43.3351550Z [36;1m  "android.permission.INTERNET"[0m
+2025-09-22T19:45:43.3352952Z [36;1m  "android.permission.WRITE_EXTERNAL_STORAGE"[0m
+2025-09-22T19:45:43.3354240Z [36;1m)[0m
+2025-09-22T19:45:43.3354971Z [36;1m[0m
+2025-09-22T19:45:43.3355978Z [36;1mmanifest_file="app/src/main/AndroidManifest.xml"[0m
+2025-09-22T19:45:43.3357406Z [36;1mif [ -f "$manifest_file" ]; then[0m
+2025-09-22T19:45:43.3358782Z [36;1m  for permission in "${required_permissions[@]}"; do[0m
+2025-09-22T19:45:43.3360602Z [36;1m    if ! grep -q "$permission" "$manifest_file"; then[0m
+2025-09-22T19:45:43.3362189Z [36;1m      echo "⚠️ Expected permission $permission not found"[0m
+2025-09-22T19:45:43.3363576Z [36;1m    fi[0m
+2025-09-22T19:45:43.3364386Z [36;1m  done[0m
+2025-09-22T19:45:43.3365165Z [36;1m[0m
+2025-09-22T19:45:43.3365989Z [36;1m  # Check for dangerous permissions[0m
+2025-09-22T19:45:43.3367208Z [36;1m  dangerous_permissions=([0m
+2025-09-22T19:45:43.3368392Z [36;1m    "android.permission.READ_CONTACTS"[0m
+2025-09-22T19:45:43.3370029Z [36;1m    "android.permission.ACCESS_FINE_LOCATION"[0m
+2025-09-22T19:45:43.3371438Z [36;1m    "android.permission.RECORD_AUDIO"[0m
+2025-09-22T19:45:43.3372602Z [36;1m  )[0m
+2025-09-22T19:45:43.3373352Z [36;1m[0m
+2025-09-22T19:45:43.3374356Z [36;1m  for permission in "${dangerous_permissions[@]}"; do[0m
+2025-09-22T19:45:43.3375909Z [36;1m    if grep -q "$permission" "$manifest_file"; then[0m
+2025-09-22T19:45:43.3377721Z [36;1m      echo "❌ Dangerous permission $permission found without justification"[0m
+2025-09-22T19:45:43.3379352Z [36;1m      exit 1[0m
+2025-09-22T19:45:43.3380402Z [36;1m    fi[0m
+2025-09-22T19:45:43.3381243Z [36;1m  done[0m
+2025-09-22T19:45:43.3382025Z [36;1mfi[0m
+2025-09-22T19:45:43.3382752Z [36;1m[0m
+2025-09-22T19:45:43.3383594Z [36;1mecho "✅ Permissions check passed"[0m
+2025-09-22T19:45:43.3413356Z shell: /usr/bin/bash -e {0}
+2025-09-22T19:45:43.3414318Z ##[endgroup]
+2025-09-22T19:45:43.3548932Z ❌ Dangerous permission android.permission.RECORD_AUDIO found without justification
+2025-09-22T19:45:43.3561461Z ##[error]Process completed with exit code 1.
+2025-09-22T19:45:43.3739994Z Post job cleanup.
+2025-09-22T19:45:43.4665791Z [command]/usr/bin/git version
+2025-09-22T19:45:43.4700817Z git version 2.51.0
+2025-09-22T19:45:43.4743293Z Temporarily overriding HOME='/home/runner/work/_temp/92af5958-497a-42d9-9101-2bbc6c9a6644' before making global git config changes
+2025-09-22T19:45:43.4746523Z Adding repository directory to the temporary git global config as a safe directory
+2025-09-22T19:45:43.4750507Z [command]/usr/bin/git config --global --add safe.directory /home/runner/work/pose-coach-android-starter/pose-coach-android-starter
+2025-09-22T19:45:43.4784537Z [command]/usr/bin/git config --local --name-only --get-regexp core\.sshCommand
+2025-09-22T19:45:43.4816460Z [command]/usr/bin/git submodule foreach --recursive sh -c "git config --local --name-only --get-regexp 'core\.sshCommand' && git config --local --unset-all 'core.sshCommand' || :"
+2025-09-22T19:45:43.5025297Z fatal: No url found for submodule path 'pose-coach-skeleton' in .gitmodules
+2025-09-22T19:45:43.5066006Z ##[warning]The process '/usr/bin/git' failed with exit code 128
+2025-09-22T19:45:43.5158969Z Cleaning up orphan processes

@@ -8,6 +8,7 @@ import android.hardware.camera2.CameraManager
 import android.util.Size
 import android.view.Surface
 import androidx.camera.core.*
+import androidx.camera.core.resolutionselector.*
 import androidx.camera.lifecycle.ProcessCameraProvider
 import androidx.camera.view.PreviewView
 import androidx.core.content.ContextCompat
@@ -148,16 +149,24 @@ class CameraXManager(
             val analysisResolution = getOptimalAnalysisResolution(performanceLevel.targetResolution)
 
             // Setup Preview
+            val previewResolutionSelector = ResolutionSelector.Builder()
+                .setResolutionStrategy(ResolutionStrategy.HIGHEST_AVAILABLE_STRATEGY)
+                .build()
+
             this.preview = Preview.Builder()
-                .setTargetResolution(previewResolution)
+                .setResolutionSelector(previewResolutionSelector)
                 .build()
                 .also {
                     it.setSurfaceProvider(preview.surfaceProvider)
                 }
 
             // Setup ImageAnalysis
+            val analysisResolutionSelector = ResolutionSelector.Builder()
+                .setResolutionStrategy(ResolutionStrategy.HIGHEST_AVAILABLE_STRATEGY)
+                .build()
+
             imageAnalyzer = ImageAnalysis.Builder()
-                .setTargetResolution(analysisResolution)
+                .setResolutionSelector(analysisResolutionSelector)
                 .setBackpressureStrategy(ImageAnalysis.STRATEGY_KEEP_ONLY_LATEST)
                 .setOutputImageFormat(ImageAnalysis.OUTPUT_IMAGE_FORMAT_YUV_420_888)
                 .build()

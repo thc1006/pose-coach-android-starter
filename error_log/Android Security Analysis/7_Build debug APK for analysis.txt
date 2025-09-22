@@ -1,0 +1,33 @@
+﻿2025-09-22T19:46:51.7028809Z ##[group]Run ./gradlew assembleDebug
+2025-09-22T19:46:51.7029129Z [36;1m./gradlew assembleDebug[0m
+2025-09-22T19:46:51.7058060Z shell: /usr/bin/bash -e {0}
+2025-09-22T19:46:51.7058292Z env:
+2025-09-22T19:46:51.7058580Z   JAVA_HOME: /opt/hostedtoolcache/Java_Temurin-Hotspot_jdk/17.0.16-8/x64
+2025-09-22T19:46:51.7059053Z   JAVA_HOME_17_X64: /opt/hostedtoolcache/Java_Temurin-Hotspot_jdk/17.0.16-8/x64
+2025-09-22T19:46:51.7059429Z   ANDROID_HOME: /usr/local/lib/android/sdk
+2025-09-22T19:46:51.7059704Z   ANDROID_SDK_ROOT: /usr/local/lib/android/sdk
+2025-09-22T19:46:51.7060135Z ##[endgroup]
+2025-09-22T19:46:51.8059460Z Downloading https://services.gradle.org/distributions/gradle-8.13-bin.zip
+2025-09-22T19:46:53.1727839Z .............10%.............20%.............30%.............40%.............50%.............60%.............70%.............80%.............90%.............100%
+2025-09-22T19:46:54.5102413Z 
+2025-09-22T19:46:54.5107654Z Welcome to Gradle 8.13!
+2025-09-22T19:46:54.5113417Z 
+2025-09-22T19:46:54.5124624Z Here are the highlights of this release:
+2025-09-22T19:46:54.5126511Z  - Daemon JVM auto-provisioning
+2025-09-22T19:46:54.5127130Z  - Enhancements for Scala plugin and JUnit testing
+2025-09-22T19:46:54.5127851Z  - Improvements for build authors and plugin developers
+2025-09-22T19:46:54.5128276Z 
+2025-09-22T19:46:54.5128744Z For more details see https://docs.gradle.org/8.13/release-notes.html
+2025-09-22T19:46:54.5129191Z 
+2025-09-22T19:46:54.5238340Z 
+2025-09-22T19:46:54.5238825Z FAILURE: Build failed with an exception.
+2025-09-22T19:46:54.5239175Z 
+2025-09-22T19:46:54.5239367Z * What went wrong:
+2025-09-22T19:46:54.5240866Z Value 'C:/Program Files/Android/Android Studio/jbr' given for org.gradle.java.home Gradle property is invalid (Java home supplied is invalid)
+2025-09-22T19:46:54.5241766Z 
+2025-09-22T19:46:54.5241887Z * Try:
+2025-09-22T19:46:54.5242379Z > Run with --stacktrace option to get the stack trace.
+2025-09-22T19:46:54.5243092Z > Run with --info or --debug option to get more log output.
+2025-09-22T19:46:54.5243724Z > Run with --scan to get full insights.
+2025-09-22T19:46:54.5244252Z > Get more help at https://help.gradle.org.
+2025-09-22T19:46:54.5452298Z ##[error]Process completed with exit code 1.

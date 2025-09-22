@@ -1,0 +1,37 @@
+﻿2025-09-22T19:46:02.6301749Z ##[group]Run ./gradlew ktlintCheck
+2025-09-22T19:46:02.6302074Z [36;1m./gradlew ktlintCheck[0m
+2025-09-22T19:46:02.6302314Z [36;1mif [ $? -ne 0 ]; then[0m
+2025-09-22T19:46:02.6302676Z [36;1m  echo "❌ Code style violations found. Run 'gradlew ktlintFormat' to fix."[0m
+2025-09-22T19:46:02.6303047Z [36;1m  exit 1[0m
+2025-09-22T19:46:02.6303222Z [36;1mfi[0m
+2025-09-22T19:46:02.6333779Z shell: /usr/bin/bash -e {0}
+2025-09-22T19:46:02.6334023Z env:
+2025-09-22T19:46:02.6334321Z   JAVA_HOME: /opt/hostedtoolcache/Java_Temurin-Hotspot_jdk/17.0.16-8/x64
+2025-09-22T19:46:02.6334794Z   JAVA_HOME_17_X64: /opt/hostedtoolcache/Java_Temurin-Hotspot_jdk/17.0.16-8/x64
+2025-09-22T19:46:02.6335167Z   ANDROID_HOME: /usr/local/lib/android/sdk
+2025-09-22T19:46:02.6335514Z   ANDROID_SDK_ROOT: /usr/local/lib/android/sdk
+2025-09-22T19:46:02.6335771Z ##[endgroup]
+2025-09-22T19:46:02.7170077Z Downloading https://services.gradle.org/distributions/gradle-8.13-bin.zip
+2025-09-22T19:46:04.1702959Z .............10%.............20%.............30%.............40%.............50%.............60%.............70%.............80%.............90%.............100%
+2025-09-22T19:46:05.3713199Z 
+2025-09-22T19:46:05.3718384Z Welcome to Gradle 8.13!
+2025-09-22T19:46:05.3718736Z 
+2025-09-22T19:46:05.3719037Z Here are the highlights of this release:
+2025-09-22T19:46:05.3719606Z  - Daemon JVM auto-provisioning
+2025-09-22T19:46:05.3720191Z  - Enhancements for Scala plugin and JUnit testing
+2025-09-22T19:46:05.3720927Z  - Improvements for build authors and plugin developers
+2025-09-22T19:46:05.3721349Z 
+2025-09-22T19:46:05.3724794Z For more details see https://docs.gradle.org/8.13/release-notes.html
+2025-09-22T19:46:05.3725516Z 
+2025-09-22T19:46:05.3817759Z 
+2025-09-22T19:46:05.3818485Z FAILURE: Build failed with an exception.
+2025-09-22T19:46:05.3818870Z 
+2025-09-22T19:46:05.3819077Z * What went wrong:
+2025-09-22T19:46:05.3821007Z Value 'C:/Program Files/Android/Android Studio/jbr' given for org.gradle.java.home Gradle property is invalid (Java home supplied is invalid)
+2025-09-22T19:46:05.3821999Z 
+2025-09-22T19:46:05.3822130Z * Try:
+2025-09-22T19:46:05.3822662Z > Run with --stacktrace option to get the stack trace.
+2025-09-22T19:46:05.3823465Z > Run with --info or --debug option to get more log output.
+2025-09-22T19:46:05.3824411Z > Run with --scan to get full insights.
+2025-09-22T19:46:05.3825143Z > Get more help at https://help.gradle.org.
+2025-09-22T19:46:05.3932217Z ##[error]Process completed with exit code 1.

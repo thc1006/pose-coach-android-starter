@@ -1,0 +1,29 @@
+﻿2025-09-22T19:45:42.5605648Z Current runner version: '2.328.0'
+2025-09-22T19:45:42.5630083Z ##[group]Runner Image Provisioner
+2025-09-22T19:45:42.5630908Z Hosted Compute Agent
+2025-09-22T19:45:42.5631564Z Version: 20250829.383
+2025-09-22T19:45:42.5632143Z Commit: 27cb235aab5b0e52e153a26cd86b4742e89dac5d
+2025-09-22T19:45:42.5632853Z Build Date: 2025-08-29T13:48:48Z
+2025-09-22T19:45:42.5633474Z ##[endgroup]
+2025-09-22T19:45:42.5634026Z ##[group]Operating System
+2025-09-22T19:45:42.5634614Z Ubuntu
+2025-09-22T19:45:42.5635130Z 24.04.3
+2025-09-22T19:45:42.5635665Z LTS
+2025-09-22T19:45:42.5636331Z ##[endgroup]
+2025-09-22T19:45:42.5637023Z ##[group]Runner Image
+2025-09-22T19:45:42.5637573Z Image: ubuntu-24.04
+2025-09-22T19:45:42.5638118Z Version: 20250907.24.1
+2025-09-22T19:45:42.5639083Z Included Software: https://github.com/actions/runner-images/blob/ubuntu24/20250907.24/images/ubuntu/Ubuntu2404-Readme.md
+2025-09-22T19:45:42.5640547Z Image Release: https://github.com/actions/runner-images/releases/tag/ubuntu24%2F20250907.24
+2025-09-22T19:45:42.5641758Z ##[endgroup]
+2025-09-22T19:45:42.5642856Z ##[group]GITHUB_TOKEN Permissions
+2025-09-22T19:45:42.5644840Z Contents: read
+2025-09-22T19:45:42.5645474Z Metadata: read
+2025-09-22T19:45:42.5646134Z Packages: read
+2025-09-22T19:45:42.5646619Z ##[endgroup]
+2025-09-22T19:45:42.5648869Z Secret source: Actions
+2025-09-22T19:45:42.5649583Z Prepare workflow directory
+2025-09-22T19:45:42.5961862Z Prepare all required actions
+2025-09-22T19:45:42.5998533Z Getting action download info
+2025-09-22T19:45:43.0108805Z Download action repository 'actions/checkout@v4' (SHA:08eba0b27e820071cde6df949e0beb9ba4906955)
+2025-09-22T19:45:43.2576848Z Complete job name: Accessibility Quality Gate

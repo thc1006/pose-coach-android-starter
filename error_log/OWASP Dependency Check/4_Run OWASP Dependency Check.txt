@@ -1,0 +1,67 @@
+﻿2025-09-22T19:45:58.4352694Z ##[group]Run dependency-check/Dependency-Check_Action@main
+2025-09-22T19:45:58.4353025Z with:
+2025-09-22T19:45:58.4353210Z   project: pose-coach-android
+2025-09-22T19:45:58.4353432Z   path: .
+2025-09-22T19:45:58.4353586Z   format: ALL
+2025-09-22T19:45:58.4353768Z   out: dependency-check-reports
+2025-09-22T19:45:58.4354180Z   args: --enableRetired --enableExperimental --suppression dependency-check-suppressions.xml
+
+2025-09-22T19:45:58.4354598Z ##[endgroup]
+2025-09-22T19:45:58.4474471Z ##[command]/usr/bin/docker run --name a953395bce264e59a23f558d3f39563f_2df88c --label 836529 --workdir /github/workspace --rm -e "INPUT_PROJECT" -e "INPUT_PATH" -e "INPUT_FORMAT" -e "INPUT_OUT" -e "INPUT_ARGS" -e "HOME" -e "GITHUB_JOB" -e "GITHUB_REF" -e "GITHUB_SHA" -e "GITHUB_REPOSITORY" -e "GITHUB_REPOSITORY_OWNER" -e "GITHUB_REPOSITORY_OWNER_ID" -e "GITHUB_RUN_ID" -e "GITHUB_RUN_NUMBER" -e "GITHUB_RETENTION_DAYS" -e "GITHUB_RUN_ATTEMPT" -e "GITHUB_ACTOR_ID" -e "GITHUB_ACTOR" -e "GITHUB_WORKFLOW" -e "GITHUB_HEAD_REF" -e "GITHUB_BASE_REF" -e "GITHUB_EVENT_NAME" -e "GITHUB_SERVER_URL" -e "GITHUB_API_URL" -e "GITHUB_GRAPHQL_URL" -e "GITHUB_REF_NAME" -e "GITHUB_REF_PROTECTED" -e "GITHUB_REF_TYPE" -e "GITHUB_WORKFLOW_REF" -e "GITHUB_WORKFLOW_SHA" -e "GITHUB_REPOSITORY_ID" -e "GITHUB_TRIGGERING_ACTOR" -e "GITHUB_WORKSPACE" -e "GITHUB_ACTION" -e "GITHUB_EVENT_PATH" -e "GITHUB_ACTION_REPOSITORY" -e "GITHUB_ACTION_REF" -e "GITHUB_PATH" -e "GITHUB_ENV" -e "GITHUB_STEP_SUMMARY" -e "GITHUB_STATE" -e "GITHUB_OUTPUT" -e "RUNNER_OS" -e "RUNNER_ARCH" -e "RUNNER_NAME" -e "RUNNER_ENVIRONMENT" -e "RUNNER_TOOL_CACHE" -e "RUNNER_TEMP" -e "RUNNER_WORKSPACE" -e "ACTIONS_RUNTIME_URL" -e "ACTIONS_RUNTIME_TOKEN" -e "ACTIONS_CACHE_URL" -e "ACTIONS_RESULTS_URL" -e GITHUB_ACTIONS=true -e CI=true -v "/var/run/docker.sock":"/var/run/docker.sock" -v "/home/runner/work/_temp/_github_home":"/github/home" -v "/home/runner/work/_temp/_github_workflow":"/github/workflow" -v "/home/runner/work/_temp/_runner_file_commands":"/github/file_commands" -v "/home/runner/work/pose-coach-android-starter/pose-coach-android-starter":"/github/workspace" 836529:a953395bce264e59a23f558d3f39563f  "--project" "pose-coach-android" "--scan" "/github/workspace/." "--format" "ALL" "--out" "/github/workspace/dependency-check-reports" "--noupdate" "--enableRetired --enableExperimental --suppression dependency-check-suppressions.xml
+"
+2025-09-22T19:46:00.3283236Z [INFO] 
+2025-09-22T19:46:00.3283608Z 
+2025-09-22T19:46:00.3286948Z Dependency-Check is an open source tool performing a best effort analysis of 3rd party dependencies; false positives and false negatives may exist in the analysis performed by the tool. Use of the tool and the reporting provided constitutes acceptance for use in an AS IS condition, and there are NO warranties, implied or otherwise, with regard to the analysis or its use. Any use of the tool and the reporting provided is at the user's risk. In no event shall the copyright holder or OWASP be held liable for any damages whatsoever arising out of or in connection with the use of this tool, the analysis performed, or the resulting report.
+2025-09-22T19:46:00.3289265Z 
+2025-09-22T19:46:00.3289275Z 
+2025-09-22T19:46:00.3289564Z    About ODC: https://dependency-check.github.io/DependencyCheck/general/internals.html
+2025-09-22T19:46:00.3290159Z    False Positives: https://dependency-check.github.io/DependencyCheck/general/suppression.html
+2025-09-22T19:46:00.3290521Z 
+2025-09-22T19:46:00.3290890Z 💖 Sponsor: https://github.com/sponsors/jeremylong
+2025-09-22T19:46:00.3291102Z 
+2025-09-22T19:46:00.3291107Z 
+2025-09-22T19:46:00.3291185Z [INFO] Analysis Started
+2025-09-22T19:46:00.3808707Z [INFO] Finished Archive Analyzer (0 seconds)
+2025-09-22T19:46:00.3851396Z [INFO] Finished File Name Analyzer (0 seconds)
+2025-09-22T19:46:00.3933295Z [INFO] Finished Jar Analyzer (0 seconds)
+2025-09-22T19:47:32.4897073Z [INFO] Finished Central Analyzer (92 seconds)
+2025-09-22T19:47:32.4908971Z [INFO] Finished Python Distribution Analyzer (0 seconds)
+2025-09-22T19:47:32.4927616Z [INFO] Finished Python Package Analyzer (0 seconds)
+2025-09-22T19:47:32.5060876Z [INFO] Finished pip Analyzer (0 seconds)
+2025-09-22T19:47:32.5212394Z [INFO] Finished Dependency Merging Analyzer (0 seconds)
+2025-09-22T19:47:32.6033886Z [INFO] Finished Hint Analyzer (0 seconds)
+2025-09-22T19:47:32.6064567Z [INFO] Finished Version Filter Analyzer (0 seconds)
+2025-09-22T19:47:34.0109003Z Sep 22, 2025 7:47:34 PM org.apache.lucene.util.HotspotVMOptions <clinit>
+2025-09-22T19:47:34.0113839Z WARNING: Lucene cannot optimize algorithms or calculate object sizes for JVMs that are not based on Hotspot or a compatible implementation.
+2025-09-22T19:47:34.0276479Z WARNING: A restricted method in java.lang.foreign.Linker has been called
+2025-09-22T19:47:34.0283531Z WARNING: java.lang.foreign.Linker::downcallHandle has been called by the unnamed module
+2025-09-22T19:47:34.0284743Z WARNING: Use --enable-native-access=ALL-UNNAMED to avoid a warning for this module
+2025-09-22T19:47:34.0285653Z 
+2025-09-22T19:47:34.1301532Z Sep 22, 2025 7:47:34 PM org.apache.lucene.store.MemorySegmentIndexInputProvider <init>
+2025-09-22T19:47:34.1303177Z INFO: Using MemorySegmentIndexInput and native madvise support with Java 21 or later; to disable start with -Dorg.apache.lucene.store.MMapDirectory.enableMemorySegments=false
+2025-09-22T19:47:34.2176474Z Sep 22, 2025 7:47:34 PM org.apache.lucene.internal.vectorization.VectorizationProvider lookup
+2025-09-22T19:47:34.2177635Z WARNING: Java runtime is not using Hotspot VM; Java vector incubator API can't be enabled.
+2025-09-22T19:47:34.5436156Z [INFO] Created CPE Index (1 seconds)
+2025-09-22T19:47:34.7231843Z [WARN] Unable to read suppression file 'dependency-check-suppressions.xml'
+2025-09-22T19:47:34.7236467Z [ERROR] Exception occurred initializing NPM CPE Analyzer.
+2025-09-22T19:47:34.7298434Z [INFO] Finished NPM CPE Analyzer (2 seconds)
+2025-09-22T19:47:36.4216793Z [INFO] Created CPE Index (1 seconds)
+2025-09-22T19:47:36.8908239Z [INFO] Finished CPE Analyzer (2 seconds)
+2025-09-22T19:47:36.8947642Z [INFO] Finished False Positive Analyzer (0 seconds)
+2025-09-22T19:47:37.0533102Z [INFO] Finished NVD CVE Analyzer (0 seconds)
+2025-09-22T19:47:37.0544086Z [ERROR] Exception occurred initializing Sonatype OSS Index Analyzer.
+2025-09-22T19:47:37.0590049Z [INFO] Finished Vulnerability Suppression Analyzer (0 seconds)
+2025-09-22T19:47:37.0796510Z [INFO] Finished Known Exploited Vulnerability Analyzer (0 seconds)
+2025-09-22T19:47:37.0839256Z [INFO] Finished Dependency Bundling Analyzer (0 seconds)
+2025-09-22T19:47:37.0852965Z [INFO] Finished Unused Suppression Rule Analyzer (0 seconds)
+2025-09-22T19:47:37.0926167Z [INFO] Analysis Complete (96 seconds)
+2025-09-22T19:47:37.1476541Z [INFO] Writing XML report to: /github/workspace/dependency-check-reports/dependency-check-report.xml
+2025-09-22T19:47:37.4624343Z [INFO] Writing HTML report to: /github/workspace/dependency-check-reports/dependency-check-report.html
+2025-09-22T19:47:37.6483375Z [INFO] Writing JSON report to: /github/workspace/dependency-check-reports/dependency-check-report.json
+2025-09-22T19:47:37.7530827Z [INFO] Writing CSV report to: /github/workspace/dependency-check-reports/dependency-check-report.csv
+2025-09-22T19:47:37.7760299Z [INFO] Writing SARIF report to: /github/workspace/dependency-check-reports/dependency-check-report.sarif
+2025-09-22T19:47:37.8065885Z [INFO] Writing JENKINS report to: /github/workspace/dependency-check-reports/dependency-check-jenkins.html
+2025-09-22T19:47:37.8613999Z [INFO] Writing JUNIT report to: /github/workspace/dependency-check-reports/dependency-check-junit.xml
+2025-09-22T19:47:37.8901364Z [INFO] Writing GITLAB report to: /github/workspace/dependency-check-reports/dependency-check-gitlab.json
+2025-09-22T19:47:37.9474895Z [ERROR] Warn initializing the suppression analyzer: Failed to load dependency-check-suppressions.xml, caused by Unable to read suppression file. 
+2025-09-22T19:47:37.9476930Z [ERROR] Error initializing OSS Index analyzer due to missing user/password credentials. Authentication is now required: https://ossindex.sonatype.org/doc/auth-required

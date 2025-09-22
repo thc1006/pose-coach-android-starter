@@ -1,0 +1,5 @@
+2025-09-22T19:45:38.0560000Z Requested labels: ubuntu-latest
+2025-09-22T19:45:38.0560000Z Job defined at: thc1006/pose-coach-android-starter/.github/workflows/performance-monitoring.yml@refs/heads/main
+2025-09-22T19:45:38.0560000Z Waiting for a runner to pick up this job...
+2025-09-22T19:45:38.5440000Z Job is about to start running on the hosted runner: GitHub Actions 1000042458
+2025-09-22T19:45:38.5460000Z Job is waiting for a hosted runner to come online.

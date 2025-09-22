@@ -1,0 +1,34 @@
+﻿2025-09-22T19:45:41.8957910Z ##[group]Run # Check for permission explanations
+2025-09-22T19:45:41.8959257Z [36;1m# Check for permission explanations[0m
+2025-09-22T19:45:41.8961509Z [36;1mif ! grep -r "shouldShowRequestPermissionRationale" --include="*.kt" --include="*.java" app/src/; then[0m
+2025-09-22T19:45:41.8963650Z [36;1m  echo "❌ Permission rationale handling not found"[0m
+2025-09-22T19:45:41.8964869Z [36;1m  exit 1[0m
+2025-09-22T19:45:41.8965631Z [36;1mfi[0m
+2025-09-22T19:45:41.8966356Z [36;1m[0m
+2025-09-22T19:45:41.8967161Z [36;1m# Check for data collection consent[0m
+2025-09-22T19:45:41.8969067Z [36;1mif ! grep -r "privacy.*consent\|consent.*privacy" --include="*.kt" --include="*.java" app/src/; then[0m
+2025-09-22T19:45:41.8971162Z [36;1m  echo "❌ Privacy consent handling not found"[0m
+2025-09-22T19:45:41.8972351Z [36;1m  exit 1[0m
+2025-09-22T19:45:41.8973112Z [36;1mfi[0m
+2025-09-22T19:45:41.8973815Z [36;1m[0m
+2025-09-22T19:45:41.8974679Z [36;1mecho "✅ Privacy compliance checks passed"[0m
+2025-09-22T19:45:41.9004176Z shell: /usr/bin/bash -e {0}
+2025-09-22T19:45:41.9005117Z ##[endgroup]
+2025-09-22T19:45:41.9098173Z app/src/main/kotlin/com/posecoach/app/camera/CameraLifecycleManager.kt:                ActivityCompat.shouldShowRequestPermissionRationale(act, permission)
+2025-09-22T19:45:41.9141195Z app/src/main/kotlin/com/posecoach/app/config/FeatureFlags.kt:     * Enable privacy controls and consent UI.
+2025-09-22T19:45:41.9146566Z app/src/main/kotlin/com/posecoach/app/MainActivity.kt:        // Initialize consent manager first (CLAUDE.md privacy requirement)
+2025-09-22T19:45:41.9150771Z app/src/main/kotlin/com/posecoach/app/privacy/DataMinimizationManager.kt:     * Get current processing mode based on privacy settings and consent
+2025-09-22T19:45:41.9154656Z app/src/main/kotlin/com/posecoach/app/privacy/DataMinimizationManager.kt:                    consentBasis = "privacy_by_design",
+2025-09-22T19:45:41.9158326Z app/src/main/kotlin/com/posecoach/app/privacy/ConsentManager.kt:     * Reset all consent (for testing or privacy reset)
+2025-09-22T19:45:41.9161963Z app/src/main/kotlin/com/posecoach/app/privacy/consent/ConsentManager.kt:package com.posecoach.app.privacy.consent
+2025-09-22T19:45:41.9166102Z app/src/main/kotlin/com/posecoach/app/privacy/advanced/AdvancedPrivacyEngine.kt:            validityPeriod = _privacyPolicy.value.temporalControls.consentRenewalPeriod,
+2025-09-22T19:45:41.9170725Z app/src/main/kotlin/com/posecoach/app/privacy/AdvancedPrivacyIntegration.kt:import com.posecoach.app.privacy.consent.ConsentManager
+2025-09-22T19:45:41.9174848Z app/src/main/kotlin/com/posecoach/app/privacy/AdvancedPrivacyIntegration.kt:        // Initialize consent management with current privacy preferences
+2025-09-22T19:45:41.9178895Z app/src/main/kotlin/com/posecoach/app/privacy/ConsentDialog.kt: * Provides user-friendly interface for privacy consent management
+2025-09-22T19:45:41.9182646Z app/src/main/kotlin/com/posecoach/app/camera/CameraXPipelineExample.kt:            // Show privacy consent dialog if needed
+2025-09-22T19:45:41.9186113Z app/src/main/kotlin/com/posecoach/app/examples/GeminiIntegrationExample.kt:     * Example of setting up privacy consent
+2025-09-22T19:45:41.9189331Z app/src/main/java/com/posecoach/MainActivity.kt:        // TDD Green Phase: Show privacy consent if needed
+2025-09-22T19:45:41.9192883Z app/src/androidTest/java/com/posecoach/integration/PrivacyControlsIntegrationTest.kt:     * TDD RED PHASE: Test privacy consent required
+2025-09-22T19:45:41.9196971Z app/src/androidTest/java/com/posecoach/integration/PrivacyControlsIntegrationTest.kt:        // TODO (GREEN PHASE): Implement privacy consent flow
+2025-09-22T19:45:41.9201377Z app/src/androidTest/java/com/posecoach/integration/PrivacyControlsIntegrationTest.kt:        // - Show privacy consent dialog before any data processing
+2025-09-22T19:45:41.9204189Z ✅ Privacy compliance checks passed

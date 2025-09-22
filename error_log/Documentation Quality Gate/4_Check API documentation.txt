@@ -1,0 +1,13 @@
+﻿2025-09-22T19:45:44.4082408Z ##[group]Run # Generate and validate KDoc documentation
+2025-09-22T19:45:44.4083882Z [36;1m# Generate and validate KDoc documentation[0m
+2025-09-22T19:45:44.4085071Z [36;1m./gradlew dokkaHtml[0m
+2025-09-22T19:45:44.4086041Z [36;1mif [ $? -ne 0 ]; then[0m
+2025-09-22T19:45:44.4087309Z [36;1m  echo "❌ KDoc generation failed"[0m
+2025-09-22T19:45:44.4088582Z [36;1m  exit 1[0m
+2025-09-22T19:45:44.4089397Z [36;1mfi[0m
+2025-09-22T19:45:44.4090192Z [36;1m[0m
+2025-09-22T19:45:44.4091166Z [36;1mecho "✅ API documentation generated successfully"[0m
+2025-09-22T19:45:44.4122652Z shell: /usr/bin/bash -e {0}
+2025-09-22T19:45:44.4123614Z ##[endgroup]
+2025-09-22T19:45:44.4183077Z /home/runner/work/_temp/4cbe663e-9999-423a-bd18-ff82d9db6ab6.sh: line 2: ./gradlew: Permission denied
+2025-09-22T19:45:44.4197320Z ##[error]Process completed with exit code 126.

@@ -1,0 +1,10 @@
+﻿2025-09-22T19:46:05.5723740Z Post job cleanup.
+2025-09-22T19:46:05.6648905Z [command]/usr/bin/git version
+2025-09-22T19:46:05.6689239Z git version 2.51.0
+2025-09-22T19:46:05.6734466Z Temporarily overriding HOME='/home/runner/work/_temp/faa87915-54aa-4603-bbb5-bdfe84da322c' before making global git config changes
+2025-09-22T19:46:05.6736016Z Adding repository directory to the temporary git global config as a safe directory
+2025-09-22T19:46:05.6741406Z [command]/usr/bin/git config --global --add safe.directory /home/runner/work/pose-coach-android-starter/pose-coach-android-starter
+2025-09-22T19:46:05.6782046Z [command]/usr/bin/git config --local --name-only --get-regexp core\.sshCommand
+2025-09-22T19:46:05.6814089Z [command]/usr/bin/git submodule foreach --recursive sh -c "git config --local --name-only --get-regexp 'core\.sshCommand' && git config --local --unset-all 'core.sshCommand' || :"
+2025-09-22T19:46:05.7026468Z fatal: No url found for submodule path 'pose-coach-skeleton' in .gitmodules
+2025-09-22T19:46:05.7065128Z ##[warning]The process '/usr/bin/git' failed with exit code 128

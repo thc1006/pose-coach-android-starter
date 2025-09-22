@@ -1,0 +1,14 @@
+﻿2025-09-22T19:46:03.8575074Z ##[group]Run ./gradlew :app:assembleBenchmark
+2025-09-22T19:46:03.8575471Z [36;1m./gradlew :app:assembleBenchmark[0m
+2025-09-22T19:46:03.8575763Z [36;1m./gradlew :app:assembleAndroidTest[0m
+2025-09-22T19:46:03.8626660Z shell: /usr/bin/bash -e {0}
+2025-09-22T19:46:03.8627190Z env:
+2025-09-22T19:46:03.8627369Z   BASELINE_BRANCH: main
+2025-09-22T19:46:03.8627580Z   PERFORMANCE_THRESHOLD: 10
+2025-09-22T19:46:03.8627931Z   JAVA_HOME: /opt/hostedtoolcache/Java_Temurin-Hotspot_jdk/17.0.16-8/x64
+2025-09-22T19:46:03.8628381Z   JAVA_HOME_17_X64: /opt/hostedtoolcache/Java_Temurin-Hotspot_jdk/17.0.16-8/x64
+2025-09-22T19:46:03.8628743Z   ANDROID_HOME: /usr/local/lib/android/sdk
+2025-09-22T19:46:03.8628997Z   ANDROID_SDK_ROOT: /usr/local/lib/android/sdk
+2025-09-22T19:46:03.8629237Z ##[endgroup]
+2025-09-22T19:46:03.8704901Z /home/runner/work/_temp/bf234080-03a4-4364-8bb3-513087fdf7e6.sh: line 1: ./gradlew: Permission denied
+2025-09-22T19:46:03.8718902Z ##[error]Process completed with exit code 126.

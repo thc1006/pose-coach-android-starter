@@ -1,0 +1,21 @@
+﻿2025-09-22T19:47:44.8003364Z ##[group]Run echo "## 🔒 Security Scan Summary"
+2025-09-22T19:47:44.8004062Z [36;1mecho "## 🔒 Security Scan Summary"[0m
+2025-09-22T19:47:44.8004616Z [36;1mecho "| Component | Status |"[0m
+2025-09-22T19:47:44.8005122Z [36;1mecho "|-----------|--------|"[0m
+2025-09-22T19:47:44.8005659Z [36;1mecho "| Dependencies | ❌ Failed |"[0m
+2025-09-22T19:47:44.8006210Z [36;1mecho "| Vulnerabilities | ❌ Failed |"[0m
+2025-09-22T19:47:44.8006747Z [36;1mecho "| Secrets | ❌ Failed |"[0m
+2025-09-22T19:47:44.8007273Z [36;1mecho "| Android Security | ❌ Failed |"[0m
+2025-09-22T19:47:44.8007834Z [36;1mecho "| Network Security | ❌ Failed |"[0m
+2025-09-22T19:47:44.8008398Z [36;1mecho "| Data Protection | ✅ Passed |"[0m
+2025-09-22T19:47:44.8103843Z shell: /usr/bin/bash -e {0}
+2025-09-22T19:47:44.8104628Z ##[endgroup]
+2025-09-22T19:47:44.8223570Z ## 🔒 Security Scan Summary
+2025-09-22T19:47:44.8224160Z | Component | Status |
+2025-09-22T19:47:44.8224596Z |-----------|--------|
+2025-09-22T19:47:44.8225079Z | Dependencies | ❌ Failed |
+2025-09-22T19:47:44.8225628Z | Vulnerabilities | ❌ Failed |
+2025-09-22T19:47:44.8226121Z | Secrets | ❌ Failed |
+2025-09-22T19:47:44.8226586Z | Android Security | ❌ Failed |
+2025-09-22T19:47:44.8227092Z | Network Security | ❌ Failed |
+2025-09-22T19:47:44.8227647Z | Data Protection | ✅ Passed |

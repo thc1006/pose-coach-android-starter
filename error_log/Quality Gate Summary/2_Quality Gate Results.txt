@@ -1,0 +1,19 @@
+﻿2025-09-22T19:46:19.0938910Z ##[group]Run echo "## Quality Gate Results 📊"
+2025-09-22T19:46:19.0939754Z [36;1mecho "## Quality Gate Results 📊"[0m
+2025-09-22T19:46:19.0940469Z [36;1mecho "- Code Style: ❌"[0m
+2025-09-22T19:46:19.0941052Z [36;1mecho "- Security: ❌"[0m
+2025-09-22T19:46:19.0941605Z [36;1mecho "- Test Coverage: ❌"[0m
+2025-09-22T19:46:19.0942276Z [36;1mecho "- Performance: ❌"[0m
+2025-09-22T19:46:19.0943005Z [36;1mecho "- Documentation: ❌"[0m
+2025-09-22T19:46:19.0943559Z [36;1mecho "- Accessibility: ✅"[0m
+2025-09-22T19:46:19.0944237Z [36;1mecho "- Dependencies: ❌"[0m
+2025-09-22T19:46:19.2303478Z shell: /usr/bin/bash -e {0}
+2025-09-22T19:46:19.2304609Z ##[endgroup]
+2025-09-22T19:46:19.2590669Z ## Quality Gate Results 📊
+2025-09-22T19:46:19.2591498Z - Code Style: ❌
+2025-09-22T19:46:19.2592014Z - Security: ❌
+2025-09-22T19:46:19.2592573Z - Test Coverage: ❌
+2025-09-22T19:46:19.2593122Z - Performance: ❌
+2025-09-22T19:46:19.2593646Z - Documentation: ❌
+2025-09-22T19:46:19.2594219Z - Accessibility: ✅
+2025-09-22T19:46:19.2594910Z - Dependencies: ❌

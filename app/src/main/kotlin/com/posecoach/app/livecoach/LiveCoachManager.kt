@@ -71,7 +71,6 @@ class LiveCoachManager(
                 }
                 ConnectionState.RECONNECTING -> GeminiSessionState.DISCONNECTING
                 ConnectionState.ERROR -> GeminiSessionState.ERROR
-                else -> GeminiSessionState.DISCONNECTED
             }
         }
         .stateIn(

@@ -165,6 +165,7 @@ class IntelligentCacheManager(
             metadata = metadata
         )
 
+        @Suppress("UNCHECKED_CAST")
         cache[key] = entry as CacheEntry<Any>
         recordAccess(key, currentTime)
 

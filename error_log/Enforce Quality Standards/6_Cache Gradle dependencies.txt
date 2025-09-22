@@ -1,0 +1,19 @@
+﻿2025-09-22T19:46:02.4137039Z ##[group]Run actions/cache@v4
+2025-09-22T19:46:02.4137738Z with:
+2025-09-22T19:46:02.4138024Z   path: ~/.gradle/caches
+~/.gradle/wrapper
+
+2025-09-22T19:46:02.4138524Z   key: Linux-gradle-c46bf01311c8a311e866c1a67f09612a3603f1064d9a77ec36e032d4cdf12d81
+2025-09-22T19:46:02.4139001Z   restore-keys: Linux-gradle-
+
+2025-09-22T19:46:02.4139280Z   enableCrossOsArchive: false
+2025-09-22T19:46:02.4139546Z   fail-on-cache-miss: false
+2025-09-22T19:46:02.4139791Z   lookup-only: false
+2025-09-22T19:46:02.4140021Z   save-always: false
+2025-09-22T19:46:02.4140421Z env:
+2025-09-22T19:46:02.4140734Z   JAVA_HOME: /opt/hostedtoolcache/Java_Temurin-Hotspot_jdk/17.0.16-8/x64
+2025-09-22T19:46:02.4141254Z   JAVA_HOME_17_X64: /opt/hostedtoolcache/Java_Temurin-Hotspot_jdk/17.0.16-8/x64
+2025-09-22T19:46:02.4141679Z   ANDROID_HOME: /usr/local/lib/android/sdk
+2025-09-22T19:46:02.4141998Z   ANDROID_SDK_ROOT: /usr/local/lib/android/sdk
+2025-09-22T19:46:02.4142277Z ##[endgroup]
+2025-09-22T19:46:02.6230071Z Cache not found for input keys: Linux-gradle-c46bf01311c8a311e866c1a67f09612a3603f1064d9a77ec36e032d4cdf12d81, Linux-gradle-

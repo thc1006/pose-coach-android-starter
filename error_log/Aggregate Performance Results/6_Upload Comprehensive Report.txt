@@ -1,0 +1,26 @@
+﻿2025-09-22T19:46:18.5920233Z ##[group]Run actions/upload-artifact@v4
+2025-09-22T19:46:18.5920531Z with:
+2025-09-22T19:46:18.5920728Z   name: comprehensive-performance-report
+2025-09-22T19:46:18.5920989Z   path: final-report/
+2025-09-22T19:46:18.5921191Z   retention-days: 180
+2025-09-22T19:46:18.5921384Z   if-no-files-found: warn
+2025-09-22T19:46:18.5921590Z   compression-level: 6
+2025-09-22T19:46:18.5921773Z   overwrite: false
+2025-09-22T19:46:18.5921968Z   include-hidden-files: false
+2025-09-22T19:46:18.5922167Z env:
+2025-09-22T19:46:18.5922328Z   BASELINE_BRANCH: main
+2025-09-22T19:46:18.5922522Z   PERFORMANCE_THRESHOLD: 10
+2025-09-22T19:46:18.5922727Z   POTENTIAL_ISSUES: 2
+2025-09-22T19:46:18.5922901Z ##[endgroup]
+2025-09-22T19:46:18.8040990Z With the provided path, there will be 1 file uploaded
+2025-09-22T19:46:18.8046573Z Artifact name is valid!
+2025-09-22T19:46:18.8047881Z Root directory input is valid!
+2025-09-22T19:46:18.8093566Z ##[warning]Retention days cannot be greater than the maximum allowed retention set within the repository. Using 90 instead.
+2025-09-22T19:46:19.0801198Z Beginning upload of artifact content to blob storage
+2025-09-22T19:46:19.4035284Z Uploaded bytes 578
+2025-09-22T19:46:19.4901475Z Finished uploading artifact content to blob storage!
+2025-09-22T19:46:19.4904693Z SHA256 digest of uploaded artifact zip is c1b792add1475213b8be06ace0cd6107e2482c267dfc132c28006021e2a4c6cf
+2025-09-22T19:46:19.4906821Z Finalizing artifact upload
+2025-09-22T19:46:19.6252540Z Artifact comprehensive-performance-report.zip successfully finalized. Artifact ID 4075992418
+2025-09-22T19:46:19.6253902Z Artifact comprehensive-performance-report has been successfully uploaded! Final size is 578 bytes. Artifact ID is 4075992418
+2025-09-22T19:46:19.6261136Z Artifact download URL: https://github.com/thc1006/pose-coach-android-starter/actions/runs/17926648367/artifacts/4075992418

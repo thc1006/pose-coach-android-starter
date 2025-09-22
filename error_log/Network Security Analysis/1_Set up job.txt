@@ -1,0 +1,30 @@
+﻿2025-09-22T19:45:47.7011946Z Current runner version: '2.328.0'
+2025-09-22T19:45:47.7034207Z ##[group]Runner Image Provisioner
+2025-09-22T19:45:47.7034978Z Hosted Compute Agent
+2025-09-22T19:45:47.7035607Z Version: 20250829.383
+2025-09-22T19:45:47.7036174Z Commit: 27cb235aab5b0e52e153a26cd86b4742e89dac5d
+2025-09-22T19:45:47.7036880Z Build Date: 2025-08-29T13:48:48Z
+2025-09-22T19:45:47.7037476Z ##[endgroup]
+2025-09-22T19:45:47.7038050Z ##[group]Operating System
+2025-09-22T19:45:47.7038607Z Ubuntu
+2025-09-22T19:45:47.7039410Z 24.04.3
+2025-09-22T19:45:47.7039928Z LTS
+2025-09-22T19:45:47.7040378Z ##[endgroup]
+2025-09-22T19:45:47.7040916Z ##[group]Runner Image
+2025-09-22T19:45:47.7041467Z Image: ubuntu-24.04
+2025-09-22T19:45:47.7041976Z Version: 20250907.24.1
+2025-09-22T19:45:47.7042930Z Included Software: https://github.com/actions/runner-images/blob/ubuntu24/20250907.24/images/ubuntu/Ubuntu2404-Readme.md
+2025-09-22T19:45:47.7044340Z Image Release: https://github.com/actions/runner-images/releases/tag/ubuntu24%2F20250907.24
+2025-09-22T19:45:47.7045582Z ##[endgroup]
+2025-09-22T19:45:47.7046799Z ##[group]GITHUB_TOKEN Permissions
+2025-09-22T19:45:47.7048557Z Actions: read
+2025-09-22T19:45:47.7049374Z Contents: read
+2025-09-22T19:45:47.7049881Z Metadata: read
+2025-09-22T19:45:47.7050376Z SecurityEvents: write
+2025-09-22T19:45:47.7050978Z ##[endgroup]
+2025-09-22T19:45:47.7052897Z Secret source: Actions
+2025-09-22T19:45:47.7053553Z Prepare workflow directory
+2025-09-22T19:45:47.7364276Z Prepare all required actions
+2025-09-22T19:45:47.7400657Z Getting action download info
+2025-09-22T19:45:48.1937063Z Download action repository 'actions/checkout@v4' (SHA:08eba0b27e820071cde6df949e0beb9ba4906955)
+2025-09-22T19:45:48.4225282Z Complete job name: Network Security Analysis

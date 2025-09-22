@@ -97,7 +97,7 @@ class AdvancedVisionAnalyzer(private val context: Context) {
     /**
      * Determine scene type from visual cues
      */
-    private suspend fun analyzeSceneType(image: Bitmap): String {
+    private suspend fun analyzeSceneType(@Suppress("UNUSED_PARAMETER") image: Bitmap): String {
         return withContext(Dispatchers.Default) {
             val features = extractSceneFeatures(image)
 
@@ -114,7 +114,7 @@ class AdvancedVisionAnalyzer(private val context: Context) {
     /**
      * Detect and classify objects in the scene
      */
-    private suspend fun detectObjects(image: Bitmap): List<DetectedObject> {
+    private suspend fun detectObjects(@Suppress("UNUSED_PARAMETER") image: Bitmap): List<DetectedObject> {
         return withContext(Dispatchers.Default) {
             val objects = mutableListOf<DetectedObject>()
 
@@ -136,7 +136,7 @@ class AdvancedVisionAnalyzer(private val context: Context) {
     /**
      * Analyze lighting conditions for optimal pose detection
      */
-    private suspend fun analyzeLightingConditions(image: Bitmap): String {
+    private suspend fun analyzeLightingConditions(@Suppress("UNUSED_PARAMETER") image: Bitmap): String {
         return withContext(Dispatchers.Default) {
             val brightness = calculateAverageBrightness(image)
             val contrast = calculateContrast(image)

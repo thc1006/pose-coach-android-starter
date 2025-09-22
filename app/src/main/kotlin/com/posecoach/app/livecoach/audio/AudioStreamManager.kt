@@ -3,10 +3,10 @@ package com.posecoach.app.livecoach.audio
 import android.Manifest
 import android.content.Context
 import android.content.pm.PackageManager
-import android.media.AudioFormat
-import android.media.AudioRecord
-import android.media.MediaRecorder
+import android.media.*
+import android.os.Build
 import android.util.Base64
+import androidx.annotation.RequiresApi
 import androidx.core.content.ContextCompat
 import com.posecoach.app.livecoach.models.AudioChunk
 import com.posecoach.app.livecoach.models.LiveApiMessage
@@ -17,6 +17,9 @@ import kotlinx.coroutines.flow.SharedFlow
 import kotlinx.coroutines.flow.asSharedFlow
 import timber.log.Timber
 import kotlin.coroutines.CoroutineContext
+import kotlin.math.abs
+import kotlin.math.max
+import kotlin.math.sqrt
 
 class AudioStreamManager(
     private val context: Context,
@@ -27,24 +30,64 @@ class AudioStreamManager(
         coroutineScope.coroutineContext + SupervisorJob()
 
     companion object {
-        private const val SAMPLE_RATE = 16000
-        private const val CHANNEL_CONFIG = AudioFormat.CHANNEL_IN_MONO
-        private const val AUDIO_FORMAT = AudioFormat.ENCODING_PCM_16BIT
+        // Input audio configuration (for Gemini Live API)
+        private const val INPUT_SAMPLE_RATE = 16000
+        private const val INPUT_CHANNEL_CONFIG = AudioFormat.CHANNEL_IN_MONO
+        private const val INPUT_AUDIO_FORMAT = AudioFormat.ENCODING_PCM_16BIT
+
+        // Output audio configuration (for playback)
+        private const val OUTPUT_SAMPLE_RATE = 24000
+        private const val OUTPUT_CHANNEL_CONFIG = AudioFormat.CHANNEL_OUT_MONO
+        private const val OUTPUT_AUDIO_FORMAT = AudioFormat.ENCODING_PCM_16BIT
+
+        // Buffer and streaming configuration
         private const val BUFFER_SIZE_MULTIPLIER = 4
         private const val CHUNK_DURATION_MS = 1000L // 1 second chunks
+        private const val LOW_LATENCY_CHUNK_MS = 100L // Smaller chunks for barge-in responsiveness
+
+        // Voice activity and silence detection
         private const val SILENCE_THRESHOLD = 500 // Adjust based on testing
         private const val SILENCE_DURATION_MS = 2000L // 2 seconds of silence
+        private const val VOICE_ACTIVITY_BUFFER_SIZE = 10 // Number of recent chunks to analyze
+
+        // Barge-in detection configuration
         private const val BARGE_IN_THRESHOLD = 800 // Higher threshold for barge-in detection
         private const val BARGE_IN_MIN_DURATION_MS = 300L // Minimum speech duration to trigger barge-in
-        private const val VOICE_ACTIVITY_BUFFER_SIZE = 10 // Number of recent chunks to analyze
-        private const val LOW_LATENCY_CHUNK_MS = 100L // Smaller chunks for barge-in responsiveness
+        private const val BARGE_IN_COOLDOWN_MS = 500L // Cooldown period between barge-ins
+
+        // Quality monitoring
         private const val QUALITY_CHECK_INTERVAL = 5000L // Check audio quality every 5 seconds
+        private const val QUALITY_SCORE_THRESHOLD = 0.3 // Threshold for poor quality warning
+
+        // Android 15+ audio session management
+        private const val AUDIO_SESSION_TIMEOUT_MS = 30000L // 30 seconds
+        private const val PERMISSION_REQUEST_TIMEOUT_MS = 10000L // 10 seconds
     }
 
+    // Audio recording components
     private var audioRecord: AudioRecord? = null
     private var recordingJob: Job? = null
     private var isRecording = false
-    private val bufferSize = AudioRecord.getMinBufferSize(SAMPLE_RATE, CHANNEL_CONFIG, AUDIO_FORMAT) * BUFFER_SIZE_MULTIPLIER
+    private val inputBufferSize = AudioRecord.getMinBufferSize(
+        INPUT_SAMPLE_RATE,
+        INPUT_CHANNEL_CONFIG,
+        INPUT_AUDIO_FORMAT
+    ) * BUFFER_SIZE_MULTIPLIER
+
+    // Audio playback components
+    private var audioTrack: AudioTrack? = null
+    private var playbackJob: Job? = null
+    private var isPlaying = false
+    private val outputBufferSize = AudioTrack.getMinBufferSize(
+        OUTPUT_SAMPLE_RATE,
+        OUTPUT_CHANNEL_CONFIG,
+        OUTPUT_AUDIO_FORMAT
+    ) * BUFFER_SIZE_MULTIPLIER
+
+    // Audio session and permission management (Android 15+)
+    private var audioManager: AudioManager? = null
+    private var audioFocusRequest: AudioFocusRequest? = null
+    private var hasAudioFocus = false
 
     private val _audioChunks = MutableSharedFlow<AudioChunk>(
         replay = 0,
@@ -86,11 +129,88 @@ class AudioStreamManager(
     )
     val audioQuality: SharedFlow<AudioQualityInfo> = _audioQuality.asSharedFlow()
 
+    // Audio playback streams
+    private val _playbackAudio = MutableSharedFlow<ByteArray>(
+        replay = 0,
+        extraBufferCapacity = 10
+    )
+    val playbackAudio: SharedFlow<ByteArray> = _playbackAudio.asSharedFlow()
+
+    // Audio session events
+    private val _audioSessionEvents = MutableSharedFlow<AudioSessionEvent>(
+        replay = 0,
+        extraBufferCapacity = 5
+    )
+    val audioSessionEvents: SharedFlow<AudioSessionEvent> = _audioSessionEvents.asSharedFlow()
+
+    // Permission status updates
+    private val _permissionStatus = MutableSharedFlow<AudioPermissionStatus>(
+        replay = 1,
+        extraBufferCapacity = 3
+    )
+    val permissionStatus: SharedFlow<AudioPermissionStatus> = _permissionStatus.asSharedFlow()
+
+    init {
+        initializeAudioManager()
+        checkPermissionsAndEmitStatus()
+    }
+
+    private fun initializeAudioManager() {
+        audioManager = context.getSystemService(Context.AUDIO_SERVICE) as? AudioManager
+        Timber.d("AudioManager initialized")
+    }
+
+    private fun checkPermissionsAndEmitStatus() {
+        launch {
+            val status = getCurrentPermissionStatus()
+            _permissionStatus.emit(status)
+        }
+    }
+
+    /**
+     * Check audio permissions with Android 15+ best practices
+     */
     fun hasAudioPermission(): Boolean {
         return ContextCompat.checkSelfPermission(
             context,
             Manifest.permission.RECORD_AUDIO
         ) == PackageManager.PERMISSION_GRANTED
+    }
+
+    /**
+     * Enhanced permission checking for Android 15+
+     */
+    @RequiresApi(Build.VERSION_CODES.M)
+    fun hasEnhancedAudioPermissions(): Boolean {
+        val recordPermission = ContextCompat.checkSelfPermission(
+            context,
+            Manifest.permission.RECORD_AUDIO
+        ) == PackageManager.PERMISSION_GRANTED
+
+        val modifyPermission = ContextCompat.checkSelfPermission(
+            context,
+            Manifest.permission.MODIFY_AUDIO_SETTINGS
+        ) == PackageManager.PERMISSION_GRANTED
+
+        return recordPermission && modifyPermission
+    }
+
+    /**
+     * Get current permission status with details
+     */
+    private fun getCurrentPermissionStatus(): AudioPermissionStatus {
+        val recordPermission = hasAudioPermission()
+        val modifyPermission = ContextCompat.checkSelfPermission(
+            context,
+            Manifest.permission.MODIFY_AUDIO_SETTINGS
+        ) == PackageManager.PERMISSION_GRANTED
+
+        return AudioPermissionStatus(
+            recordAudio = recordPermission,
+            modifyAudioSettings = modifyPermission,
+            isFullyGranted = recordPermission && modifyPermission,
+            timestamp = System.currentTimeMillis()
+        )
     }
 
     fun startRecording() {
@@ -102,11 +222,19 @@ class AudioStreamManager(
         if (!hasAudioPermission()) {
             val error = "Audio recording permission not granted"
             Timber.e(error)
-            launch { _errors.emit(error) }
+            launch {
+                _errors.emit(error)
+                _audioSessionEvents.emit(AudioSessionEvent.PermissionDenied(error))
+            }
             return
         }
 
         try {
+            // Request audio focus for recording
+            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+                requestAudioFocus()
+            }
+
             initializeAudioRecord()
             isRecording = true
             lastSoundTimestamp = System.currentTimeMillis()
@@ -115,10 +243,17 @@ class AudioStreamManager(
                 recordAudioLoop()
             }
 
-            Timber.d("Audio recording started")
+            launch {
+                _audioSessionEvents.emit(AudioSessionEvent.RecordingStarted(System.currentTimeMillis()))
+            }
+
+            Timber.d("Audio recording started with enhanced session management")
         } catch (e: Exception) {
             Timber.e(e, "Failed to start audio recording")
-            launch { _errors.emit("Failed to start recording: ${e.message}") }
+            launch {
+                _errors.emit("Failed to start recording: ${e.message}")
+                _audioSessionEvents.emit(AudioSessionEvent.Error("Recording failed: ${e.message}"))
+            }
         }
     }
 
@@ -126,16 +261,18 @@ class AudioStreamManager(
         try {
             audioRecord = AudioRecord(
                 MediaRecorder.AudioSource.MIC,
-                SAMPLE_RATE,
-                CHANNEL_CONFIG,
-                AUDIO_FORMAT,
-                bufferSize
+                INPUT_SAMPLE_RATE,
+                INPUT_CHANNEL_CONFIG,
+                INPUT_AUDIO_FORMAT,
+                inputBufferSize
             ).apply {
                 if (state != AudioRecord.STATE_INITIALIZED) {
                     throw IllegalStateException("AudioRecord not initialized")
                 }
                 startRecording()
             }
+
+            Timber.d("AudioRecord initialized: sample rate=$INPUT_SAMPLE_RATE, buffer size=$inputBufferSize")
         } catch (e: Exception) {
             audioRecord?.release()
             audioRecord = null
@@ -143,10 +280,76 @@ class AudioStreamManager(
         }
     }
 
+    /**
+     * Request audio focus for recording (Android 8.0+)
+     */
+    @RequiresApi(Build.VERSION_CODES.O)
+    private fun requestAudioFocus() {
+        audioManager?.let { manager ->
+            val audioAttributes = AudioAttributes.Builder()
+                .setUsage(AudioAttributes.USAGE_VOICE_COMMUNICATION)
+                .setContentType(AudioAttributes.CONTENT_TYPE_SPEECH)
+                .build()
+
+            audioFocusRequest = AudioFocusRequest.Builder(AudioManager.AUDIOFOCUS_GAIN_TRANSIENT_EXCLUSIVE)
+                .setAudioAttributes(audioAttributes)
+                .setAcceptsDelayedFocusGain(true)
+                .setOnAudioFocusChangeListener(audioFocusChangeListener)
+                .build()
+
+            val result = manager.requestAudioFocus(audioFocusRequest!!)
+            hasAudioFocus = result == AudioManager.AUDIOFOCUS_REQUEST_GRANTED
+
+            Timber.d("Audio focus request result: $result, hasAudioFocus: $hasAudioFocus")
+
+            launch {
+                _audioSessionEvents.emit(
+                    if (hasAudioFocus) {
+                        AudioSessionEvent.AudioFocusGranted(System.currentTimeMillis())
+                    } else {
+                        AudioSessionEvent.AudioFocusLost("Failed to gain audio focus", System.currentTimeMillis())
+                    }
+                )
+            }
+        }
+    }
+
+    private val audioFocusChangeListener = AudioManager.OnAudioFocusChangeListener { focusChange ->
+        when (focusChange) {
+            AudioManager.AUDIOFOCUS_GAIN -> {
+                hasAudioFocus = true
+                Timber.d("Audio focus gained")
+                launch {
+                    _audioSessionEvents.emit(AudioSessionEvent.AudioFocusGranted(System.currentTimeMillis()))
+                }
+            }
+            AudioManager.AUDIOFOCUS_LOSS,
+            AudioManager.AUDIOFOCUS_LOSS_TRANSIENT,
+            AudioManager.AUDIOFOCUS_LOSS_TRANSIENT_CAN_DUCK -> {
+                hasAudioFocus = false
+                Timber.d("Audio focus lost: $focusChange")
+                launch {
+                    _audioSessionEvents.emit(
+                        AudioSessionEvent.AudioFocusLost(
+                            "Focus change: $focusChange",
+                            System.currentTimeMillis()
+                        )
+                    )
+                }
+
+                // If recording, consider pausing or stopping
+                if (isRecording && focusChange == AudioManager.AUDIOFOCUS_LOSS) {
+                    Timber.w("Stopping recording due to audio focus loss")
+                    stopRecording()
+                }
+            }
+        }
+    }
+
     private suspend fun recordAudioLoop() {
-        val buffer = ShortArray(bufferSize / 2) // 16-bit samples
+        val buffer = ShortArray(inputBufferSize / 2) // 16-bit samples
         val baseChunkDuration = if (lowLatencyMode || bargeInMode) LOW_LATENCY_CHUNK_MS else CHUNK_DURATION_MS
-        val chunkSamples = (SAMPLE_RATE * baseChunkDuration / 1000).toInt()
+        val chunkSamples = (INPUT_SAMPLE_RATE * baseChunkDuration / 1000).toInt()
         val chunkBuffer = mutableListOf<Short>()
         var qualityCheckTime = System.currentTimeMillis()
 
@@ -306,7 +509,7 @@ class AudioStreamManager(
             val audioChunk = AudioChunk(
                 data = bytes,
                 timestamp = timestamp,
-                sampleRate = SAMPLE_RATE
+                sampleRate = INPUT_SAMPLE_RATE
             )
 
             // Emit raw audio chunk
@@ -315,9 +518,9 @@ class AudioStreamManager(
             // Create Live API message with quality indicators
             val base64Data = Base64.encodeToString(bytes, Base64.NO_WRAP)
             val mimeType = if (analysis.hasVoiceActivity) {
-                "audio/pcm;rate=$SAMPLE_RATE;voice_activity=true"
+                "audio/pcm;rate=$INPUT_SAMPLE_RATE;voice_activity=true"
             } else {
-                "audio/pcm;rate=$SAMPLE_RATE;voice_activity=false"
+                "audio/pcm;rate=$INPUT_SAMPLE_RATE;voice_activity=false"
             }
 
             val mediaChunk = MediaChunk(
@@ -362,9 +565,154 @@ class AudioStreamManager(
             audioRecord?.stop()
             audioRecord?.release()
             audioRecord = null
+
+            // Release audio focus
+            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+                releaseAudioFocus()
+            }
+
+            launch {
+                _audioSessionEvents.emit(AudioSessionEvent.RecordingStopped(System.currentTimeMillis()))
+            }
+
             Timber.d("Audio recording stopped")
         } catch (e: Exception) {
             Timber.e(e, "Error stopping audio recording")
+            launch {
+                _audioSessionEvents.emit(AudioSessionEvent.Error("Stop recording failed: ${e.message}"))
+            }
+        }
+    }
+
+    /**
+     * Release audio focus (Android 8.0+)
+     */
+    @RequiresApi(Build.VERSION_CODES.O)
+    private fun releaseAudioFocus() {
+        audioFocusRequest?.let { request ->
+            audioManager?.abandonAudioFocusRequest(request)
+            hasAudioFocus = false
+            audioFocusRequest = null
+            Timber.d("Audio focus released")
+
+            launch {
+                _audioSessionEvents.emit(AudioSessionEvent.AudioFocusReleased(System.currentTimeMillis()))
+            }
+        }
+    }
+
+    /**
+     * Start audio playback for received audio data (24kHz)
+     */
+    fun startPlayback() {
+        if (isPlaying) {
+            Timber.w("Already playing audio")
+            return
+        }
+
+        try {
+            initializeAudioTrack()
+            isPlaying = true
+
+            playbackJob = launch {
+                playbackAudioLoop()
+            }
+
+            launch {
+                _audioSessionEvents.emit(AudioSessionEvent.PlaybackStarted(System.currentTimeMillis()))
+            }
+
+            Timber.d("Audio playback started")
+        } catch (e: Exception) {
+            Timber.e(e, "Failed to start audio playback")
+            launch {
+                _errors.emit("Failed to start playback: ${e.message}")
+                _audioSessionEvents.emit(AudioSessionEvent.Error("Playback failed: ${e.message}"))
+            }
+        }
+    }
+
+    private fun initializeAudioTrack() {
+        try {
+            audioTrack = AudioTrack.Builder()
+                .setAudioAttributes(
+                    AudioAttributes.Builder()
+                        .setUsage(AudioAttributes.USAGE_MEDIA)
+                        .setContentType(AudioAttributes.CONTENT_TYPE_SPEECH)
+                        .build()
+                )
+                .setAudioFormat(
+                    AudioFormat.Builder()
+                        .setSampleRate(OUTPUT_SAMPLE_RATE)
+                        .setEncoding(OUTPUT_AUDIO_FORMAT)
+                        .setChannelMask(OUTPUT_CHANNEL_CONFIG)
+                        .build()
+                )
+                .setBufferSizeInBytes(outputBufferSize)
+                .setTransferMode(AudioTrack.MODE_STREAM)
+                .build()
+
+            audioTrack?.play()
+            Timber.d("AudioTrack initialized: sample rate=$OUTPUT_SAMPLE_RATE, buffer size=$outputBufferSize")
+        } catch (e: Exception) {
+            audioTrack?.release()
+            audioTrack = null
+            throw e
+        }
+    }
+
+    private suspend fun playbackAudioLoop() {
+        try {
+            playbackAudio.collect { audioData ->
+                if (isPlaying && audioTrack != null) {
+                    val bytesWritten = audioTrack?.write(audioData, 0, audioData.size) ?: 0
+                    if (bytesWritten < 0) {
+                        Timber.e("Error writing audio data: $bytesWritten")
+                    }
+                }
+            }
+        } catch (e: Exception) {
+            Timber.e(e, "Error in playback loop")
+            launch { _errors.emit("Playback error: ${e.message}") }
+        }
+    }
+
+    fun stopPlayback() {
+        if (!isPlaying) {
+            Timber.w("Not currently playing")
+            return
+        }
+
+        isPlaying = false
+        playbackJob?.cancel()
+
+        try {
+            audioTrack?.stop()
+            audioTrack?.release()
+            audioTrack = null
+
+            launch {
+                _audioSessionEvents.emit(AudioSessionEvent.PlaybackStopped(System.currentTimeMillis()))
+            }
+
+            Timber.d("Audio playback stopped")
+        } catch (e: Exception) {
+            Timber.e(e, "Error stopping audio playback")
+            launch {
+                _audioSessionEvents.emit(AudioSessionEvent.Error("Stop playback failed: ${e.message}"))
+            }
+        }
+    }
+
+    /**
+     * Queue audio data for playback
+     */
+    suspend fun queueAudioForPlayback(audioData: ByteArray) {
+        try {
+            _playbackAudio.emit(audioData)
+        } catch (e: Exception) {
+            Timber.e(e, "Failed to queue audio for playback")
+            _errors.emit("Failed to queue audio: ${e.message}")
         }
     }
 
@@ -400,6 +748,13 @@ class AudioStreamManager(
     }
 
     private suspend fun handleBargeInDetection(timestamp: Long) {
+        val timeSinceLastBargeIn = timestamp - lastBargeInTimestamp
+
+        if (timeSinceLastBargeIn < BARGE_IN_COOLDOWN_MS) {
+            Timber.v("Barge-in detection suppressed (cooldown period)")
+            return
+        }
+
         lastBargeInTimestamp = timestamp
         Timber.d("Barge-in detected at $timestamp")
         _bargeInDetected.emit(timestamp)
@@ -447,8 +802,8 @@ class AudioStreamManager(
 
         _audioQuality.emit(qualityInfo)
 
-        if (qualityInfo.qualityScore < 0.3) {
-            _errors.emit("Poor audio quality detected - check microphone positioning")
+        if (qualityInfo.qualityScore < QUALITY_SCORE_THRESHOLD) {
+            _errors.emit("Poor audio quality detected (${String.format("%.1f", qualityInfo.qualityScore * 100)}%) - check microphone positioning")
         }
     }
 
@@ -466,25 +821,38 @@ class AudioStreamManager(
     fun getCurrentAudioQuality(): Double = calculateQualityScore()
 
     fun getBufferInfo(): Pair<Int, Int> {
-        return Pair(bufferSize, SAMPLE_RATE)
+        return Pair(inputBufferSize, INPUT_SAMPLE_RATE)
     }
 
     fun getAdvancedBufferInfo(): Map<String, Any> {
         return mapOf(
-            "bufferSize" to bufferSize,
-            "sampleRate" to SAMPLE_RATE,
-            "audioFormat" to AUDIO_FORMAT,
+            "inputBufferSize" to inputBufferSize,
+            "outputBufferSize" to outputBufferSize,
+            "inputSampleRate" to INPUT_SAMPLE_RATE,
+            "outputSampleRate" to OUTPUT_SAMPLE_RATE,
+            "inputAudioFormat" to INPUT_AUDIO_FORMAT,
+            "outputAudioFormat" to OUTPUT_AUDIO_FORMAT,
             "chunkDurationMs" to if (lowLatencyMode) LOW_LATENCY_CHUNK_MS else CHUNK_DURATION_MS,
             "bargeInMode" to bargeInMode,
             "lowLatencyMode" to lowLatencyMode,
             "qualityScore" to calculateQualityScore(),
-            "voiceActivityBufferSize" to voiceActivityBuffer.size
+            "voiceActivityBufferSize" to voiceActivityBuffer.size,
+            "hasAudioFocus" to hasAudioFocus,
+            "isRecording" to isRecording,
+            "isPlaying" to isPlaying
         )
     }
 
     fun destroy() {
         Timber.d("Destroying AudioStreamManager")
+
         stopRecording()
+        stopPlayback()
+
+        // Release audio focus
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+            releaseAudioFocus()
+        }
 
         // Clear buffers
         voiceActivityBuffer.clear()
@@ -492,8 +860,50 @@ class AudioStreamManager(
         // Reset metrics
         audioQualityMetrics = AudioQualityMetrics()
 
+        // Clean up audio manager references
+        audioManager = null
+
         cancel() // Cancel coroutine scope
 
         Timber.i("AudioStreamManager destroyed")
     }
+
+    // Additional utility methods for enhanced functionality
+    fun isCurrentlyPlaying(): Boolean = isPlaying
+
+    fun hasCurrentAudioFocus(): Boolean = hasAudioFocus
+
+    fun getAudioSessionInfo(): Map<String, Any> {
+        return mapOf(
+            "recording" to isRecording,
+            "playing" to isPlaying,
+            "audioFocus" to hasAudioFocus,
+            "bargeInMode" to bargeInMode,
+            "lowLatencyMode" to lowLatencyMode,
+            "permissions" to getCurrentPermissionStatus(),
+            "bufferInfo" to getAdvancedBufferInfo()
+        )
+    }
+
+
+
+    // Data classes for new events and status
+    sealed class AudioSessionEvent {
+        data class RecordingStarted(val timestamp: Long) : AudioSessionEvent()
+        data class RecordingStopped(val timestamp: Long) : AudioSessionEvent()
+        data class PlaybackStarted(val timestamp: Long) : AudioSessionEvent()
+        data class PlaybackStopped(val timestamp: Long) : AudioSessionEvent()
+        data class AudioFocusGranted(val timestamp: Long) : AudioSessionEvent()
+        data class AudioFocusLost(val reason: String, val timestamp: Long) : AudioSessionEvent()
+        data class AudioFocusReleased(val timestamp: Long) : AudioSessionEvent()
+        data class PermissionDenied(val reason: String) : AudioSessionEvent()
+        data class Error(val message: String) : AudioSessionEvent()
+    }
+
+    data class AudioPermissionStatus(
+        val recordAudio: Boolean,
+        val modifyAudioSettings: Boolean,
+        val isFullyGranted: Boolean,
+        val timestamp: Long
+    )
 }

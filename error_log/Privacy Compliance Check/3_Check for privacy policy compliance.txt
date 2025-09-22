@@ -1,0 +1,64 @@
+﻿2025-09-22T19:45:43.9791466Z ##[group]Run # Validate privacy manager implementation
+2025-09-22T19:45:43.9793211Z [36;1m# Validate privacy manager implementation[0m
+2025-09-22T19:45:43.9795341Z [36;1mif [ ! -f "app/src/main/kotlin/com/posecoach/app/privacy/PrivacyManager.kt" ]; then[0m
+2025-09-22T19:45:43.9797765Z [36;1m  echo "❌ Privacy Manager not found"[0m
+2025-09-22T19:45:43.9799050Z [36;1m  exit 1[0m
+2025-09-22T19:45:43.9799994Z [36;1mfi[0m
+2025-09-22T19:45:43.9801196Z [36;1m[0m
+2025-09-22T19:45:43.9802193Z [36;1m# Check for data collection consent[0m
+2025-09-22T19:45:43.9803777Z [36;1mif ! grep -r "requestPermission" app/src/main/kotlin/; then[0m
+2025-09-22T19:45:43.9805433Z [36;1m  echo "❌ No permission requests found"[0m
+2025-09-22T19:45:43.9806893Z [36;1m  exit 1[0m
+2025-09-22T19:45:43.9807837Z [36;1mfi[0m
+2025-09-22T19:45:43.9808744Z [36;1m[0m
+2025-09-22T19:45:43.9809703Z [36;1m# Validate encrypted storage[0m
+2025-09-22T19:45:43.9811353Z [36;1mif ! grep -r "EncryptedSharedPreferences" app/src/main/kotlin/; then[0m
+2025-09-22T19:45:43.9813222Z [36;1m  echo "❌ Encrypted storage not implemented"[0m
+2025-09-22T19:45:43.9814537Z [36;1m  exit 1[0m
+2025-09-22T19:45:43.9815413Z [36;1mfi[0m
+2025-09-22T19:45:43.9816378Z [36;1m[0m
+2025-09-22T19:45:43.9817364Z [36;1mecho "✅ Privacy compliance checks passed"[0m
+2025-09-22T19:45:43.9873384Z shell: /usr/bin/bash -e {0}
+2025-09-22T19:45:43.9874524Z env:
+2025-09-22T19:45:43.9876208Z   GRADLE_OPTS: -Dorg.gradle.daemon=false -Dorg.gradle.parallel=true -Dorg.gradle.configureondemand=true
+2025-09-22T19:45:43.9878520Z   JAVA_VERSION: 17
+2025-09-22T19:45:43.9879431Z   ANDROID_COMPILE_SDK: 34
+2025-09-22T19:45:43.9880396Z   ANDROID_BUILD_TOOLS: 34.0.0
+2025-09-22T19:45:43.9881414Z   ANDROID_SDK_TOOLS: 9477386
+2025-09-22T19:45:43.9882400Z ##[endgroup]
+2025-09-22T19:45:43.9993856Z app/src/main/kotlin/com/posecoach/app/camera/CameraXPipelineExample.kt:    private val requestPermissionLauncher = registerForActivityResult(
+2025-09-22T19:45:43.9998833Z app/src/main/kotlin/com/posecoach/app/camera/CameraXPipelineExample.kt:            requestPermissionLauncher.launch(missingPermissions.toTypedArray())
+2025-09-22T19:45:44.0002910Z app/src/main/kotlin/com/posecoach/app/camera/CameraLifecycleManager.kt:        ActivityCompat.requestPermissions(
+2025-09-22T19:45:44.0019590Z app/src/main/kotlin/com/posecoach/app/privacy/ConsentManager.kt:import androidx.security.crypto.EncryptedSharedPreferences
+2025-09-22T19:45:44.0024787Z app/src/main/kotlin/com/posecoach/app/privacy/ConsentManager.kt:        EncryptedSharedPreferences.create(
+2025-09-22T19:45:44.0029704Z app/src/main/kotlin/com/posecoach/app/privacy/ConsentManager.kt:            EncryptedSharedPreferences.PrefKeyEncryptionScheme.AES256_SIV,
+2025-09-22T19:45:44.0036522Z app/src/main/kotlin/com/posecoach/app/privacy/ConsentManager.kt:            EncryptedSharedPreferences.PrefValueEncryptionScheme.AES256_GCM
+2025-09-22T19:45:44.0041355Z app/src/main/kotlin/com/posecoach/app/privacy/consent/ConsentManager.kt:import androidx.security.crypto.EncryptedSharedPreferences
+2025-09-22T19:45:44.0045341Z app/src/main/kotlin/com/posecoach/app/privacy/consent/ConsentManager.kt:    private val encryptedPrefs = EncryptedSharedPreferences.create(
+2025-09-22T19:45:44.0049736Z app/src/main/kotlin/com/posecoach/app/privacy/consent/ConsentManager.kt:        EncryptedSharedPreferences.PrefKeyEncryptionScheme.AES256_SIV,
+2025-09-22T19:45:44.0053867Z app/src/main/kotlin/com/posecoach/app/privacy/consent/ConsentManager.kt:        EncryptedSharedPreferences.PrefValueEncryptionScheme.AES256_GCM
+2025-09-22T19:45:44.0057954Z app/src/main/kotlin/com/posecoach/app/privacy/SecureStorageManager.kt:import androidx.security.crypto.EncryptedSharedPreferences
+2025-09-22T19:45:44.0061403Z app/src/main/kotlin/com/posecoach/app/privacy/SecureStorageManager.kt:        EncryptedSharedPreferences.create(
+2025-09-22T19:45:44.0065003Z app/src/main/kotlin/com/posecoach/app/privacy/SecureStorageManager.kt:            EncryptedSharedPreferences.PrefKeyEncryptionScheme.AES256_SIV,
+2025-09-22T19:45:44.0069509Z app/src/main/kotlin/com/posecoach/app/privacy/SecureStorageManager.kt:            EncryptedSharedPreferences.PrefValueEncryptionScheme.AES256_GCM
+2025-09-22T19:45:44.0073379Z app/src/main/kotlin/com/posecoach/app/privacy/audit/PrivacyAuditFramework.kt:import androidx.security.crypto.EncryptedSharedPreferences
+2025-09-22T19:45:44.0077423Z app/src/main/kotlin/com/posecoach/app/privacy/audit/PrivacyAuditFramework.kt:    private val encryptedPrefs = EncryptedSharedPreferences.create(
+2025-09-22T19:45:44.0081625Z app/src/main/kotlin/com/posecoach/app/privacy/audit/PrivacyAuditFramework.kt:        EncryptedSharedPreferences.PrefKeyEncryptionScheme.AES256_SIV,
+2025-09-22T19:45:44.0085701Z app/src/main/kotlin/com/posecoach/app/privacy/audit/PrivacyAuditFramework.kt:        EncryptedSharedPreferences.PrefValueEncryptionScheme.AES256_GCM
+2025-09-22T19:45:44.0089866Z app/src/main/kotlin/com/posecoach/app/privacy/advanced/AdvancedPrivacyEngine.kt:import androidx.security.crypto.EncryptedSharedPreferences
+2025-09-22T19:45:44.0093815Z app/src/main/kotlin/com/posecoach/app/privacy/advanced/AdvancedPrivacyEngine.kt:    private val encryptedPrefs = EncryptedSharedPreferences.create(
+2025-09-22T19:45:44.0098039Z app/src/main/kotlin/com/posecoach/app/privacy/advanced/AdvancedPrivacyEngine.kt:        EncryptedSharedPreferences.PrefKeyEncryptionScheme.AES256_SIV,
+2025-09-22T19:45:44.0102186Z app/src/main/kotlin/com/posecoach/app/privacy/advanced/AdvancedPrivacyEngine.kt:        EncryptedSharedPreferences.PrefValueEncryptionScheme.AES256_GCM
+2025-09-22T19:45:44.0106120Z app/src/main/kotlin/com/posecoach/app/privacy/EnhancedPrivacyManager.kt:import androidx.security.crypto.EncryptedSharedPreferences
+2025-09-22T19:45:44.0109631Z app/src/main/kotlin/com/posecoach/app/privacy/EnhancedPrivacyManager.kt:        EncryptedSharedPreferences.create(
+2025-09-22T19:45:44.0113178Z app/src/main/kotlin/com/posecoach/app/privacy/EnhancedPrivacyManager.kt:            EncryptedSharedPreferences.PrefKeyEncryptionScheme.AES256_SIV,
+2025-09-22T19:45:44.0117423Z app/src/main/kotlin/com/posecoach/app/privacy/EnhancedPrivacyManager.kt:            EncryptedSharedPreferences.PrefValueEncryptionScheme.AES256_GCM
+2025-09-22T19:45:44.0121378Z app/src/main/kotlin/com/posecoach/app/livecoach/config/LiveApiKeyManager.kt:import androidx.security.crypto.EncryptedSharedPreferences
+2025-09-22T19:45:44.0124874Z app/src/main/kotlin/com/posecoach/app/livecoach/config/LiveApiKeyManager.kt:            EncryptedSharedPreferences.create(
+2025-09-22T19:45:44.0128732Z app/src/main/kotlin/com/posecoach/app/livecoach/config/LiveApiKeyManager.kt:                EncryptedSharedPreferences.PrefKeyEncryptionScheme.AES256_SIV,
+2025-09-22T19:45:44.0132719Z app/src/main/kotlin/com/posecoach/app/livecoach/config/LiveApiKeyManager.kt:                EncryptedSharedPreferences.PrefValueEncryptionScheme.AES256_GCM
+2025-09-22T19:45:44.0136224Z app/src/main/kotlin/com/posecoach/auth/TokenManager.kt:import androidx.security.crypto.EncryptedSharedPreferences
+2025-09-22T19:45:44.0139174Z app/src/main/kotlin/com/posecoach/auth/TokenManager.kt:        EncryptedSharedPreferences.create(
+2025-09-22T19:45:44.0142053Z app/src/main/kotlin/com/posecoach/auth/TokenManager.kt:            EncryptedSharedPreferences.PrefKeyEncryptionScheme.AES256_SIV,
+2025-09-22T19:45:44.0145299Z app/src/main/kotlin/com/posecoach/auth/TokenManager.kt:            EncryptedSharedPreferences.PrefValueEncryptionScheme.AES256_GCM
+2025-09-22T19:45:44.0147852Z ✅ Privacy compliance checks passed

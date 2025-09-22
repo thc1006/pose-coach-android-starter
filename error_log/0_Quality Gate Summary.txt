@@ -1,0 +1,54 @@
+﻿2025-09-22T19:46:18.9651385Z Current runner version: '2.328.0'
+2025-09-22T19:46:18.9675602Z ##[group]Runner Image Provisioner
+2025-09-22T19:46:18.9676333Z Hosted Compute Agent
+2025-09-22T19:46:18.9676951Z Version: 20250829.383
+2025-09-22T19:46:18.9677511Z Commit: 27cb235aab5b0e52e153a26cd86b4742e89dac5d
+2025-09-22T19:46:18.9678595Z Build Date: 2025-08-29T13:48:48Z
+2025-09-22T19:46:18.9679227Z ##[endgroup]
+2025-09-22T19:46:18.9679802Z ##[group]Operating System
+2025-09-22T19:46:18.9680318Z Ubuntu
+2025-09-22T19:46:18.9680826Z 24.04.3
+2025-09-22T19:46:18.9681296Z LTS
+2025-09-22T19:46:18.9681707Z ##[endgroup]
+2025-09-22T19:46:18.9682221Z ##[group]Runner Image
+2025-09-22T19:46:18.9682769Z Image: ubuntu-24.04
+2025-09-22T19:46:18.9683266Z Version: 20250907.24.1
+2025-09-22T19:46:18.9684225Z Included Software: https://github.com/actions/runner-images/blob/ubuntu24/20250907.24/images/ubuntu/Ubuntu2404-Readme.md
+2025-09-22T19:46:18.9685869Z Image Release: https://github.com/actions/runner-images/releases/tag/ubuntu24%2F20250907.24
+2025-09-22T19:46:18.9686888Z ##[endgroup]
+2025-09-22T19:46:18.9688259Z ##[group]GITHUB_TOKEN Permissions
+2025-09-22T19:46:18.9690042Z Contents: read
+2025-09-22T19:46:18.9690646Z Metadata: read
+2025-09-22T19:46:18.9691130Z Packages: read
+2025-09-22T19:46:18.9691578Z ##[endgroup]
+2025-09-22T19:46:18.9693849Z Secret source: Actions
+2025-09-22T19:46:18.9694535Z Prepare workflow directory
+2025-09-22T19:46:19.0056829Z Prepare all required actions
+2025-09-22T19:46:19.0160146Z Complete job name: Quality Gate Summary
+2025-09-22T19:46:19.0938944Z ##[group]Run echo "## Quality Gate Results 📊"
+2025-09-22T19:46:19.0939760Z [36;1mecho "## Quality Gate Results 📊"[0m
+2025-09-22T19:46:19.0940474Z [36;1mecho "- Code Style: ❌"[0m
+2025-09-22T19:46:19.0941055Z [36;1mecho "- Security: ❌"[0m
+2025-09-22T19:46:19.0941608Z [36;1mecho "- Test Coverage: ❌"[0m
+2025-09-22T19:46:19.0942280Z [36;1mecho "- Performance: ❌"[0m
+2025-09-22T19:46:19.0943010Z [36;1mecho "- Documentation: ❌"[0m
+2025-09-22T19:46:19.0943563Z [36;1mecho "- Accessibility: ✅"[0m
+2025-09-22T19:46:19.0944242Z [36;1mecho "- Dependencies: ❌"[0m
+2025-09-22T19:46:19.2303520Z shell: /usr/bin/bash -e {0}
+2025-09-22T19:46:19.2304620Z ##[endgroup]
+2025-09-22T19:46:19.2590720Z ## Quality Gate Results 📊
+2025-09-22T19:46:19.2591504Z - Code Style: ❌
+2025-09-22T19:46:19.2592021Z - Security: ❌
+2025-09-22T19:46:19.2592580Z - Test Coverage: ❌
+2025-09-22T19:46:19.2593125Z - Performance: ❌
+2025-09-22T19:46:19.2593652Z - Documentation: ❌
+2025-09-22T19:46:19.2594350Z - Accessibility: ✅
+2025-09-22T19:46:19.2594914Z - Dependencies: ❌
+2025-09-22T19:46:19.2709881Z ##[group]Run echo "❌ One or more quality gates failed"
+2025-09-22T19:46:19.2710822Z [36;1mecho "❌ One or more quality gates failed"[0m
+2025-09-22T19:46:19.2711462Z [36;1mexit 1[0m
+2025-09-22T19:46:19.2743030Z shell: /usr/bin/bash -e {0}
+2025-09-22T19:46:19.2743579Z ##[endgroup]
+2025-09-22T19:46:19.2801373Z ❌ One or more quality gates failed
+2025-09-22T19:46:19.2813910Z ##[error]Process completed with exit code 1.
+2025-09-22T19:46:19.2959202Z Cleaning up orphan processes

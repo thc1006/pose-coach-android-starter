@@ -1,0 +1,30 @@
+﻿2025-09-22T19:45:46.9404526Z ##[group]Run actions/setup-java@v4
+2025-09-22T19:45:46.9404886Z with:
+2025-09-22T19:45:46.9405103Z   java-version: 17
+2025-09-22T19:45:46.9405337Z   distribution: temurin
+2025-09-22T19:45:46.9405572Z   java-package: jdk
+2025-09-22T19:45:46.9405807Z   check-latest: false
+2025-09-22T19:45:46.9406037Z   server-id: github
+2025-09-22T19:45:46.9406284Z   server-username: GITHUB_ACTOR
+2025-09-22T19:45:46.9406554Z   server-password: GITHUB_TOKEN
+2025-09-22T19:45:46.9406827Z   overwrite-settings: true
+2025-09-22T19:45:46.9407088Z   job-status: success
+2025-09-22T19:45:46.9407467Z   token: ***
+2025-09-22T19:45:46.9407681Z env:
+2025-09-22T19:45:46.9407887Z   BASELINE_BRANCH: main
+2025-09-22T19:45:46.9408143Z   PERFORMANCE_THRESHOLD: 10
+2025-09-22T19:45:46.9408389Z ##[endgroup]
+2025-09-22T19:45:47.1459983Z ##[group]Installed distributions
+2025-09-22T19:45:47.1876048Z Resolved Java 17.0.16+8 from tool-cache
+2025-09-22T19:45:47.1876848Z Setting Java 17.0.16+8 as the default
+2025-09-22T19:45:47.1890689Z Creating toolchains.xml for JDK version 17 from temurin
+2025-09-22T19:45:47.1976032Z Writing to /home/runner/.m2/toolchains.xml
+2025-09-22T19:45:47.1976456Z 
+2025-09-22T19:45:47.1976611Z Java configuration:
+2025-09-22T19:45:47.1977008Z   Distribution: temurin
+2025-09-22T19:45:47.1977367Z   Version: 17.0.16+8
+2025-09-22T19:45:47.1978236Z   Path: /opt/hostedtoolcache/Java_Temurin-Hotspot_jdk/17.0.16-8/x64
+2025-09-22T19:45:47.1978759Z 
+2025-09-22T19:45:47.1980961Z ##[endgroup]
+2025-09-22T19:45:47.1998081Z Creating settings.xml with server-id: github
+2025-09-22T19:45:47.2004884Z Writing to /home/runner/.m2/settings.xml

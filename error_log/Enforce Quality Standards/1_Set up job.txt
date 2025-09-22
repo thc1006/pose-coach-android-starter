@@ -1,0 +1,32 @@
+﻿2025-09-22T19:45:40.0333408Z Current runner version: '2.328.0'
+2025-09-22T19:45:40.0370794Z ##[group]Runner Image Provisioner
+2025-09-22T19:45:40.0371546Z Hosted Compute Agent
+2025-09-22T19:45:40.0372170Z Version: 20250829.383
+2025-09-22T19:45:40.0372742Z Commit: 27cb235aab5b0e52e153a26cd86b4742e89dac5d
+2025-09-22T19:45:40.0373422Z Build Date: 2025-08-29T13:48:48Z
+2025-09-22T19:45:40.0373957Z ##[endgroup]
+2025-09-22T19:45:40.0374600Z ##[group]Operating System
+2025-09-22T19:45:40.0375147Z Ubuntu
+2025-09-22T19:45:40.0375566Z 24.04.3
+2025-09-22T19:45:40.0376090Z LTS
+2025-09-22T19:45:40.0376499Z ##[endgroup]
+2025-09-22T19:45:40.0376963Z ##[group]Runner Image
+2025-09-22T19:45:40.0377830Z Image: ubuntu-24.04
+2025-09-22T19:45:40.0378355Z Version: 20250907.24.1
+2025-09-22T19:45:40.0379305Z Included Software: https://github.com/actions/runner-images/blob/ubuntu24/20250907.24/images/ubuntu/Ubuntu2404-Readme.md
+2025-09-22T19:45:40.0380696Z Image Release: https://github.com/actions/runner-images/releases/tag/ubuntu24%2F20250907.24
+2025-09-22T19:45:40.0381803Z ##[endgroup]
+2025-09-22T19:45:40.0382926Z ##[group]GITHUB_TOKEN Permissions
+2025-09-22T19:45:40.0384710Z Contents: read
+2025-09-22T19:45:40.0385305Z Metadata: read
+2025-09-22T19:45:40.0385821Z Packages: read
+2025-09-22T19:45:40.0386305Z ##[endgroup]
+2025-09-22T19:45:40.0388590Z Secret source: Actions
+2025-09-22T19:45:40.0389339Z Prepare workflow directory
+2025-09-22T19:45:40.0753150Z Prepare all required actions
+2025-09-22T19:45:40.0790437Z Getting action download info
+2025-09-22T19:45:40.4616941Z Download action repository 'actions/checkout@v4' (SHA:08eba0b27e820071cde6df949e0beb9ba4906955)
+2025-09-22T19:45:40.5280151Z Download action repository 'actions/setup-java@v4' (SHA:c5195efecf7bdfc987ee8bae7a71cb8b11521c00)
+2025-09-22T19:45:40.8379799Z Download action repository 'android-actions/setup-android@v3' (SHA:9fc6c4e9069bf8d3d10b2204b1fb8f6ef7065407)
+2025-09-22T19:45:41.1256228Z Download action repository 'actions/cache@v4' (SHA:0400d5f644dc74513175e3cd8d07132dd4860809)
+2025-09-22T19:45:41.3830202Z Complete job name: Enforce Quality Standards

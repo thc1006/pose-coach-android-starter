@@ -16,11 +16,13 @@
 
 package com.posecoach.gemini.live.audio
 
+import android.media.AudioAttributes
 import android.media.AudioFormat
 import android.media.AudioManager
 import android.media.AudioRecord
 import android.media.AudioTrack
 import android.media.MediaRecorder
+import android.os.Build
 import com.posecoach.gemini.live.models.AudioConfig
 import com.posecoach.gemini.live.models.LiveApiError
 import kotlinx.coroutines.*
@@ -231,14 +233,37 @@ class AudioProcessor(
 
     private fun initializeAudioTrack(): AudioTrack? {
         return try {
-            val track = AudioTrack(
-                AudioManager.STREAM_MUSIC,
-                AudioConfig.SAMPLE_RATE_OUTPUT,
-                AudioFormat.CHANNEL_OUT_MONO,
-                AudioFormat.ENCODING_PCM_16BIT,
-                audioBufferSizeOutput,
-                AudioTrack.MODE_STREAM
-            )
+            val track = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
+                // Use AudioTrack.Builder for API 23+
+                val audioAttributes = AudioAttributes.Builder()
+                    .setUsage(AudioAttributes.USAGE_MEDIA)
+                    .setContentType(AudioAttributes.CONTENT_TYPE_MUSIC)
+                    .build()
+
+                val audioFormat = AudioFormat.Builder()
+                    .setSampleRate(AudioConfig.SAMPLE_RATE_OUTPUT)
+                    .setEncoding(AudioFormat.ENCODING_PCM_16BIT)
+                    .setChannelMask(AudioFormat.CHANNEL_OUT_MONO)
+                    .build()
+
+                AudioTrack.Builder()
+                    .setAudioAttributes(audioAttributes)
+                    .setAudioFormat(audioFormat)
+                    .setBufferSizeInBytes(audioBufferSizeOutput)
+                    .setTransferMode(AudioTrack.MODE_STREAM)
+                    .build()
+            } else {
+                // Fallback for older APIs
+                @Suppress("DEPRECATION")
+                AudioTrack(
+                    AudioManager.STREAM_MUSIC,
+                    AudioConfig.SAMPLE_RATE_OUTPUT,
+                    AudioFormat.CHANNEL_OUT_MONO,
+                    AudioFormat.ENCODING_PCM_16BIT,
+                    audioBufferSizeOutput,
+                    AudioTrack.MODE_STREAM
+                )
+            }
 
             if (track.state != AudioTrack.STATE_INITIALIZED) {
                 track.release()

@@ -1,0 +1,28 @@
+﻿2025-09-22T19:45:41.5037100Z Current runner version: '2.328.0'
+2025-09-22T19:45:41.5051390Z ##[group]Runner Image Provisioner
+2025-09-22T19:45:41.5051960Z Hosted Compute Agent
+2025-09-22T19:45:41.5052300Z Version: 20250912.392
+2025-09-22T19:45:41.5052660Z Commit: d921fda672a98b64f4f82364647e2f10b2267d0b
+2025-09-22T19:45:41.5053110Z Build Date: 2025-09-12T15:23:14Z
+2025-09-22T19:45:41.5053460Z ##[endgroup]
+2025-09-22T19:45:41.5054830Z ##[group]Operating System
+2025-09-22T19:45:41.5055270Z macOS
+2025-09-22T19:45:41.5055570Z 15.6.1
+2025-09-22T19:45:41.5055860Z 24G90
+2025-09-22T19:45:41.5056140Z ##[endgroup]
+2025-09-22T19:45:41.5056430Z ##[group]Runner Image
+2025-09-22T19:45:41.5056780Z Image: macos-15-arm64
+2025-09-22T19:45:41.5057090Z Version: 20250916.2338
+2025-09-22T19:45:41.5057760Z Included Software: https://github.com/actions/runner-images/blob/macos-15-arm64/20250916.2338/images/macos/macos-15-arm64-Readme.md
+2025-09-22T19:45:41.5058810Z Image Release: https://github.com/actions/runner-images/releases/tag/macos-15-arm64%2F20250916.2338
+2025-09-22T19:45:41.5059400Z ##[endgroup]
+2025-09-22T19:45:41.5060100Z ##[group]GITHUB_TOKEN Permissions
+2025-09-22T19:45:41.5061400Z Contents: read
+2025-09-22T19:45:41.5061710Z Metadata: read
+2025-09-22T19:45:41.5062010Z Packages: read
+2025-09-22T19:45:41.5062300Z ##[endgroup]
+2025-09-22T19:45:41.5063740Z Secret source: Actions
+2025-09-22T19:45:41.5064130Z Prepare workflow directory
+2025-09-22T19:45:41.5343690Z Prepare all required actions
+2025-09-22T19:45:41.5371310Z Getting action download info
+2025-09-22T19:45:41.6120420Z ##[error]A task was canceled.

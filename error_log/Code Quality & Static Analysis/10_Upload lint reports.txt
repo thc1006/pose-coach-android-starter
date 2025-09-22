@@ -1,0 +1,26 @@
+﻿2025-09-22T19:46:10.5673062Z ##[group]Run actions/upload-artifact@v4
+2025-09-22T19:46:10.5673350Z with:
+2025-09-22T19:46:10.5673518Z   name: lint-reports
+2025-09-22T19:46:10.5673884Z   path: **/build/reports/ktlint/
+**/build/reports/detekt/
+**/build/reports/lint-results-*.html
+
+2025-09-22T19:46:10.5674293Z   retention-days: 30
+2025-09-22T19:46:10.5674485Z   if-no-files-found: warn
+2025-09-22T19:46:10.5674693Z   compression-level: 6
+2025-09-22T19:46:10.5674876Z   overwrite: false
+2025-09-22T19:46:10.5675065Z   include-hidden-files: false
+2025-09-22T19:46:10.5675260Z env:
+2025-09-22T19:46:10.5675633Z   GRADLE_OPTS: -Dorg.gradle.daemon=false -Dorg.gradle.parallel=true -Dorg.gradle.configureondemand=true
+2025-09-22T19:46:10.5676409Z   JAVA_VERSION: 17
+2025-09-22T19:46:10.5676601Z   ANDROID_COMPILE_SDK: 34
+2025-09-22T19:46:10.5676814Z   ANDROID_BUILD_TOOLS: 34.0.0
+2025-09-22T19:46:10.5677022Z   ANDROID_SDK_TOOLS: 9477386
+2025-09-22T19:46:10.5677328Z   JAVA_HOME: /opt/hostedtoolcache/Java_Temurin-Hotspot_jdk/17.0.16-8/x64
+2025-09-22T19:46:10.5677790Z   JAVA_HOME_17_X64: /opt/hostedtoolcache/Java_Temurin-Hotspot_jdk/17.0.16-8/x64
+2025-09-22T19:46:10.5678141Z   ANDROID_HOME: /usr/local/lib/android/sdk
+2025-09-22T19:46:10.5678629Z   ANDROID_SDK_ROOT: /usr/local/lib/android/sdk
+2025-09-22T19:46:10.5678935Z ##[endgroup]
+2025-09-22T19:46:10.8785386Z ##[warning]No files were found with the provided path: **/build/reports/ktlint/
+**/build/reports/detekt/
+**/build/reports/lint-results-*.html. No artifacts will be uploaded.

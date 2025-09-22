@@ -1,0 +1,15 @@
+﻿2025-09-22T19:45:42.7752694Z ##[group]Run ./gradlew dependencyUpdates
+2025-09-22T19:45:42.7753187Z [36;1m./gradlew dependencyUpdates[0m
+2025-09-22T19:45:42.7753511Z [36;1m[0m
+2025-09-22T19:45:42.7753785Z [36;1m# Check if critical security updates are available[0m
+2025-09-22T19:45:42.7754219Z [36;1mif grep -q "security" build/dependencyUpdates/report.txt; then[0m
+2025-09-22T19:45:42.7754681Z [36;1m  echo "❌ Security-related dependency updates available"[0m
+2025-09-22T19:45:42.7755042Z [36;1m  exit 1[0m
+2025-09-22T19:45:42.7755273Z [36;1mfi[0m
+2025-09-22T19:45:42.7814982Z shell: /usr/bin/bash -e {0}
+2025-09-22T19:45:42.7815315Z env:
+2025-09-22T19:45:42.7815665Z   JAVA_HOME: /opt/hostedtoolcache/Java_Temurin-Hotspot_jdk/17.0.16-8/x64
+2025-09-22T19:45:42.7816161Z   JAVA_HOME_17_X64: /opt/hostedtoolcache/Java_Temurin-Hotspot_jdk/17.0.16-8/x64
+2025-09-22T19:45:42.7816560Z ##[endgroup]
+2025-09-22T19:45:42.7895807Z /home/runner/work/_temp/052c9b9f-a39b-4f50-9148-67709b14c2cb.sh: line 1: ./gradlew: Permission denied
+2025-09-22T19:45:42.7911057Z ##[error]Process completed with exit code 126.

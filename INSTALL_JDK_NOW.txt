@@ -1,0 +1,51 @@
+============================================
+QUICK JDK 21 INSTALLATION INSTRUCTIONS
+============================================
+
+You currently have Java JRE but need Java JDK to build the APK.
+
+EASIEST METHOD - Copy and paste these commands:
+
+1. Open Command Prompt AS ADMINISTRATOR
+   (Right-click Command Prompt → Run as Administrator)
+
+2. Install OpenJDK 21 with this single command:
+
+   choco install temurin21 -y
+
+3. After installation completes, close the terminal
+
+4. Open a NEW Command Prompt (regular, not admin)
+
+5. Verify installation worked:
+
+   javac -version
+
+   Should show: javac 21.x.x
+
+6. Navigate to your project and build:
+
+   cd C:\Users\thc1006\Desktop\dev\pose-coach-android-starter
+   gradlew app:assembleDebug
+
+============================================
+ALTERNATIVE: Download Directly
+============================================
+
+If the above doesn't work, download from:
+https://adoptium.net/temurin/releases/
+
+Choose:
+- Operating System: Windows
+- Architecture: x64
+- Package Type: JDK
+- Version: 21 (LTS)
+
+Download the .msi installer and run it.
+
+============================================
+
+Your APK will be created at:
+app\build\outputs\apk\debug\app-debug.apk
+
+The app is now fixed for Android 15+ 16KB compatibility!

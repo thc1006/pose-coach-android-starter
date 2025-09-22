@@ -1,0 +1,30 @@
+﻿2025-09-22T19:45:40.2921919Z Current runner version: '2.328.0'
+2025-09-22T19:45:40.2954714Z ##[group]Runner Image Provisioner
+2025-09-22T19:45:40.2956073Z Hosted Compute Agent
+2025-09-22T19:45:40.2957052Z Version: 20250829.383
+2025-09-22T19:45:40.2958023Z Commit: 27cb235aab5b0e52e153a26cd86b4742e89dac5d
+2025-09-22T19:45:40.2959363Z Build Date: 2025-08-29T13:48:48Z
+2025-09-22T19:45:40.2960634Z ##[endgroup]
+2025-09-22T19:45:40.2961445Z ##[group]Operating System
+2025-09-22T19:45:40.2962497Z Ubuntu
+2025-09-22T19:45:40.2963230Z 24.04.3
+2025-09-22T19:45:40.2963991Z LTS
+2025-09-22T19:45:40.2964895Z ##[endgroup]
+2025-09-22T19:45:40.2965719Z ##[group]Runner Image
+2025-09-22T19:45:40.2966555Z Image: ubuntu-24.04
+2025-09-22T19:45:40.2967565Z Version: 20250907.24.1
+2025-09-22T19:45:40.2969348Z Included Software: https://github.com/actions/runner-images/blob/ubuntu24/20250907.24/images/ubuntu/Ubuntu2404-Readme.md
+2025-09-22T19:45:40.2972143Z Image Release: https://github.com/actions/runner-images/releases/tag/ubuntu24%2F20250907.24
+2025-09-22T19:45:40.2974295Z ##[endgroup]
+2025-09-22T19:45:40.2976250Z ##[group]GITHUB_TOKEN Permissions
+2025-09-22T19:45:40.2978758Z Actions: read
+2025-09-22T19:45:40.2979763Z Contents: read
+2025-09-22T19:45:40.2980790Z Metadata: read
+2025-09-22T19:45:40.2981579Z SecurityEvents: write
+2025-09-22T19:45:40.2982574Z ##[endgroup]
+2025-09-22T19:45:40.2985760Z Secret source: Actions
+2025-09-22T19:45:40.2987562Z Prepare workflow directory
+2025-09-22T19:45:40.3457949Z Prepare all required actions
+2025-09-22T19:45:40.3513816Z Getting action download info
+2025-09-22T19:45:40.5741663Z Download action repository 'actions/checkout@v4' (SHA:08eba0b27e820071cde6df949e0beb9ba4906955)
+2025-09-22T19:45:40.7007685Z Complete job name: Data Protection & Privacy Analysis

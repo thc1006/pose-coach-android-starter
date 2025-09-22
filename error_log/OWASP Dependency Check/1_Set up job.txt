@@ -1,0 +1,32 @@
+﻿2025-09-22T19:45:42.4108344Z Current runner version: '2.328.0'
+2025-09-22T19:45:42.4139807Z ##[group]Runner Image Provisioner
+2025-09-22T19:45:42.4140597Z Hosted Compute Agent
+2025-09-22T19:45:42.4141107Z Version: 20250829.383
+2025-09-22T19:45:42.4141792Z Commit: 27cb235aab5b0e52e153a26cd86b4742e89dac5d
+2025-09-22T19:45:42.4142453Z Build Date: 2025-08-29T13:48:48Z
+2025-09-22T19:45:42.4143052Z ##[endgroup]
+2025-09-22T19:45:42.4143620Z ##[group]Operating System
+2025-09-22T19:45:42.4144215Z Ubuntu
+2025-09-22T19:45:42.4144661Z 24.04.3
+2025-09-22T19:45:42.4145177Z LTS
+2025-09-22T19:45:42.4145848Z ##[endgroup]
+2025-09-22T19:45:42.4146360Z ##[group]Runner Image
+2025-09-22T19:45:42.4146987Z Image: ubuntu-24.04
+2025-09-22T19:45:42.4147486Z Version: 20250907.24.1
+2025-09-22T19:45:42.4148485Z Included Software: https://github.com/actions/runner-images/blob/ubuntu24/20250907.24/images/ubuntu/Ubuntu2404-Readme.md
+2025-09-22T19:45:42.4149788Z Image Release: https://github.com/actions/runner-images/releases/tag/ubuntu24%2F20250907.24
+2025-09-22T19:45:42.4151009Z ##[endgroup]
+2025-09-22T19:45:42.4152259Z ##[group]GITHUB_TOKEN Permissions
+2025-09-22T19:45:42.4154261Z Actions: read
+2025-09-22T19:45:42.4154866Z Contents: read
+2025-09-22T19:45:42.4155680Z Metadata: read
+2025-09-22T19:45:42.4156236Z SecurityEvents: write
+2025-09-22T19:45:42.4156746Z ##[endgroup]
+2025-09-22T19:45:42.4159069Z Secret source: Actions
+2025-09-22T19:45:42.4160062Z Prepare workflow directory
+2025-09-22T19:45:42.4568044Z Prepare all required actions
+2025-09-22T19:45:42.4622920Z Getting action download info
+2025-09-22T19:45:42.7857400Z Download action repository 'actions/checkout@v4' (SHA:08eba0b27e820071cde6df949e0beb9ba4906955)
+2025-09-22T19:45:42.9587123Z Download action repository 'dependency-check/Dependency-Check_Action@main' (SHA:2ba636726705b0f74f126ebeaacaf2ad4600b967)
+2025-09-22T19:45:43.3484244Z Download action repository 'actions/upload-artifact@v4' (SHA:ea165f8d65b6e75b540449e92b4886f43607fa02)
+2025-09-22T19:45:43.5514978Z Complete job name: OWASP Dependency Check

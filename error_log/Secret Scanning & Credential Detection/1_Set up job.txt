@@ -1,0 +1,31 @@
+﻿2025-09-22T19:45:41.1146577Z Current runner version: '2.328.0'
+2025-09-22T19:45:41.1175774Z ##[group]Runner Image Provisioner
+2025-09-22T19:45:41.1176744Z Hosted Compute Agent
+2025-09-22T19:45:41.1177451Z Version: 20250829.383
+2025-09-22T19:45:41.1178407Z Commit: 27cb235aab5b0e52e153a26cd86b4742e89dac5d
+2025-09-22T19:45:41.1179591Z Build Date: 2025-08-29T13:48:48Z
+2025-09-22T19:45:41.1180454Z ##[endgroup]
+2025-09-22T19:45:41.1181244Z ##[group]Operating System
+2025-09-22T19:45:41.1181857Z Ubuntu
+2025-09-22T19:45:41.1182379Z 24.04.3
+2025-09-22T19:45:41.1182815Z LTS
+2025-09-22T19:45:41.1183316Z ##[endgroup]
+2025-09-22T19:45:41.1183801Z ##[group]Runner Image
+2025-09-22T19:45:41.1184376Z Image: ubuntu-24.04
+2025-09-22T19:45:41.1185135Z Version: 20250907.24.1
+2025-09-22T19:45:41.1186161Z Included Software: https://github.com/actions/runner-images/blob/ubuntu24/20250907.24/images/ubuntu/Ubuntu2404-Readme.md
+2025-09-22T19:45:41.1187921Z Image Release: https://github.com/actions/runner-images/releases/tag/ubuntu24%2F20250907.24
+2025-09-22T19:45:41.1189767Z ##[endgroup]
+2025-09-22T19:45:41.1191499Z ##[group]GITHUB_TOKEN Permissions
+2025-09-22T19:45:41.1193536Z Actions: read
+2025-09-22T19:45:41.1194103Z Contents: read
+2025-09-22T19:45:41.1194810Z Metadata: read
+2025-09-22T19:45:41.1195443Z SecurityEvents: write
+2025-09-22T19:45:41.1196037Z ##[endgroup]
+2025-09-22T19:45:41.1198202Z Secret source: Actions
+2025-09-22T19:45:41.1199029Z Prepare workflow directory
+2025-09-22T19:45:41.1675967Z Prepare all required actions
+2025-09-22T19:45:41.1721580Z Getting action download info
+2025-09-22T19:45:41.5765649Z Download action repository 'actions/checkout@v4' (SHA:08eba0b27e820071cde6df949e0beb9ba4906955)
+2025-09-22T19:45:41.7823646Z Download action repository 'trufflesecurity/trufflehog@main' (SHA:466da5b0bb161144f6afca9afe5d57975828c410)
+2025-09-22T19:45:43.4996757Z Complete job name: Secret Scanning & Credential Detection

@@ -1,0 +1,167 @@
+﻿2025-09-22T19:45:47.7012595Z Current runner version: '2.328.0'
+2025-09-22T19:45:47.7034230Z ##[group]Runner Image Provisioner
+2025-09-22T19:45:47.7034984Z Hosted Compute Agent
+2025-09-22T19:45:47.7035611Z Version: 20250829.383
+2025-09-22T19:45:47.7036178Z Commit: 27cb235aab5b0e52e153a26cd86b4742e89dac5d
+2025-09-22T19:45:47.7036884Z Build Date: 2025-08-29T13:48:48Z
+2025-09-22T19:45:47.7037480Z ##[endgroup]
+2025-09-22T19:45:47.7038054Z ##[group]Operating System
+2025-09-22T19:45:47.7038611Z Ubuntu
+2025-09-22T19:45:47.7039420Z 24.04.3
+2025-09-22T19:45:47.7039932Z LTS
+2025-09-22T19:45:47.7040381Z ##[endgroup]
+2025-09-22T19:45:47.7040920Z ##[group]Runner Image
+2025-09-22T19:45:47.7041470Z Image: ubuntu-24.04
+2025-09-22T19:45:47.7041980Z Version: 20250907.24.1
+2025-09-22T19:45:47.7042934Z Included Software: https://github.com/actions/runner-images/blob/ubuntu24/20250907.24/images/ubuntu/Ubuntu2404-Readme.md
+2025-09-22T19:45:47.7044602Z Image Release: https://github.com/actions/runner-images/releases/tag/ubuntu24%2F20250907.24
+2025-09-22T19:45:47.7045586Z ##[endgroup]
+2025-09-22T19:45:47.7046804Z ##[group]GITHUB_TOKEN Permissions
+2025-09-22T19:45:47.7048576Z Actions: read
+2025-09-22T19:45:47.7049379Z Contents: read
+2025-09-22T19:45:47.7049884Z Metadata: read
+2025-09-22T19:45:47.7050380Z SecurityEvents: write
+2025-09-22T19:45:47.7050982Z ##[endgroup]
+2025-09-22T19:45:47.7052915Z Secret source: Actions
+2025-09-22T19:45:47.7053557Z Prepare workflow directory
+2025-09-22T19:45:47.7364300Z Prepare all required actions
+2025-09-22T19:45:47.7400682Z Getting action download info
+2025-09-22T19:45:48.1937091Z Download action repository 'actions/checkout@v4' (SHA:08eba0b27e820071cde6df949e0beb9ba4906955)
+2025-09-22T19:45:48.4225306Z Complete job name: Network Security Analysis
+2025-09-22T19:45:48.4962432Z ##[group]Run actions/checkout@v4
+2025-09-22T19:45:48.4963241Z with:
+2025-09-22T19:45:48.4963695Z   repository: thc1006/pose-coach-android-starter
+2025-09-22T19:45:48.4964383Z   token: ***
+2025-09-22T19:45:48.4964770Z   ssh-strict: true
+2025-09-22T19:45:48.4965179Z   ssh-user: git
+2025-09-22T19:45:48.4965588Z   persist-credentials: true
+2025-09-22T19:45:48.4966033Z   clean: true
+2025-09-22T19:45:48.4966430Z   sparse-checkout-cone-mode: true
+2025-09-22T19:45:48.4966913Z   fetch-depth: 1
+2025-09-22T19:45:48.4967317Z   fetch-tags: false
+2025-09-22T19:45:48.4967721Z   show-progress: true
+2025-09-22T19:45:48.4968115Z   lfs: false
+2025-09-22T19:45:48.4968483Z   submodules: false
+2025-09-22T19:45:48.4969110Z   set-safe-directory: true
+2025-09-22T19:45:48.4969812Z ##[endgroup]
+2025-09-22T19:45:48.6006999Z Syncing repository: thc1006/pose-coach-android-starter
+2025-09-22T19:45:48.6008737Z ##[group]Getting Git version info
+2025-09-22T19:45:48.6010054Z Working directory is '/home/runner/work/pose-coach-android-starter/pose-coach-android-starter'
+2025-09-22T19:45:48.6011261Z [command]/usr/bin/git version
+2025-09-22T19:45:48.6074885Z git version 2.51.0
+2025-09-22T19:45:48.6100287Z ##[endgroup]
+2025-09-22T19:45:48.6113610Z Temporarily overriding HOME='/home/runner/work/_temp/49d4e116-8353-4984-bb39-340d3929aa4c' before making global git config changes
+2025-09-22T19:45:48.6114999Z Adding repository directory to the temporary git global config as a safe directory
+2025-09-22T19:45:48.6126638Z [command]/usr/bin/git config --global --add safe.directory /home/runner/work/pose-coach-android-starter/pose-coach-android-starter
+2025-09-22T19:45:48.6159489Z Deleting the contents of '/home/runner/work/pose-coach-android-starter/pose-coach-android-starter'
+2025-09-22T19:45:48.6162106Z ##[group]Initializing the repository
+2025-09-22T19:45:48.6166207Z [command]/usr/bin/git init /home/runner/work/pose-coach-android-starter/pose-coach-android-starter
+2025-09-22T19:45:48.6259110Z hint: Using 'master' as the name for the initial branch. This default branch name
+2025-09-22T19:45:48.6260527Z hint: is subject to change. To configure the initial branch name to use in all
+2025-09-22T19:45:48.6261556Z hint: of your new repositories, which will suppress this warning, call:
+2025-09-22T19:45:48.6262741Z hint:
+2025-09-22T19:45:48.6263654Z hint: 	git config --global init.defaultBranch <name>
+2025-09-22T19:45:48.6264683Z hint:
+2025-09-22T19:45:48.6265686Z hint: Names commonly chosen instead of 'master' are 'main', 'trunk' and
+2025-09-22T19:45:48.6267286Z hint: 'development'. The just-created branch can be renamed via this command:
+2025-09-22T19:45:48.6268569Z hint:
+2025-09-22T19:45:48.6269535Z hint: 	git branch -m <name>
+2025-09-22T19:45:48.6270331Z hint:
+2025-09-22T19:45:48.6271320Z hint: Disable this message with "git config set advice.defaultBranchName false"
+2025-09-22T19:45:48.6273429Z Initialized empty Git repository in /home/runner/work/pose-coach-android-starter/pose-coach-android-starter/.git/
+2025-09-22T19:45:48.6276785Z [command]/usr/bin/git remote add origin https://github.com/thc1006/pose-coach-android-starter
+2025-09-22T19:45:48.6311968Z ##[endgroup]
+2025-09-22T19:45:48.6313133Z ##[group]Disabling automatic garbage collection
+2025-09-22T19:45:48.6316654Z [command]/usr/bin/git config --local gc.auto 0
+2025-09-22T19:45:48.6343724Z ##[endgroup]
+2025-09-22T19:45:48.6344398Z ##[group]Setting up auth
+2025-09-22T19:45:48.6351871Z [command]/usr/bin/git config --local --name-only --get-regexp core\.sshCommand
+2025-09-22T19:45:48.6381900Z [command]/usr/bin/git submodule foreach --recursive sh -c "git config --local --name-only --get-regexp 'core\.sshCommand' && git config --local --unset-all 'core.sshCommand' || :"
+2025-09-22T19:45:48.6672694Z [command]/usr/bin/git config --local --name-only --get-regexp http\.https\:\/\/github\.com\/\.extraheader
+2025-09-22T19:45:48.6702775Z [command]/usr/bin/git submodule foreach --recursive sh -c "git config --local --name-only --get-regexp 'http\.https\:\/\/github\.com\/\.extraheader' && git config --local --unset-all 'http.https://github.com/.extraheader' || :"
+2025-09-22T19:45:48.6931002Z [command]/usr/bin/git config --local http.https://github.com/.extraheader AUTHORIZATION: basic ***
+2025-09-22T19:45:48.6964254Z ##[endgroup]
+2025-09-22T19:45:48.6965484Z ##[group]Fetching the repository
+2025-09-22T19:45:48.6981018Z [command]/usr/bin/git -c protocol.version=2 fetch --no-tags --prune --no-recurse-submodules --depth=1 origin +685d758d9ae8c729893935dc590157eded077a04:refs/remotes/origin/main
+2025-09-22T19:45:49.4106464Z From https://github.com/thc1006/pose-coach-android-starter
+2025-09-22T19:45:49.4107930Z  * [new ref]         685d758d9ae8c729893935dc590157eded077a04 -> origin/main
+2025-09-22T19:45:49.4137751Z ##[endgroup]
+2025-09-22T19:45:49.4140732Z ##[group]Determining the checkout info
+2025-09-22T19:45:49.4142009Z ##[endgroup]
+2025-09-22T19:45:49.4145480Z [command]/usr/bin/git sparse-checkout disable
+2025-09-22T19:45:49.4183642Z [command]/usr/bin/git config --local --unset-all extensions.worktreeConfig
+2025-09-22T19:45:49.5035673Z ##[group]Checking out the ref
+2025-09-22T19:45:49.5036981Z [command]/usr/bin/git checkout --progress --force -B main refs/remotes/origin/main
+2025-09-22T19:45:49.5038169Z Switched to a new branch 'main'
+2025-09-22T19:45:49.5039177Z branch 'main' set up to track 'origin/main'.
+2025-09-22T19:45:49.5044945Z ##[endgroup]
+2025-09-22T19:45:49.5081913Z [command]/usr/bin/git log -1 --format=%H
+2025-09-22T19:45:49.5103458Z 685d758d9ae8c729893935dc590157eded077a04
+2025-09-22T19:45:49.5317077Z ##[group]Run nsc_file="app/src/main/res/xml/network_security_config.xml"
+2025-09-22T19:45:49.5319504Z [36;1mnsc_file="app/src/main/res/xml/network_security_config.xml"[0m
+2025-09-22T19:45:49.5321199Z [36;1m[0m
+2025-09-22T19:45:49.5322150Z [36;1mif [ -f "$nsc_file" ]; then[0m
+2025-09-22T19:45:49.5323547Z [36;1m  # Check for clear text traffic permissions[0m
+2025-09-22T19:45:49.5325393Z [36;1m  if grep -q "cleartextTrafficPermitted.*true" "$nsc_file"; then[0m
+2025-09-22T19:45:49.5327559Z [36;1m    echo "❌ Clear text traffic permitted in network security config"[0m
+2025-09-22T19:45:49.5329428Z [36;1m    exit 1[0m
+2025-09-22T19:45:49.5330451Z [36;1m  fi[0m
+2025-09-22T19:45:49.5331387Z [36;1m[0m
+2025-09-22T19:45:49.5332388Z [36;1m  # Check for certificate pinning[0m
+2025-09-22T19:45:49.5334073Z [36;1m  if ! grep -q "pin-set" "$nsc_file"; then[0m
+2025-09-22T19:45:49.5335649Z [36;1m    echo "⚠️ Certificate pinning not configured"[0m
+2025-09-22T19:45:49.5337149Z [36;1m  fi[0m
+2025-09-22T19:45:49.5338052Z [36;1m[0m
+2025-09-22T19:45:49.5339376Z [36;1m  echo "✅ Network security configuration is secure"[0m
+2025-09-22T19:45:49.5340884Z [36;1melse[0m
+2025-09-22T19:45:49.5341993Z [36;1m  echo "⚠️ No network security configuration found"[0m
+2025-09-22T19:45:49.5343411Z [36;1mfi[0m
+2025-09-22T19:45:49.5398045Z shell: /usr/bin/bash -e {0}
+2025-09-22T19:45:49.5399343Z ##[endgroup]
+2025-09-22T19:45:49.5501219Z ⚠️ Certificate pinning not configured
+2025-09-22T19:45:49.5503407Z ✅ Network security configuration is secure
+2025-09-22T19:45:49.5566649Z ##[group]Run # Check for HTTP URLs in code
+2025-09-22T19:45:49.5567972Z [36;1m# Check for HTTP URLs in code[0m
+2025-09-22T19:45:49.5569661Z [36;1mif grep -r "http://" --include="*.kt" --include="*.java" app/src/; then[0m
+2025-09-22T19:45:49.5571861Z [36;1m  echo "❌ Insecure HTTP URLs found in code"[0m
+2025-09-22T19:45:49.5573182Z [36;1m  exit 1[0m
+2025-09-22T19:45:49.5574284Z [36;1mfi[0m
+2025-09-22T19:45:49.5575057Z [36;1m[0m
+2025-09-22T19:45:49.5575908Z [36;1m# Check for disabled SSL verification[0m
+2025-09-22T19:45:49.5578279Z [36;1mif grep -r "setHostnameVerifier.*ALLOW_ALL" --include="*.kt" --include="*.java" app/src/; then[0m
+2025-09-22T19:45:49.5580902Z [36;1m  echo "❌ SSL hostname verification disabled"[0m
+2025-09-22T19:45:49.5582332Z [36;1m  exit 1[0m
+2025-09-22T19:45:49.5583130Z [36;1mfi[0m
+2025-09-22T19:45:49.5583878Z [36;1m[0m
+2025-09-22T19:45:49.5585219Z [36;1mif grep -r "trustAllCerts" --include="*.kt" --include="*.java" app/src/; then[0m
+2025-09-22T19:45:49.5587162Z [36;1m  echo "❌ SSL certificate validation disabled"[0m
+2025-09-22T19:45:49.5588427Z [36;1m  exit 1[0m
+2025-09-22T19:45:49.5589397Z [36;1mfi[0m
+2025-09-22T19:45:49.5590131Z [36;1m[0m
+2025-09-22T19:45:49.5591003Z [36;1mecho "✅ Network security checks passed"[0m
+2025-09-22T19:45:49.5620759Z shell: /usr/bin/bash -e {0}
+2025-09-22T19:45:49.5621719Z ##[endgroup]
+2025-09-22T19:45:49.5720013Z app/src/main/java/com/posecoach/gemini/live/session/LiveApiSessionManager.kt: *     http://www.apache.org/licenses/LICENSE-2.0
+2025-09-22T19:45:49.5726313Z app/src/main/java/com/posecoach/gemini/live/client/LiveApiWebSocketClient.kt: *     http://www.apache.org/licenses/LICENSE-2.0
+2025-09-22T19:45:49.5730916Z app/src/main/java/com/posecoach/gemini/live/client/ErrorRecoveryManager.kt: *     http://www.apache.org/licenses/LICENSE-2.0
+2025-09-22T19:45:49.5734844Z app/src/main/java/com/posecoach/gemini/live/LiveApiManager.kt: *     http://www.apache.org/licenses/LICENSE-2.0
+2025-09-22T19:45:49.5738598Z app/src/main/java/com/posecoach/gemini/live/tools/PoseAnalysisTools.kt: *     http://www.apache.org/licenses/LICENSE-2.0
+2025-09-22T19:45:49.5742833Z app/src/main/java/com/posecoach/gemini/live/security/EphemeralTokenManager.kt: *     http://www.apache.org/licenses/LICENSE-2.0
+2025-09-22T19:45:49.5746785Z app/src/main/java/com/posecoach/gemini/live/audio/AudioProcessor.kt: *     http://www.apache.org/licenses/LICENSE-2.0
+2025-09-22T19:45:49.5750755Z app/src/main/java/com/posecoach/gemini/live/audio/AdaptiveAudioManager.kt: *     http://www.apache.org/licenses/LICENSE-2.0
+2025-09-22T19:45:49.5754752Z app/src/main/java/com/posecoach/gemini/live/examples/PoseCoachingActivity.kt: *     http://www.apache.org/licenses/LICENSE-2.0
+2025-09-22T19:45:49.5758568Z app/src/main/java/com/posecoach/gemini/live/models/LiveApiModels.kt: *     http://www.apache.org/licenses/LICENSE-2.0
+2025-09-22T19:45:49.5762887Z app/src/androidTest/java/com/example/myapplication/ExampleInstrumentedTest.kt: * See [testing documentation](http://d.android.com/tools/testing).
+2025-09-22T19:45:49.5765856Z ❌ Insecure HTTP URLs found in code
+2025-09-22T19:45:49.5776629Z ##[error]Process completed with exit code 1.
+2025-09-22T19:45:49.5951040Z Post job cleanup.
+2025-09-22T19:45:49.6874610Z [command]/usr/bin/git version
+2025-09-22T19:45:49.6909540Z git version 2.51.0
+2025-09-22T19:45:49.6954973Z Temporarily overriding HOME='/home/runner/work/_temp/83870a6e-07d0-41d5-80e6-4d039e78f73b' before making global git config changes
+2025-09-22T19:45:49.6960137Z Adding repository directory to the temporary git global config as a safe directory
+2025-09-22T19:45:49.6964993Z [command]/usr/bin/git config --global --add safe.directory /home/runner/work/pose-coach-android-starter/pose-coach-android-starter
+2025-09-22T19:45:49.6996816Z [command]/usr/bin/git config --local --name-only --get-regexp core\.sshCommand
+2025-09-22T19:45:49.7031169Z [command]/usr/bin/git submodule foreach --recursive sh -c "git config --local --name-only --get-regexp 'core\.sshCommand' && git config --local --unset-all 'core.sshCommand' || :"
+2025-09-22T19:45:49.7256925Z fatal: No url found for submodule path 'pose-coach-skeleton' in .gitmodules
+2025-09-22T19:45:49.7302142Z ##[warning]The process '/usr/bin/git' failed with exit code 128
+2025-09-22T19:45:49.7378162Z Cleaning up orphan processes

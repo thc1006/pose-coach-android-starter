@@ -14,11 +14,11 @@ import com.posecoach.app.livecoach.models.MediaChunk
 import com.posecoach.app.livecoach.models.PoseSnapshot
 import com.posecoach.corepose.models.PoseLandmarkResult
 import kotlinx.coroutines.*
-import kotlinx.coroutines.flow.MutableSharedFlow
-import kotlinx.coroutines.flow.SharedFlow
-import kotlinx.coroutines.flow.asSharedFlow
+import kotlinx.coroutines.flow.*
 import timber.log.Timber
 import java.io.ByteArrayOutputStream
+import java.lang.ref.WeakReference
+import java.util.concurrent.atomic.AtomicLong
 import kotlin.coroutines.CoroutineContext
 
 class ImageSnapshotManager(
@@ -29,44 +29,106 @@ class ImageSnapshotManager(
         coroutineScope.coroutineContext + SupervisorJob()
 
     companion object {
-        // Low resolution for Live API - reduces payload size
+        // Low resolution for Live API - reduces payload size and bandwidth
         private const val MAX_WIDTH = 320
         private const val MAX_HEIGHT = 240
         private const val JPEG_QUALITY = 70
-        private const val SNAPSHOT_INTERVAL_MS = 1500L // 1.5 seconds
+
+        // Frame rate limiting - configurable for performance tuning
+        private const val DEFAULT_SNAPSHOT_INTERVAL_MS = 1000L // 1 FPS default
+        private const val MIN_SNAPSHOT_INTERVAL_MS = 500L      // 2 FPS max
+        private const val MAX_SNAPSHOT_INTERVAL_MS = 3000L     // 0.33 FPS min
+
+        // Memory management
+        private const val MAX_CONCURRENT_PROCESSING = 2
+        private const val PROCESSING_TIMEOUT_MS = 5000L
+
+        // Quality settings
+        private const val HIGH_QUALITY_JPEG = 85
+        private const val MEDIUM_QUALITY_JPEG = 70
+        private const val LOW_QUALITY_JPEG = 50
     }
 
+    // Configuration
+    @Volatile
+    private var snapshotIntervalMs = DEFAULT_SNAPSHOT_INTERVAL_MS
+    @Volatile
+    private var jpegQuality = JPEG_QUALITY
+    @Volatile
+    private var privacyEnabled = true
+
+    // State tracking
+    private val lastSnapshotTime = AtomicLong(0L)
+    private val processingCount = AtomicLong(0L)
+    @Volatile
+    private var isEnabled = false
+
+    // Processing jobs
+    private var snapshotJobs = mutableListOf<Job>()
+    private val processingJobs = mutableSetOf<Job>()
+
+    // Memory management
+    private val weakImageReferences = mutableListOf<WeakReference<Bitmap>>()
+
+    // Flows with enhanced buffering
     private val _snapshots = MutableSharedFlow<PoseSnapshot>(
         replay = 0,
-        extraBufferCapacity = 5
+        extraBufferCapacity = 10,
+        onBufferOverflow = BufferOverflow.DROP_OLDEST
     )
     val snapshots: SharedFlow<PoseSnapshot> = _snapshots.asSharedFlow()
 
     private val _realtimeInput = MutableSharedFlow<LiveApiMessage.RealtimeInput>(
         replay = 0,
-        extraBufferCapacity = 5
+        extraBufferCapacity = 10,
+        onBufferOverflow = BufferOverflow.DROP_OLDEST
     )
     val realtimeInput: SharedFlow<LiveApiMessage.RealtimeInput> = _realtimeInput.asSharedFlow()
 
     private val _errors = MutableSharedFlow<String>(
         replay = 0,
-        extraBufferCapacity = 3
+        extraBufferCapacity = 5,
+        onBufferOverflow = BufferOverflow.DROP_OLDEST
     )
     val errors: SharedFlow<String> = _errors.asSharedFlow()
 
-    private var lastSnapshotTime = 0L
-    private var isEnabled = false
-    private var snapshotJob: Job? = null
+    // Performance metrics
+    private val _performanceMetrics = MutableStateFlow(PerformanceMetrics())
+    val performanceMetrics: StateFlow<PerformanceMetrics> = _performanceMetrics.asStateFlow()
 
-    fun startSnapshots() {
+    data class PerformanceMetrics(
+        val totalSnapshots: Long = 0,
+        val averageProcessingTimeMs: Long = 0,
+        val droppedFrames: Long = 0,
+        val averageFileSizeBytes: Long = 0,
+        val memoryUsageKB: Long = 0
+    )
+
+    /**
+     * Start capturing periodic snapshots with configurable frame rate
+     * @param intervalMs Custom interval between snapshots (optional)
+     * @param quality JPEG quality setting (optional)
+     */
+    fun startSnapshots(intervalMs: Long? = null, quality: Int? = null) {
         if (isEnabled) {
             Timber.w("Snapshots already enabled")
             return
         }
 
+        // Apply custom settings if provided
+        intervalMs?.let { setSnapshotInterval(it) }
+        quality?.let { setJpegQuality(it) }
+
         isEnabled = true
-        lastSnapshotTime = 0L // Force first snapshot
-        Timber.d("Image snapshots started")
+        lastSnapshotTime.set(0L) // Force first snapshot
+
+        // Reset performance metrics
+        _performanceMetrics.value = PerformanceMetrics()
+
+        // Start memory cleanup coroutine
+        startMemoryCleanup()
+
+        Timber.d("Image snapshots started - interval: ${snapshotIntervalMs}ms, quality: $jpegQuality")
     }
 
     fun stopSnapshots() {
@@ -76,35 +138,76 @@ class ImageSnapshotManager(
         }
 
         isEnabled = false
-        snapshotJob?.cancel()
-        snapshotJob = null
-        Timber.d("Image snapshots stopped")
+
+        // Cancel all processing jobs
+        snapshotJobs.forEach { it.cancel() }
+        processingJobs.forEach { it.cancel() }
+        snapshotJobs.clear()
+        processingJobs.clear()
+
+        // Clean up memory
+        cleanupMemory()
+
+        // Log final performance
+        val finalMetrics = _performanceMetrics.value
+        Timber.d("Image snapshots stopped - Final metrics: $finalMetrics")
     }
 
+    /**
+     * Process camera frame with pose landmarks for snapshot generation
+     * Implements frame rate limiting and memory-efficient processing
+     */
     fun processImageWithLandmarks(
         imageProxy: ImageProxy,
         landmarks: PoseLandmarkResult?
     ) {
-        if (!isEnabled || landmarks == null) {
+        if (!isEnabled || landmarks == null || !privacyEnabled) {
             return
         }
 
         val currentTime = System.currentTimeMillis()
-        if (currentTime - lastSnapshotTime < SNAPSHOT_INTERVAL_MS) {
+        val lastTime = lastSnapshotTime.get()
+
+        // Frame rate limiting
+        if (currentTime - lastTime < snapshotIntervalMs) {
+            updateMetrics { it.copy(droppedFrames = it.droppedFrames + 1) }
             return // Skip this frame
         }
 
-        lastSnapshotTime = currentTime
+        // Prevent too many concurrent processing operations
+        if (processingCount.get() >= MAX_CONCURRENT_PROCESSING) {
+            updateMetrics { it.copy(droppedFrames = it.droppedFrames + 1) }
+            Timber.w("Skipping snapshot - too many concurrent operations")
+            return
+        }
+
+        if (!lastSnapshotTime.compareAndSet(lastTime, currentTime)) {
+            return // Another thread updated the timestamp
+        }
 
         // Process in background to avoid blocking camera thread
-        snapshotJob?.cancel()
-        snapshotJob = launch {
+        val job = launch {
+            processingCount.incrementAndGet()
             try {
-                processSnapshot(imageProxy, landmarks, currentTime)
+                withTimeout(PROCESSING_TIMEOUT_MS) {
+                    processSnapshot(imageProxy, landmarks, currentTime)
+                }
+            } catch (e: TimeoutCancellationException) {
+                Timber.w("Snapshot processing timed out")
+                _errors.emit("Snapshot processing timeout")
             } catch (e: Exception) {
                 Timber.e(e, "Error processing snapshot")
                 _errors.emit("Snapshot processing error: ${e.message}")
+            } finally {
+                processingCount.decrementAndGet()
             }
+        }
+
+        // Track job for cleanup
+        synchronized(processingJobs) {
+            processingJobs.add(job)
+            // Clean up completed jobs
+            processingJobs.removeAll { it.isCompleted }
         }
     }
 
@@ -113,44 +216,70 @@ class ImageSnapshotManager(
         landmarks: PoseLandmarkResult,
         timestamp: Long
     ) = withContext(Dispatchers.Default) {
+        val startTime = System.currentTimeMillis()
+
         try {
-            // Convert ImageProxy to Bitmap
+            // Convert ImageProxy to Bitmap with memory management
             val bitmap = imageProxyToBitmap(imageProxy)
+            trackBitmap(bitmap)
 
-            // Resize to low resolution
+            // Resize to low resolution for bandwidth optimization
             val resizedBitmap = resizeBitmap(bitmap, MAX_WIDTH, MAX_HEIGHT)
+            if (resizedBitmap != bitmap) {
+                trackBitmap(resizedBitmap)
+            }
 
-            // Convert to JPEG bytes
+            // Convert to JPEG bytes with configured quality
             val jpegBytes = bitmapToJpegBytes(resizedBitmap)
 
-            // Encode to Base64
+            // Encode to Base64 for Live API
             val base64Image = Base64.encodeToString(jpegBytes, Base64.NO_WRAP)
 
-            // Create snapshot
-            val snapshot = PoseSnapshot(
+            // Attach pose landmarks for context
+            val enhancedSnapshot = PoseSnapshot(
                 imageData = base64Image,
                 landmarks = landmarks,
                 timestamp = timestamp
             )
 
-            // Emit snapshot
-            _snapshots.emit(snapshot)
+            // Emit snapshot for local processing
+            _snapshots.emit(enhancedSnapshot)
 
-            // Create Live API message
+            // Create optimized Live API message with pose context
+            val landmarksJson = landmarks.let {
+                "pose_landmarks:${landmarks.landmarks.size}_points"
+            }
+
             val mediaChunk = MediaChunk(
                 mimeType = "image/jpeg",
                 data = base64Image
             )
 
             val realtimeInputMessage = LiveApiMessage.RealtimeInput(
-                mediaChunks = listOf(mediaChunk)
+                mediaChunks = listOf(mediaChunk),
+                text = "Frame with $landmarksJson at ${timestamp}ms"
             )
 
             _realtimeInput.emit(realtimeInputMessage)
 
-            Timber.v("Processed snapshot: ${jpegBytes.size} bytes -> ${base64Image.length} chars")
+            // Update performance metrics
+            val processingTime = System.currentTimeMillis() - startTime
+            updateMetrics { metrics ->
+                val newTotal = metrics.totalSnapshots + 1
+                val newAvgTime = ((metrics.averageProcessingTimeMs * metrics.totalSnapshots) + processingTime) / newTotal
+                val newAvgSize = ((metrics.averageFileSizeBytes * metrics.totalSnapshots) + jpegBytes.size) / newTotal
 
-            // Clean up
+                metrics.copy(
+                    totalSnapshots = newTotal,
+                    averageProcessingTimeMs = newAvgTime,
+                    averageFileSizeBytes = newAvgSize,
+                    memoryUsageKB = getMemoryUsageKB()
+                )
+            }
+
+            Timber.v("Processed snapshot: ${jpegBytes.size} bytes -> ${base64Image.length} chars in ${processingTime}ms")
+
+            // Clean up bitmaps immediately to prevent memory leaks
             bitmap.recycle()
             if (resizedBitmap != bitmap) {
                 resizedBitmap.recycle()
@@ -240,23 +369,168 @@ class ImageSnapshotManager(
 
     private fun bitmapToJpegBytes(bitmap: Bitmap): ByteArray {
         val outputStream = ByteArrayOutputStream()
-        bitmap.compress(Bitmap.CompressFormat.JPEG, JPEG_QUALITY, outputStream)
+        bitmap.compress(Bitmap.CompressFormat.JPEG, jpegQuality, outputStream)
         return outputStream.toByteArray()
     }
 
+    /**
+     * Track bitmap for memory management
+     */
+    private fun trackBitmap(bitmap: Bitmap) {
+        synchronized(weakImageReferences) {
+            weakImageReferences.add(WeakReference(bitmap))
+            // Clean up null references periodically
+            if (weakImageReferences.size > 10) {
+                weakImageReferences.removeAll { it.get() == null }
+            }
+        }
+    }
+
+    /**
+     * Get approximate memory usage
+     */
+    private fun getMemoryUsageKB(): Long {
+        return synchronized(weakImageReferences) {
+            weakImageReferences.mapNotNull { it.get() }
+                .sumOf { it.byteCount.toLong() } / 1024
+        }
+    }
+
+    /**
+     * Update performance metrics atomically
+     */
+    private fun updateMetrics(update: (PerformanceMetrics) -> PerformanceMetrics) {
+        _performanceMetrics.value = update(_performanceMetrics.value)
+    }
+
+    /**
+     * Start memory cleanup coroutine
+     */
+    private fun startMemoryCleanup() {
+        val cleanupJob = launch {
+            while (isEnabled) {
+                delay(10000) // Clean up every 10 seconds
+                cleanupMemory()
+            }
+        }
+        snapshotJobs.add(cleanupJob)
+    }
+
+    /**
+     * Force cleanup of unused bitmaps
+     */
+    private fun cleanupMemory() {
+        synchronized(weakImageReferences) {
+            val beforeCount = weakImageReferences.size
+            weakImageReferences.removeAll { it.get() == null }
+            val afterCount = weakImageReferences.size
+
+            if (beforeCount > afterCount) {
+                Timber.v("Cleaned up ${beforeCount - afterCount} bitmap references")
+            }
+        }
+
+        // Suggest GC if memory usage is high
+        if (getMemoryUsageKB() > 5000) { // More than 5MB
+            System.gc()
+            Timber.d("Suggested garbage collection due to high memory usage")
+        }
+    }
+
+    /**
+     * Configure snapshot interval for frame rate limiting
+     * @param intervalMs Time between snapshots (500ms to 3000ms)
+     */
     fun setSnapshotInterval(intervalMs: Long) {
-        // For now, we use a fixed interval, but this could be made configurable
-        Timber.d("Snapshot interval: ${intervalMs}ms (currently fixed at ${SNAPSHOT_INTERVAL_MS}ms)")
+        val clampedInterval = intervalMs.coerceIn(MIN_SNAPSHOT_INTERVAL_MS, MAX_SNAPSHOT_INTERVAL_MS)
+        snapshotIntervalMs = clampedInterval
+        Timber.d("Snapshot interval updated: ${clampedInterval}ms (${1000f / clampedInterval} fps)")
+    }
+
+    /**
+     * Configure JPEG compression quality
+     * @param quality JPEG quality (50-100)
+     */
+    fun setJpegQuality(quality: Int) {
+        jpegQuality = quality.coerceIn(LOW_QUALITY_JPEG, HIGH_QUALITY_JPEG)
+        Timber.d("JPEG quality updated: $jpegQuality")
+    }
+
+    /**
+     * Enable/disable privacy mode (affects image capture)
+     * @param enabled When false, no images are captured
+     */
+    fun setPrivacyEnabled(enabled: Boolean) {
+        privacyEnabled = enabled
+        Timber.d("Privacy mode: ${if (enabled) "enabled" else "disabled"}")
     }
 
     fun isSnapshotsEnabled(): Boolean = isEnabled
 
+    /**
+     * Get current snapshot configuration
+     * @return Triple of (width, height, intervalMs)
+     */
     fun getSnapshotInfo(): Triple<Int, Int, Long> {
-        return Triple(MAX_WIDTH, MAX_HEIGHT, SNAPSHOT_INTERVAL_MS)
+        return Triple(MAX_WIDTH, MAX_HEIGHT, snapshotIntervalMs)
     }
 
+    /**
+     * Get current frame rate in FPS
+     */
+    fun getCurrentFrameRate(): Float {
+        return 1000f / snapshotIntervalMs
+    }
+
+    /**
+     * Check if privacy settings allow image capture
+     */
+    fun isPrivacyCompliant(): Boolean {
+        return privacyEnabled
+    }
+
+    /**
+     * Get real-time processing status
+     */
+    fun getProcessingStatus(): ProcessingStatus {
+        return ProcessingStatus(
+            isEnabled = isEnabled,
+            currentProcessingCount = processingCount.get().toInt(),
+            maxConcurrentProcessing = MAX_CONCURRENT_PROCESSING,
+            frameRate = getCurrentFrameRate(),
+            privacyEnabled = privacyEnabled
+        )
+    }
+
+    data class ProcessingStatus(
+        val isEnabled: Boolean,
+        val currentProcessingCount: Int,
+        val maxConcurrentProcessing: Int,
+        val frameRate: Float,
+        val privacyEnabled: Boolean
+    )
+
     fun destroy() {
+        Timber.d("Destroying ImageSnapshotManager")
+
         stopSnapshots()
-        cancel() // Cancel coroutine scope
+
+        // Force cleanup all resources
+        cleanupMemory()
+
+        // Clear all flows
+        synchronized(processingJobs) {
+            processingJobs.clear()
+        }
+        snapshotJobs.clear()
+
+        // Reset atomic counters
+        lastSnapshotTime.set(0L)
+        processingCount.set(0L)
+
+        // Cancel coroutine scope
+        cancel()
+
+        Timber.d("ImageSnapshotManager destroyed successfully")
     }
 }

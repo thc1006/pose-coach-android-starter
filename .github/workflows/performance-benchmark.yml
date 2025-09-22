@@ -1,5 +1,10 @@
 name: Performance Benchmarking & Regression Detection
 
+permissions:
+  contents: read
+  issues: write
+  pull-requests: write
+
 on:
   push:
     branches: [ main, develop ]
@@ -47,6 +52,9 @@ jobs:
           java-version: '17'
           distribution: 'temurin'
           cache: gradle
+
+      - name: Grant execute permission for gradlew
+        run: chmod +x gradlew
 
       - name: Setup Android SDK
         uses: android-actions/setup-android@v3
@@ -124,13 +132,13 @@ jobs:
           distribution: 'temurin'
           cache: gradle
 
+      - name: Grant execute permission for gradlew
+        run: chmod +x gradlew
+
       - name: Setup Android SDK
         uses: android-actions/setup-android@v3
         with:
           api-level: 30
-
-      - name: Grant execute permission for gradlew
-        run: chmod +x gradlew
 
       - name: Run UI rendering benchmarks
         uses: reactivecircus/android-emulator-runner@v2
@@ -178,13 +186,13 @@ jobs:
           distribution: 'temurin'
           cache: gradle
 
+      - name: Grant execute permission for gradlew
+        run: chmod +x gradlew
+
       - name: Setup Android SDK
         uses: android-actions/setup-android@v3
         with:
           api-level: 30
-
-      - name: Grant execute permission for gradlew
-        run: chmod +x gradlew
 
       - name: Run memory benchmarks
         uses: reactivecircus/android-emulator-runner@v2
@@ -234,11 +242,11 @@ jobs:
           distribution: 'temurin'
           cache: gradle
 
-      - name: Setup Android SDK
-        uses: android-actions/setup-android@v3
-
       - name: Grant execute permission for gradlew
         run: chmod +x gradlew
+
+      - name: Setup Android SDK
+        uses: android-actions/setup-android@v3
 
       - name: Run network benchmarks
         uses: reactivecircus/android-emulator-runner@v2
@@ -277,11 +285,11 @@ jobs:
           distribution: 'temurin'
           cache: gradle
 
-      - name: Setup Android SDK
-        uses: android-actions/setup-android@v3
-
       - name: Grant execute permission for gradlew
         run: chmod +x gradlew
+
+      - name: Setup Android SDK
+        uses: android-actions/setup-android@v3
 
       - name: Build release APK
         run: ./gradlew assembleRelease

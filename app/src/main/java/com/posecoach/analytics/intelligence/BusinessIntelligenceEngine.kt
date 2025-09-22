@@ -137,10 +137,10 @@ class BusinessIntelligenceEngine @Inject constructor(
             retentionRate = retentionRate,
             churnPrediction = churnPrediction,
             demographicInsights = DemographicInsights(
-                ageGroups = rawMetrics.userDemographics["age"] as? Map<String, Int> ?: emptyMap(),
-                experienceLevels = rawMetrics.userDemographics["experience"] as? Map<String, Int> ?: emptyMap(),
-                geographicDistribution = rawMetrics.userDemographics["location"] as? Map<String, Int> ?: emptyMap(),
-                deviceTypes = rawMetrics.userDemographics["device"] as? Map<String, Int> ?: emptyMap()
+                ageGroups = rawMetrics.userDemographics["age"] ?: emptyMap(),
+                experienceLevels = rawMetrics.userDemographics["experience"] ?: emptyMap(),
+                geographicDistribution = rawMetrics.userDemographics["location"] ?: emptyMap(),
+                deviceTypes = rawMetrics.userDemographics["device"] ?: emptyMap()
             )
         )
     }

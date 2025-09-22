@@ -1,0 +1,28 @@
+﻿2025-09-22T19:45:39.7015410Z Current runner version: '2.328.0'
+2025-09-22T19:45:39.7031300Z ##[group]Runner Image Provisioner
+2025-09-22T19:45:39.7031800Z Hosted Compute Agent
+2025-09-22T19:45:39.7032130Z Version: 20250912.392
+2025-09-22T19:45:39.7032490Z Commit: d921fda672a98b64f4f82364647e2f10b2267d0b
+2025-09-22T19:45:39.7032930Z Build Date: 2025-09-12T15:23:14Z
+2025-09-22T19:45:39.7033300Z ##[endgroup]
+2025-09-22T19:45:39.7033620Z ##[group]Operating System
+2025-09-22T19:45:39.7033970Z macOS
+2025-09-22T19:45:39.7034260Z 15.6.1
+2025-09-22T19:45:39.7034540Z 24G90
+2025-09-22T19:45:39.7034810Z ##[endgroup]
+2025-09-22T19:45:39.7035100Z ##[group]Runner Image
+2025-09-22T19:45:39.7035420Z Image: macos-15-arm64
+2025-09-22T19:45:39.7035780Z Version: 20250916.2338
+2025-09-22T19:45:39.7036460Z Included Software: https://github.com/actions/runner-images/blob/macos-15-arm64/20250916.2338/images/macos/macos-15-arm64-Readme.md
+2025-09-22T19:45:39.7037410Z Image Release: https://github.com/actions/runner-images/releases/tag/macos-15-arm64%2F20250916.2338
+2025-09-22T19:45:39.7038110Z ##[endgroup]
+2025-09-22T19:45:39.7038790Z ##[group]GITHUB_TOKEN Permissions
+2025-09-22T19:45:39.7039770Z Contents: read
+2025-09-22T19:45:39.7040070Z Metadata: read
+2025-09-22T19:45:39.7040360Z Packages: read
+2025-09-22T19:45:39.7040650Z ##[endgroup]
+2025-09-22T19:45:39.7041910Z Secret source: Actions
+2025-09-22T19:45:39.7042290Z Prepare workflow directory
+2025-09-22T19:45:39.7608750Z Prepare all required actions
+2025-09-22T19:45:39.7638220Z Getting action download info
+2025-09-22T19:45:40.0163590Z ##[error]This request has been automatically failed because it uses a deprecated version of `actions/upload-artifact: v3`. Learn more: https://github.blog/changelog/2024-04-16-deprecation-notice-v3-of-the-artifact-actions/

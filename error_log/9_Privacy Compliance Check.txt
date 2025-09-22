@@ -1,0 +1,179 @@
+﻿2025-09-22T19:45:42.0549301Z Current runner version: '2.328.0'
+2025-09-22T19:45:42.0579330Z ##[group]Runner Image Provisioner
+2025-09-22T19:45:42.0580165Z Hosted Compute Agent
+2025-09-22T19:45:42.0580753Z Version: 20250829.383
+2025-09-22T19:45:42.0581356Z Commit: 27cb235aab5b0e52e153a26cd86b4742e89dac5d
+2025-09-22T19:45:42.0582049Z Build Date: 2025-08-29T13:48:48Z
+2025-09-22T19:45:42.0582665Z ##[endgroup]
+2025-09-22T19:45:42.0583193Z ##[group]Operating System
+2025-09-22T19:45:42.0583791Z Ubuntu
+2025-09-22T19:45:42.0584259Z 24.04.3
+2025-09-22T19:45:42.0584728Z LTS
+2025-09-22T19:45:42.0585129Z ##[endgroup]
+2025-09-22T19:45:42.0585686Z ##[group]Runner Image
+2025-09-22T19:45:42.0586471Z Image: ubuntu-24.04
+2025-09-22T19:45:42.0587017Z Version: 20250907.24.1
+2025-09-22T19:45:42.0588133Z Included Software: https://github.com/actions/runner-images/blob/ubuntu24/20250907.24/images/ubuntu/Ubuntu2404-Readme.md
+2025-09-22T19:45:42.0589634Z Image Release: https://github.com/actions/runner-images/releases/tag/ubuntu24%2F20250907.24
+2025-09-22T19:45:42.0590628Z ##[endgroup]
+2025-09-22T19:45:42.0591722Z ##[group]GITHUB_TOKEN Permissions
+2025-09-22T19:45:42.0593830Z Contents: read
+2025-09-22T19:45:42.0594393Z Metadata: read
+2025-09-22T19:45:42.0594863Z Packages: read
+2025-09-22T19:45:42.0595449Z ##[endgroup]
+2025-09-22T19:45:42.0598134Z Secret source: Actions
+2025-09-22T19:45:42.0598887Z Prepare workflow directory
+2025-09-22T19:45:42.0996925Z Prepare all required actions
+2025-09-22T19:45:42.1035069Z Getting action download info
+2025-09-22T19:45:42.4196657Z Download action repository 'actions/checkout@v4' (SHA:08eba0b27e820071cde6df949e0beb9ba4906955)
+2025-09-22T19:45:42.6581040Z Complete job name: Privacy Compliance Check
+2025-09-22T19:45:42.7350716Z ##[group]Run actions/checkout@v4
+2025-09-22T19:45:42.7351562Z with:
+2025-09-22T19:45:42.7352006Z   repository: thc1006/pose-coach-android-starter
+2025-09-22T19:45:42.7352695Z   token: ***
+2025-09-22T19:45:42.7353061Z   ssh-strict: true
+2025-09-22T19:45:42.7353446Z   ssh-user: git
+2025-09-22T19:45:42.7353845Z   persist-credentials: true
+2025-09-22T19:45:42.7354306Z   clean: true
+2025-09-22T19:45:42.7354697Z   sparse-checkout-cone-mode: true
+2025-09-22T19:45:42.7355162Z   fetch-depth: 1
+2025-09-22T19:45:42.7355543Z   fetch-tags: false
+2025-09-22T19:45:42.7355928Z   show-progress: true
+2025-09-22T19:45:42.7356486Z   lfs: false
+2025-09-22T19:45:42.7356851Z   submodules: false
+2025-09-22T19:45:42.7357256Z   set-safe-directory: true
+2025-09-22T19:45:42.7357919Z env:
+2025-09-22T19:45:42.7358668Z   GRADLE_OPTS: -Dorg.gradle.daemon=false -Dorg.gradle.parallel=true -Dorg.gradle.configureondemand=true
+2025-09-22T19:45:42.7359508Z   JAVA_VERSION: 17
+2025-09-22T19:45:42.7359937Z   ANDROID_COMPILE_SDK: 34
+2025-09-22T19:45:42.7360361Z   ANDROID_BUILD_TOOLS: 34.0.0
+2025-09-22T19:45:42.7360810Z   ANDROID_SDK_TOOLS: 9477386
+2025-09-22T19:45:42.7361232Z ##[endgroup]
+2025-09-22T19:45:42.8422866Z Syncing repository: thc1006/pose-coach-android-starter
+2025-09-22T19:45:42.8424628Z ##[group]Getting Git version info
+2025-09-22T19:45:42.8425607Z Working directory is '/home/runner/work/pose-coach-android-starter/pose-coach-android-starter'
+2025-09-22T19:45:42.8427238Z [command]/usr/bin/git version
+2025-09-22T19:45:42.8494970Z git version 2.51.0
+2025-09-22T19:45:42.8521088Z ##[endgroup]
+2025-09-22T19:45:42.8541619Z Temporarily overriding HOME='/home/runner/work/_temp/060dbf67-505f-4ea7-ba32-dbb47bcc1ebb' before making global git config changes
+2025-09-22T19:45:42.8542936Z Adding repository directory to the temporary git global config as a safe directory
+2025-09-22T19:45:42.8547169Z [command]/usr/bin/git config --global --add safe.directory /home/runner/work/pose-coach-android-starter/pose-coach-android-starter
+2025-09-22T19:45:42.8582795Z Deleting the contents of '/home/runner/work/pose-coach-android-starter/pose-coach-android-starter'
+2025-09-22T19:45:42.8585899Z ##[group]Initializing the repository
+2025-09-22T19:45:42.8591410Z [command]/usr/bin/git init /home/runner/work/pose-coach-android-starter/pose-coach-android-starter
+2025-09-22T19:45:42.8692406Z hint: Using 'master' as the name for the initial branch. This default branch name
+2025-09-22T19:45:42.8693739Z hint: is subject to change. To configure the initial branch name to use in all
+2025-09-22T19:45:42.8694616Z hint: of your new repositories, which will suppress this warning, call:
+2025-09-22T19:45:42.8695784Z hint:
+2025-09-22T19:45:42.8696666Z hint: 	git config --global init.defaultBranch <name>
+2025-09-22T19:45:42.8697330Z hint:
+2025-09-22T19:45:42.8698281Z hint: Names commonly chosen instead of 'master' are 'main', 'trunk' and
+2025-09-22T19:45:42.8699879Z hint: 'development'. The just-created branch can be renamed via this command:
+2025-09-22T19:45:42.8701172Z hint:
+2025-09-22T19:45:42.8701877Z hint: 	git branch -m <name>
+2025-09-22T19:45:42.8702695Z hint:
+2025-09-22T19:45:42.8703772Z hint: Disable this message with "git config set advice.defaultBranchName false"
+2025-09-22T19:45:42.8705838Z Initialized empty Git repository in /home/runner/work/pose-coach-android-starter/pose-coach-android-starter/.git/
+2025-09-22T19:45:42.8709975Z [command]/usr/bin/git remote add origin https://github.com/thc1006/pose-coach-android-starter
+2025-09-22T19:45:42.8747129Z ##[endgroup]
+2025-09-22T19:45:42.8748333Z ##[group]Disabling automatic garbage collection
+2025-09-22T19:45:42.8752086Z [command]/usr/bin/git config --local gc.auto 0
+2025-09-22T19:45:42.8780459Z ##[endgroup]
+2025-09-22T19:45:42.8781731Z ##[group]Setting up auth
+2025-09-22T19:45:42.8788126Z [command]/usr/bin/git config --local --name-only --get-regexp core\.sshCommand
+2025-09-22T19:45:42.8818574Z [command]/usr/bin/git submodule foreach --recursive sh -c "git config --local --name-only --get-regexp 'core\.sshCommand' && git config --local --unset-all 'core.sshCommand' || :"
+2025-09-22T19:45:42.9148134Z [command]/usr/bin/git config --local --name-only --get-regexp http\.https\:\/\/github\.com\/\.extraheader
+2025-09-22T19:45:42.9179124Z [command]/usr/bin/git submodule foreach --recursive sh -c "git config --local --name-only --get-regexp 'http\.https\:\/\/github\.com\/\.extraheader' && git config --local --unset-all 'http.https://github.com/.extraheader' || :"
+2025-09-22T19:45:42.9400579Z [command]/usr/bin/git config --local http.https://github.com/.extraheader AUTHORIZATION: basic ***
+2025-09-22T19:45:42.9436872Z ##[endgroup]
+2025-09-22T19:45:42.9438111Z ##[group]Fetching the repository
+2025-09-22T19:45:42.9446559Z [command]/usr/bin/git -c protocol.version=2 fetch --no-tags --prune --no-recurse-submodules --depth=1 origin +685d758d9ae8c729893935dc590157eded077a04:refs/remotes/origin/main
+2025-09-22T19:45:43.8577269Z From https://github.com/thc1006/pose-coach-android-starter
+2025-09-22T19:45:43.8579244Z  * [new ref]         685d758d9ae8c729893935dc590157eded077a04 -> origin/main
+2025-09-22T19:45:43.8612786Z ##[endgroup]
+2025-09-22T19:45:43.8614125Z ##[group]Determining the checkout info
+2025-09-22T19:45:43.8615632Z ##[endgroup]
+2025-09-22T19:45:43.8621091Z [command]/usr/bin/git sparse-checkout disable
+2025-09-22T19:45:43.8662229Z [command]/usr/bin/git config --local --unset-all extensions.worktreeConfig
+2025-09-22T19:45:43.8694160Z ##[group]Checking out the ref
+2025-09-22T19:45:43.8699362Z [command]/usr/bin/git checkout --progress --force -B main refs/remotes/origin/main
+2025-09-22T19:45:43.9527031Z Switched to a new branch 'main'
+2025-09-22T19:45:43.9528722Z branch 'main' set up to track 'origin/main'.
+2025-09-22T19:45:43.9570354Z ##[endgroup]
+2025-09-22T19:45:43.9573711Z [command]/usr/bin/git log -1 --format=%H
+2025-09-22T19:45:43.9595796Z 685d758d9ae8c729893935dc590157eded077a04
+2025-09-22T19:45:43.9791496Z ##[group]Run # Validate privacy manager implementation
+2025-09-22T19:45:43.9793218Z [36;1m# Validate privacy manager implementation[0m
+2025-09-22T19:45:43.9795346Z [36;1mif [ ! -f "app/src/main/kotlin/com/posecoach/app/privacy/PrivacyManager.kt" ]; then[0m
+2025-09-22T19:45:43.9797777Z [36;1m  echo "❌ Privacy Manager not found"[0m
+2025-09-22T19:45:43.9799055Z [36;1m  exit 1[0m
+2025-09-22T19:45:43.9799998Z [36;1mfi[0m
+2025-09-22T19:45:43.9801208Z [36;1m[0m
+2025-09-22T19:45:43.9802197Z [36;1m# Check for data collection consent[0m
+2025-09-22T19:45:43.9803781Z [36;1mif ! grep -r "requestPermission" app/src/main/kotlin/; then[0m
+2025-09-22T19:45:43.9805438Z [36;1m  echo "❌ No permission requests found"[0m
+2025-09-22T19:45:43.9806898Z [36;1m  exit 1[0m
+2025-09-22T19:45:43.9807841Z [36;1mfi[0m
+2025-09-22T19:45:43.9808748Z [36;1m[0m
+2025-09-22T19:45:43.9809707Z [36;1m# Validate encrypted storage[0m
+2025-09-22T19:45:43.9811399Z [36;1mif ! grep -r "EncryptedSharedPreferences" app/src/main/kotlin/; then[0m
+2025-09-22T19:45:43.9813226Z [36;1m  echo "❌ Encrypted storage not implemented"[0m
+2025-09-22T19:45:43.9814541Z [36;1m  exit 1[0m
+2025-09-22T19:45:43.9815416Z [36;1mfi[0m
+2025-09-22T19:45:43.9816383Z [36;1m[0m
+2025-09-22T19:45:43.9817375Z [36;1mecho "✅ Privacy compliance checks passed"[0m
+2025-09-22T19:45:43.9873413Z shell: /usr/bin/bash -e {0}
+2025-09-22T19:45:43.9874530Z env:
+2025-09-22T19:45:43.9876219Z   GRADLE_OPTS: -Dorg.gradle.daemon=false -Dorg.gradle.parallel=true -Dorg.gradle.configureondemand=true
+2025-09-22T19:45:43.9878527Z   JAVA_VERSION: 17
+2025-09-22T19:45:43.9879435Z   ANDROID_COMPILE_SDK: 34
+2025-09-22T19:45:43.9880400Z   ANDROID_BUILD_TOOLS: 34.0.0
+2025-09-22T19:45:43.9881417Z   ANDROID_SDK_TOOLS: 9477386
+2025-09-22T19:45:43.9882404Z ##[endgroup]
+2025-09-22T19:45:43.9993895Z app/src/main/kotlin/com/posecoach/app/camera/CameraXPipelineExample.kt:    private val requestPermissionLauncher = registerForActivityResult(
+2025-09-22T19:45:43.9998880Z app/src/main/kotlin/com/posecoach/app/camera/CameraXPipelineExample.kt:            requestPermissionLauncher.launch(missingPermissions.toTypedArray())
+2025-09-22T19:45:44.0002916Z app/src/main/kotlin/com/posecoach/app/camera/CameraLifecycleManager.kt:        ActivityCompat.requestPermissions(
+2025-09-22T19:45:44.0019617Z app/src/main/kotlin/com/posecoach/app/privacy/ConsentManager.kt:import androidx.security.crypto.EncryptedSharedPreferences
+2025-09-22T19:45:44.0024813Z app/src/main/kotlin/com/posecoach/app/privacy/ConsentManager.kt:        EncryptedSharedPreferences.create(
+2025-09-22T19:45:44.0029741Z app/src/main/kotlin/com/posecoach/app/privacy/ConsentManager.kt:            EncryptedSharedPreferences.PrefKeyEncryptionScheme.AES256_SIV,
+2025-09-22T19:45:44.0036560Z app/src/main/kotlin/com/posecoach/app/privacy/ConsentManager.kt:            EncryptedSharedPreferences.PrefValueEncryptionScheme.AES256_GCM
+2025-09-22T19:45:44.0041398Z app/src/main/kotlin/com/posecoach/app/privacy/consent/ConsentManager.kt:import androidx.security.crypto.EncryptedSharedPreferences
+2025-09-22T19:45:44.0045347Z app/src/main/kotlin/com/posecoach/app/privacy/consent/ConsentManager.kt:    private val encryptedPrefs = EncryptedSharedPreferences.create(
+2025-09-22T19:45:44.0049744Z app/src/main/kotlin/com/posecoach/app/privacy/consent/ConsentManager.kt:        EncryptedSharedPreferences.PrefKeyEncryptionScheme.AES256_SIV,
+2025-09-22T19:45:44.0053871Z app/src/main/kotlin/com/posecoach/app/privacy/consent/ConsentManager.kt:        EncryptedSharedPreferences.PrefValueEncryptionScheme.AES256_GCM
+2025-09-22T19:45:44.0057962Z app/src/main/kotlin/com/posecoach/app/privacy/SecureStorageManager.kt:import androidx.security.crypto.EncryptedSharedPreferences
+2025-09-22T19:45:44.0061408Z app/src/main/kotlin/com/posecoach/app/privacy/SecureStorageManager.kt:        EncryptedSharedPreferences.create(
+2025-09-22T19:45:44.0065242Z app/src/main/kotlin/com/posecoach/app/privacy/SecureStorageManager.kt:            EncryptedSharedPreferences.PrefKeyEncryptionScheme.AES256_SIV,
+2025-09-22T19:45:44.0069518Z app/src/main/kotlin/com/posecoach/app/privacy/SecureStorageManager.kt:            EncryptedSharedPreferences.PrefValueEncryptionScheme.AES256_GCM
+2025-09-22T19:45:44.0073384Z app/src/main/kotlin/com/posecoach/app/privacy/audit/PrivacyAuditFramework.kt:import androidx.security.crypto.EncryptedSharedPreferences
+2025-09-22T19:45:44.0077430Z app/src/main/kotlin/com/posecoach/app/privacy/audit/PrivacyAuditFramework.kt:    private val encryptedPrefs = EncryptedSharedPreferences.create(
+2025-09-22T19:45:44.0081630Z app/src/main/kotlin/com/posecoach/app/privacy/audit/PrivacyAuditFramework.kt:        EncryptedSharedPreferences.PrefKeyEncryptionScheme.AES256_SIV,
+2025-09-22T19:45:44.0085706Z app/src/main/kotlin/com/posecoach/app/privacy/audit/PrivacyAuditFramework.kt:        EncryptedSharedPreferences.PrefValueEncryptionScheme.AES256_GCM
+2025-09-22T19:45:44.0089887Z app/src/main/kotlin/com/posecoach/app/privacy/advanced/AdvancedPrivacyEngine.kt:import androidx.security.crypto.EncryptedSharedPreferences
+2025-09-22T19:45:44.0093819Z app/src/main/kotlin/com/posecoach/app/privacy/advanced/AdvancedPrivacyEngine.kt:    private val encryptedPrefs = EncryptedSharedPreferences.create(
+2025-09-22T19:45:44.0098049Z app/src/main/kotlin/com/posecoach/app/privacy/advanced/AdvancedPrivacyEngine.kt:        EncryptedSharedPreferences.PrefKeyEncryptionScheme.AES256_SIV,
+2025-09-22T19:45:44.0102190Z app/src/main/kotlin/com/posecoach/app/privacy/advanced/AdvancedPrivacyEngine.kt:        EncryptedSharedPreferences.PrefValueEncryptionScheme.AES256_GCM
+2025-09-22T19:45:44.0106126Z app/src/main/kotlin/com/posecoach/app/privacy/EnhancedPrivacyManager.kt:import androidx.security.crypto.EncryptedSharedPreferences
+2025-09-22T19:45:44.0109639Z app/src/main/kotlin/com/posecoach/app/privacy/EnhancedPrivacyManager.kt:        EncryptedSharedPreferences.create(
+2025-09-22T19:45:44.0113191Z app/src/main/kotlin/com/posecoach/app/privacy/EnhancedPrivacyManager.kt:            EncryptedSharedPreferences.PrefKeyEncryptionScheme.AES256_SIV,
+2025-09-22T19:45:44.0117432Z app/src/main/kotlin/com/posecoach/app/privacy/EnhancedPrivacyManager.kt:            EncryptedSharedPreferences.PrefValueEncryptionScheme.AES256_GCM
+2025-09-22T19:45:44.0121385Z app/src/main/kotlin/com/posecoach/app/livecoach/config/LiveApiKeyManager.kt:import androidx.security.crypto.EncryptedSharedPreferences
+2025-09-22T19:45:44.0124879Z app/src/main/kotlin/com/posecoach/app/livecoach/config/LiveApiKeyManager.kt:            EncryptedSharedPreferences.create(
+2025-09-22T19:45:44.0128740Z app/src/main/kotlin/com/posecoach/app/livecoach/config/LiveApiKeyManager.kt:                EncryptedSharedPreferences.PrefKeyEncryptionScheme.AES256_SIV,
+2025-09-22T19:45:44.0132724Z app/src/main/kotlin/com/posecoach/app/livecoach/config/LiveApiKeyManager.kt:                EncryptedSharedPreferences.PrefValueEncryptionScheme.AES256_GCM
+2025-09-22T19:45:44.0136237Z app/src/main/kotlin/com/posecoach/auth/TokenManager.kt:import androidx.security.crypto.EncryptedSharedPreferences
+2025-09-22T19:45:44.0139187Z app/src/main/kotlin/com/posecoach/auth/TokenManager.kt:        EncryptedSharedPreferences.create(
+2025-09-22T19:45:44.0142058Z app/src/main/kotlin/com/posecoach/auth/TokenManager.kt:            EncryptedSharedPreferences.PrefKeyEncryptionScheme.AES256_SIV,
+2025-09-22T19:45:44.0145303Z app/src/main/kotlin/com/posecoach/auth/TokenManager.kt:            EncryptedSharedPreferences.PrefValueEncryptionScheme.AES256_GCM
+2025-09-22T19:45:44.0147862Z ✅ Privacy compliance checks passed
+2025-09-22T19:45:44.0290483Z Post job cleanup.
+2025-09-22T19:45:44.1225884Z [command]/usr/bin/git version
+2025-09-22T19:45:44.1261336Z git version 2.51.0
+2025-09-22T19:45:44.1304775Z Temporarily overriding HOME='/home/runner/work/_temp/fbd3a28a-9e2f-4747-ac97-35eacf97ebc9' before making global git config changes
+2025-09-22T19:45:44.1307499Z Adding repository directory to the temporary git global config as a safe directory
+2025-09-22T19:45:44.1310416Z [command]/usr/bin/git config --global --add safe.directory /home/runner/work/pose-coach-android-starter/pose-coach-android-starter
+2025-09-22T19:45:44.1344529Z [command]/usr/bin/git config --local --name-only --get-regexp core\.sshCommand
+2025-09-22T19:45:44.1376727Z [command]/usr/bin/git submodule foreach --recursive sh -c "git config --local --name-only --get-regexp 'core\.sshCommand' && git config --local --unset-all 'core.sshCommand' || :"
+2025-09-22T19:45:44.1592018Z fatal: No url found for submodule path 'pose-coach-skeleton' in .gitmodules
+2025-09-22T19:45:44.1639194Z ##[warning]The process '/usr/bin/git' failed with exit code 128
+2025-09-22T19:45:44.1730749Z Cleaning up orphan processes

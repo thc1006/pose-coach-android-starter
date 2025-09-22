@@ -1,0 +1,5 @@
+2025-09-22T19:45:38.1830000Z Job is about to start running on the hosted runner: GitHub Actions 1000042465
+2025-09-22T19:45:38.1830000Z Job is waiting for a hosted runner to come online.
+2025-09-22T19:45:38.1750000Z Requested labels: macos-latest
+2025-09-22T19:45:38.1750000Z Job defined at: thc1006/pose-coach-android-starter/.github/workflows/gemini-live-api-testing.yml@refs/heads/main
+2025-09-22T19:45:38.1750000Z Waiting for a runner to pick up this job...

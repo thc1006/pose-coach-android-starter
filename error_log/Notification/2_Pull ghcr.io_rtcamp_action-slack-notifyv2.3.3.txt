@@ -1,0 +1,39 @@
+﻿2025-09-22T19:45:52.8195132Z ##[group]Pull down action image 'ghcr.io/rtcamp/action-slack-notify:v2.3.3'
+2025-09-22T19:45:52.8243999Z ##[command]/usr/bin/docker pull ghcr.io/rtcamp/action-slack-notify:v2.3.3
+2025-09-22T19:45:53.6514910Z v2.3.3: Pulling from rtcamp/action-slack-notify
+2025-09-22T19:45:53.7864261Z 43c4264eed91: Pulling fs layer
+2025-09-22T19:45:53.7864604Z d2ffb1f53d95: Pulling fs layer
+2025-09-22T19:45:53.7865105Z 9a3469c34bee: Pulling fs layer
+2025-09-22T19:45:53.7865453Z 668005e24564: Pulling fs layer
+2025-09-22T19:45:53.7865847Z 2c69aaeb7992: Pulling fs layer
+2025-09-22T19:45:53.7866302Z f37893a31575: Pulling fs layer
+2025-09-22T19:45:53.7866665Z 2fa8e688e01c: Pulling fs layer
+2025-09-22T19:45:53.7867052Z 2c69aaeb7992: Waiting
+2025-09-22T19:45:53.7867351Z f37893a31575: Waiting
+2025-09-22T19:45:53.7867602Z 2fa8e688e01c: Waiting
+2025-09-22T19:45:53.7867786Z 668005e24564: Waiting
+2025-09-22T19:45:54.0276873Z 43c4264eed91: Verifying Checksum
+2025-09-22T19:45:54.0278589Z 43c4264eed91: Download complete
+2025-09-22T19:45:54.1184277Z 9a3469c34bee: Verifying Checksum
+2025-09-22T19:45:54.1188498Z 9a3469c34bee: Download complete
+2025-09-22T19:45:54.1631736Z 43c4264eed91: Pull complete
+2025-09-22T19:45:54.1697572Z d2ffb1f53d95: Verifying Checksum
+2025-09-22T19:45:54.1698164Z d2ffb1f53d95: Download complete
+2025-09-22T19:45:54.2659926Z 2c69aaeb7992: Verifying Checksum
+2025-09-22T19:45:54.2660528Z 2c69aaeb7992: Download complete
+2025-09-22T19:45:54.3052120Z f37893a31575: Verifying Checksum
+2025-09-22T19:45:54.3053266Z f37893a31575: Download complete
+2025-09-22T19:45:54.4342910Z 668005e24564: Verifying Checksum
+2025-09-22T19:45:54.4343446Z 668005e24564: Download complete
+2025-09-22T19:45:54.4835082Z 2fa8e688e01c: Verifying Checksum
+2025-09-22T19:45:54.4835712Z 2fa8e688e01c: Download complete
+2025-09-22T19:45:54.6574326Z d2ffb1f53d95: Pull complete
+2025-09-22T19:45:55.8543372Z 9a3469c34bee: Pull complete
+2025-09-22T19:45:56.2578130Z 668005e24564: Pull complete
+2025-09-22T19:45:56.2694943Z 2c69aaeb7992: Pull complete
+2025-09-22T19:45:56.2805341Z f37893a31575: Pull complete
+2025-09-22T19:45:56.2928633Z 2fa8e688e01c: Pull complete
+2025-09-22T19:45:56.2976173Z Digest: sha256:acc1c430721b27030d3dacf4273eec569388ad650e127bb9f1292f33cd9cd9bd
+2025-09-22T19:45:56.2996441Z Status: Downloaded newer image for ghcr.io/rtcamp/action-slack-notify:v2.3.3
+2025-09-22T19:45:56.3007657Z ghcr.io/rtcamp/action-slack-notify:v2.3.3
+2025-09-22T19:45:56.3032979Z ##[endgroup]

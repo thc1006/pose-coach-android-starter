@@ -1,0 +1,26 @@
+﻿2025-09-22T19:47:44.8388899Z ##[group]Run 8398a7/action-slack@v3
+2025-09-22T19:47:44.8389457Z with:
+2025-09-22T19:47:44.8389824Z   status: failure
+2025-09-22T19:47:44.8391319Z   text: 🚨 CRITICAL SECURITY ISSUES DETECTED 🚨
+Repository: thc1006/pose-coach-android-starter
+Branch: refs/heads/main
+
+Failed Security Checks:
+- Dependencies: failure
+- Secrets: failure
+- Android: failure
+
+Please review immediately!
+
+2025-09-22T19:47:44.8393214Z   author_name: 8398a7@action-slack
+2025-09-22T19:47:44.8393824Z   success_message: :white_check_mark: Succeeded GitHub Actions
+
+2025-09-22T19:47:44.8394524Z   cancelled_message: :warning: Cancelled GitHub Actions
+
+2025-09-22T19:47:44.8395255Z   failure_message: :no_entry: Failed GitHub Actions
+
+2025-09-22T19:47:44.8395996Z   github_token: ***
+2025-09-22T19:47:44.8396404Z env:
+2025-09-22T19:47:44.8396769Z   SLACK_WEBHOOK_URL: 
+2025-09-22T19:47:44.8397178Z ##[endgroup]
+2025-09-22T19:47:44.9365338Z ##[error]Specify secrets.SLACK_WEBHOOK_URL

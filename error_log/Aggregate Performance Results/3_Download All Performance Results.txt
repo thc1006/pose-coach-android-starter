@@ -1,0 +1,15 @@
+﻿2025-09-22T19:46:18.0845443Z ##[group]Run actions/download-artifact@v4
+2025-09-22T19:46:18.0845798Z with:
+2025-09-22T19:46:18.0845989Z   pattern: performance-results-*
+2025-09-22T19:46:18.0846230Z   path: all-results/
+2025-09-22T19:46:18.0846422Z   merge-multiple: true
+2025-09-22T19:46:18.0846658Z   repository: thc1006/pose-coach-android-starter
+2025-09-22T19:46:18.0847118Z   run-id: 17926648367
+2025-09-22T19:46:18.0847300Z env:
+2025-09-22T19:46:18.0847464Z   BASELINE_BRANCH: main
+2025-09-22T19:46:18.0847671Z   PERFORMANCE_THRESHOLD: 10
+2025-09-22T19:46:18.0847903Z ##[endgroup]
+2025-09-22T19:46:18.5318064Z Found 0 artifact(s)
+2025-09-22T19:46:18.5319148Z Filtering artifacts by pattern 'performance-results-*'
+2025-09-22T19:46:18.5336383Z Total of 0 artifact(s) downloaded
+2025-09-22T19:46:18.5344115Z Download artifact has finished successfully

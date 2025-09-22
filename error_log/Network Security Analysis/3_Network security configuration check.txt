@@ -1,0 +1,23 @@
+﻿2025-09-22T19:45:49.5317053Z ##[group]Run nsc_file="app/src/main/res/xml/network_security_config.xml"
+2025-09-22T19:45:49.5319497Z [36;1mnsc_file="app/src/main/res/xml/network_security_config.xml"[0m
+2025-09-22T19:45:49.5321188Z [36;1m[0m
+2025-09-22T19:45:49.5322146Z [36;1mif [ -f "$nsc_file" ]; then[0m
+2025-09-22T19:45:49.5323543Z [36;1m  # Check for clear text traffic permissions[0m
+2025-09-22T19:45:49.5325389Z [36;1m  if grep -q "cleartextTrafficPermitted.*true" "$nsc_file"; then[0m
+2025-09-22T19:45:49.5327553Z [36;1m    echo "❌ Clear text traffic permitted in network security config"[0m
+2025-09-22T19:45:49.5329417Z [36;1m    exit 1[0m
+2025-09-22T19:45:49.5330446Z [36;1m  fi[0m
+2025-09-22T19:45:49.5331384Z [36;1m[0m
+2025-09-22T19:45:49.5332383Z [36;1m  # Check for certificate pinning[0m
+2025-09-22T19:45:49.5334067Z [36;1m  if ! grep -q "pin-set" "$nsc_file"; then[0m
+2025-09-22T19:45:49.5335644Z [36;1m    echo "⚠️ Certificate pinning not configured"[0m
+2025-09-22T19:45:49.5337097Z [36;1m  fi[0m
+2025-09-22T19:45:49.5338048Z [36;1m[0m
+2025-09-22T19:45:49.5339366Z [36;1m  echo "✅ Network security configuration is secure"[0m
+2025-09-22T19:45:49.5340880Z [36;1melse[0m
+2025-09-22T19:45:49.5341988Z [36;1m  echo "⚠️ No network security configuration found"[0m
+2025-09-22T19:45:49.5343407Z [36;1mfi[0m
+2025-09-22T19:45:49.5398020Z shell: /usr/bin/bash -e {0}
+2025-09-22T19:45:49.5399337Z ##[endgroup]
+2025-09-22T19:45:49.5501189Z ⚠️ Certificate pinning not configured
+2025-09-22T19:45:49.5503388Z ✅ Network security configuration is secure

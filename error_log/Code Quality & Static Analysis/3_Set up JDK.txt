@@ -1,0 +1,35 @@
+﻿2025-09-22T19:45:44.4295596Z ##[group]Run actions/setup-java@v4
+2025-09-22T19:45:44.4297125Z with:
+2025-09-22T19:45:44.4298018Z   java-version: 17
+2025-09-22T19:45:44.4298940Z   distribution: temurin
+2025-09-22T19:45:44.4299945Z   cache: gradle
+2025-09-22T19:45:44.4300880Z   java-package: jdk
+2025-09-22T19:45:44.4301825Z   check-latest: false
+2025-09-22T19:45:44.4302743Z   server-id: github
+2025-09-22T19:45:44.4303774Z   server-username: GITHUB_ACTOR
+2025-09-22T19:45:44.4304968Z   server-password: GITHUB_TOKEN
+2025-09-22T19:45:44.4306136Z   overwrite-settings: true
+2025-09-22T19:45:44.4307271Z   job-status: success
+2025-09-22T19:45:44.4308416Z   token: ***
+2025-09-22T19:45:44.4309202Z env:
+2025-09-22T19:45:44.4310921Z   GRADLE_OPTS: -Dorg.gradle.daemon=false -Dorg.gradle.parallel=true -Dorg.gradle.configureondemand=true
+2025-09-22T19:45:44.4312972Z   JAVA_VERSION: 17
+2025-09-22T19:45:44.4313840Z   ANDROID_COMPILE_SDK: 34
+2025-09-22T19:45:44.4314889Z   ANDROID_BUILD_TOOLS: 34.0.0
+2025-09-22T19:45:44.4315918Z   ANDROID_SDK_TOOLS: 9477386
+2025-09-22T19:45:44.4317347Z ##[endgroup]
+2025-09-22T19:45:44.6351571Z ##[group]Installed distributions
+2025-09-22T19:45:44.6398589Z Resolved Java 17.0.16+8 from tool-cache
+2025-09-22T19:45:44.6399835Z Setting Java 17.0.16+8 as the default
+2025-09-22T19:45:44.6411877Z Creating toolchains.xml for JDK version 17 from temurin
+2025-09-22T19:45:44.6487247Z Writing to /home/runner/.m2/toolchains.xml
+2025-09-22T19:45:44.6488484Z 
+2025-09-22T19:45:44.6488987Z Java configuration:
+2025-09-22T19:45:44.6490226Z   Distribution: temurin
+2025-09-22T19:45:44.6491494Z   Version: 17.0.16+8
+2025-09-22T19:45:44.6493298Z   Path: /opt/hostedtoolcache/Java_Temurin-Hotspot_jdk/17.0.16-8/x64
+2025-09-22T19:45:44.6494960Z 
+2025-09-22T19:45:44.6496449Z ##[endgroup]
+2025-09-22T19:45:44.6510863Z Creating settings.xml with server-id: github
+2025-09-22T19:45:44.6512956Z Writing to /home/runner/.m2/settings.xml
+2025-09-22T19:45:44.8683459Z gradle cache is not found

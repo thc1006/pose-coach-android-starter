@@ -1,0 +1,78 @@
+﻿2025-09-22T19:47:43.8697192Z Current runner version: '2.328.0'
+2025-09-22T19:47:43.8730529Z ##[group]Runner Image Provisioner
+2025-09-22T19:47:43.8731728Z Hosted Compute Agent
+2025-09-22T19:47:43.8732897Z Version: 20250829.383
+2025-09-22T19:47:43.8733903Z Commit: 27cb235aab5b0e52e153a26cd86b4742e89dac5d
+2025-09-22T19:47:43.8735025Z Build Date: 2025-08-29T13:48:48Z
+2025-09-22T19:47:43.8736017Z ##[endgroup]
+2025-09-22T19:47:43.8736904Z ##[group]Operating System
+2025-09-22T19:47:43.8737800Z Ubuntu
+2025-09-22T19:47:43.8738622Z 24.04.3
+2025-09-22T19:47:43.8739315Z LTS
+2025-09-22T19:47:43.8740126Z ##[endgroup]
+2025-09-22T19:47:43.8740970Z ##[group]Runner Image
+2025-09-22T19:47:43.8742166Z Image: ubuntu-24.04
+2025-09-22T19:47:43.8743058Z Version: 20250907.24.1
+2025-09-22T19:47:43.8744881Z Included Software: https://github.com/actions/runner-images/blob/ubuntu24/20250907.24/images/ubuntu/Ubuntu2404-Readme.md
+2025-09-22T19:47:43.8747695Z Image Release: https://github.com/actions/runner-images/releases/tag/ubuntu24%2F20250907.24
+2025-09-22T19:47:43.8749560Z ##[endgroup]
+2025-09-22T19:47:43.8751609Z ##[group]GITHUB_TOKEN Permissions
+2025-09-22T19:47:43.8754669Z Actions: read
+2025-09-22T19:47:43.8755500Z Contents: read
+2025-09-22T19:47:43.8756345Z Metadata: read
+2025-09-22T19:47:43.8757121Z SecurityEvents: write
+2025-09-22T19:47:43.8758146Z ##[endgroup]
+2025-09-22T19:47:43.8760863Z Secret source: Actions
+2025-09-22T19:47:43.8762140Z Prepare workflow directory
+2025-09-22T19:47:43.9504764Z Prepare all required actions
+2025-09-22T19:47:43.9562452Z Getting action download info
+2025-09-22T19:47:44.2117643Z Download action repository '8398a7/action-slack@v3' (SHA:77eaa4f1c608a7d68b38af4e3f739dcd8cba273e)
+2025-09-22T19:47:44.7286179Z Complete job name: Security Scan Summary
+2025-09-22T19:47:44.8003390Z ##[group]Run echo "## 🔒 Security Scan Summary"
+2025-09-22T19:47:44.8004067Z [36;1mecho "## 🔒 Security Scan Summary"[0m
+2025-09-22T19:47:44.8004620Z [36;1mecho "| Component | Status |"[0m
+2025-09-22T19:47:44.8005125Z [36;1mecho "|-----------|--------|"[0m
+2025-09-22T19:47:44.8005663Z [36;1mecho "| Dependencies | ❌ Failed |"[0m
+2025-09-22T19:47:44.8006213Z [36;1mecho "| Vulnerabilities | ❌ Failed |"[0m
+2025-09-22T19:47:44.8006750Z [36;1mecho "| Secrets | ❌ Failed |"[0m
+2025-09-22T19:47:44.8007276Z [36;1mecho "| Android Security | ❌ Failed |"[0m
+2025-09-22T19:47:44.8007837Z [36;1mecho "| Network Security | ❌ Failed |"[0m
+2025-09-22T19:47:44.8008401Z [36;1mecho "| Data Protection | ✅ Passed |"[0m
+2025-09-22T19:47:44.8103864Z shell: /usr/bin/bash -e {0}
+2025-09-22T19:47:44.8104636Z ##[endgroup]
+2025-09-22T19:47:44.8223594Z ## 🔒 Security Scan Summary
+2025-09-22T19:47:44.8224164Z | Component | Status |
+2025-09-22T19:47:44.8224599Z |-----------|--------|
+2025-09-22T19:47:44.8225130Z | Dependencies | ❌ Failed |
+2025-09-22T19:47:44.8225632Z | Vulnerabilities | ❌ Failed |
+2025-09-22T19:47:44.8226125Z | Secrets | ❌ Failed |
+2025-09-22T19:47:44.8226589Z | Android Security | ❌ Failed |
+2025-09-22T19:47:44.8227095Z | Network Security | ❌ Failed |
+2025-09-22T19:47:44.8227651Z | Data Protection | ✅ Passed |
+2025-09-22T19:47:44.8388916Z ##[group]Run 8398a7/action-slack@v3
+2025-09-22T19:47:44.8389461Z with:
+2025-09-22T19:47:44.8389827Z   status: failure
+2025-09-22T19:47:44.8391339Z   text: 🚨 CRITICAL SECURITY ISSUES DETECTED 🚨
+Repository: thc1006/pose-coach-android-starter
+Branch: refs/heads/main
+
+Failed Security Checks:
+- Dependencies: failure
+- Secrets: failure
+- Android: failure
+
+Please review immediately!
+
+2025-09-22T19:47:44.8393221Z   author_name: 8398a7@action-slack
+2025-09-22T19:47:44.8393833Z   success_message: :white_check_mark: Succeeded GitHub Actions
+
+2025-09-22T19:47:44.8394531Z   cancelled_message: :warning: Cancelled GitHub Actions
+
+2025-09-22T19:47:44.8395262Z   failure_message: :no_entry: Failed GitHub Actions
+
+2025-09-22T19:47:44.8396000Z   github_token: ***
+2025-09-22T19:47:44.8396408Z env:
+2025-09-22T19:47:44.8396772Z   SLACK_WEBHOOK_URL: 
+2025-09-22T19:47:44.8397181Z ##[endgroup]
+2025-09-22T19:47:44.9365383Z ##[error]Specify secrets.SLACK_WEBHOOK_URL
+2025-09-22T19:47:44.9518816Z Cleaning up orphan processes

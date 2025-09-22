@@ -1,0 +1,276 @@
+--- a/.github/workflows/ci-cd.yml
++++ b/.github/workflows/ci-cd.yml
+@@ -55,6 +55,9 @@ jobs:
+         with:
+           java-version: '17'
+           distribution: 'temurin'
++
++      - name: Grant execute permission for gradlew
++        run: chmod +x gradlew
+
+       - name: Cache Gradle dependencies
+         uses: actions/cache@v3
+@@ -152,6 +155,9 @@ jobs:
+         with:
+           java-version: '17'
+           distribution: 'temurin'
++
++      - name: Grant execute permission for gradlew
++        run: chmod +x gradlew
+
+       - name: Cache Gradle dependencies
+         uses: actions/cache@v3
+@@ -211,6 +217,9 @@ jobs:
+         with:
+           java-version: '17'
+           distribution: 'temurin'
++
++      - name: Grant execute permission for gradlew
++        run: chmod +x gradlew
+
+       - name: Cache Gradle dependencies
+         uses: actions/cache@v3
+@@ -265,6 +274,9 @@ jobs:
+         with:
+           java-version: '17'
+           distribution: 'temurin'
++
++      - name: Grant execute permission for gradlew
++        run: chmod +x gradlew
+
+       - name: Cache Gradle dependencies
+         uses: actions/cache@v3
+@@ -334,6 +346,9 @@ jobs:
+         with:
+           java-version: '17'
+           distribution: 'temurin'
++
++      - name: Grant execute permission for gradlew
++        run: chmod +x gradlew
+
+       - name: Setup Android SDK
+         uses: android-actions/setup-android@v2
+@@ -383,6 +398,9 @@ jobs:
+         with:
+           java-version: '17'
+           distribution: 'temurin'
++
++      - name: Grant execute permission for gradlew
++        run: chmod +x gradlew
+
+       - name: Setup Android SDK
+         uses: android-actions/setup-android@v2
+@@ -522,6 +540,8 @@ jobs:
+       - name: OWASP Dependency Check
+         uses: dependency-check/Dependency-Check_Action@main
+         with:
++          project: 'pose-coach-android'
++          path: '.'
+           args: >
+             --scan .
+             --format HTML
+@@ -529,7 +549,10 @@ jobs:
+             --failOnCVSS 7
+             --enableRetired
+             --enableExperimental
+-            --nvdApiKey ${{ secrets.NVD_API_KEY }}
++            ${{ secrets.NVD_API_KEY && format('--nvdApiKey {0}', secrets.NVD_API_KEY) || '' }}
++            ${{ secrets.OSSINDEX_USER && format('--ossindexUsername {0}', secrets.OSSINDEX_USER) || '--disableOssIndex' }}
++            ${{ secrets.OSSINDEX_TOKEN && format('--ossindexPassword {0}', secrets.OSSINDEX_TOKEN) || '' }}
++            --disableNodeAudit
+
+       - name: Upload OWASP Dependency Check results
+         uses: actions/upload-artifact@v3
+@@ -604,12 +627,16 @@ jobs:
+
+       - name: Notify Slack on Success
+         uses: rtCamp/action-slack-notify@v2.3.3
+-        if: success() && github.event_name == 'push' && github.ref == 'refs/heads/main'
++        if: |
++          success() &&
++          github.event_name == 'push' &&
++          github.ref == 'refs/heads/main' &&
++          env.SLACK_WEBHOOK != ''
+         env:
+           SLACK_COLOR: 'good'
+           SLACK_MESSAGE: |
+             ✅ All CI/CD checks passed successfully!
+             ${{ needs.aggregate-test-results.outputs.test-summary }}
+-          SLACK_WEBHOOK: ${{ secrets.SLACK_WEBHOOK }}
++          SLACK_WEBHOOK: ${{ secrets.SLACK_WEBHOOK || '' }}
+           SLACK_USERNAME: 'GitHub Actions'
+           SLACK_CHANNEL: '#ci-cd'
+           SLACK_ICON_EMOJI: ':white_check_mark:'
+@@ -617,7 +644,11 @@ jobs:
+
+       - name: Notify Slack on Failure
+         uses: rtCamp/action-slack-notify@v2.3.3
+-        if: failure() && github.event_name == 'push' && github.ref == 'refs/heads/main'
++        if: |
++          failure() &&
++          github.event_name == 'push' &&
++          github.ref == 'refs/heads/main' &&
++          env.SLACK_WEBHOOK != ''
+         env:
+           SLACK_COLOR: 'danger'
+           SLACK_MESSAGE: |
+@@ -625,7 +656,7 @@ jobs:
+             Failed jobs: ${{ join(needs.*.result, ', ') }}
+             Check the workflow run for details.
+             Repository: ${{ github.repository }}
+-          SLACK_WEBHOOK: ${{ secrets.SLACK_WEBHOOK }}
++          SLACK_WEBHOOK: ${{ secrets.SLACK_WEBHOOK || '' }}
+           SLACK_USERNAME: 'GitHub Actions'
+           SLACK_CHANNEL: '#ci-cd-alerts'
+           SLACK_ICON_EMOJI: ':x:'
+--- a/.github/workflows/gemini-live-api-testing.yml
++++ b/.github/workflows/gemini-live-api-testing.yml
+@@ -7,6 +7,11 @@ on:
+   workflow_dispatch:
+   workflow_call:
+
++permissions:
++  contents: read
++  checks: write
++  pull-requests: write
++
+ env:
+   GEMINI_API_KEY: ${{ secrets.GEMINI_API_KEY }}
+   GOOGLE_APPLICATION_CREDENTIALS: ${{ secrets.GOOGLE_APPLICATION_CREDENTIALS }}
+@@ -40,6 +45,9 @@ jobs:
+         with:
+           java-version: '17'
+           distribution: 'temurin'
++
++      - name: Grant execute permission for gradlew
++        run: chmod +x gradlew
+
+       - name: Setup Android SDK
+         uses: android-actions/setup-android@v2
+@@ -91,6 +99,9 @@ jobs:
+         with:
+           java-version: '17'
+           distribution: 'temurin'
++
++      - name: Grant execute permission for gradlew
++        run: chmod +x gradlew
+
+       - name: Setup Android SDK
+         uses: android-actions/setup-android@v2
+@@ -144,6 +155,9 @@ jobs:
+         with:
+           java-version: '17'
+           distribution: 'temurin'
++
++      - name: Grant execute permission for gradlew
++        run: chmod +x gradlew
+
+       - name: Setup Android SDK
+         uses: android-actions/setup-android@v2
+@@ -191,6 +205,9 @@ jobs:
+         with:
+           java-version: '17'
+           distribution: 'temurin'
++
++      - name: Grant execute permission for gradlew
++        run: chmod +x gradlew
+
+       - name: Setup Android SDK
+         uses: android-actions/setup-android@v2
+@@ -250,18 +267,23 @@ jobs:
+
+       - name: Notify on Success
+         uses: rtCamp/action-slack-notify@v2.3.3
+-        if: success()
++        if: |
++          success() &&
++          env.SLACK_WEBHOOK != ''
+         env:
+           SLACK_COLOR: 'good'
+           SLACK_MESSAGE: '✅ All Gemini Live API tests passed successfully!'
+-          SLACK_WEBHOOK: ${{ secrets.SLACK_WEBHOOK }}
++          SLACK_WEBHOOK: ${{ secrets.SLACK_WEBHOOK || '' }}
+           SLACK_CHANNEL: '#ci-cd'
+
+       - name: Notify on Failure
+         uses: rtCamp/action-slack-notify@v2.3.3
+-        if: failure()
++        if: |
++          failure() &&
++          env.SLACK_WEBHOOK != ''
+         env:
+           SLACK_COLOR: 'danger'
+           SLACK_MESSAGE: |
+             ❌ Gemini Live API tests failed!
+             Failed tests: ${{ join(needs.*.result, ', ') }}
+-          SLACK_WEBHOOK: ${{ secrets.SLACK_WEBHOOK }}
++          SLACK_WEBHOOK: ${{ secrets.SLACK_WEBHOOK || '' }}
++          SLACK_CHANNEL: '#ci-cd-alerts'
+--- a/.github/workflows/performance-benchmark.yml
++++ b/.github/workflows/performance-benchmark.yml
+@@ -11,6 +11,11 @@ on:
+       - '!**.md'
+       - '!docs/**'
+
++permissions:
++  contents: read
++  issues: write
++  pull-requests: write
++
+ jobs:
+   performance-benchmark:
+     runs-on: ubuntu-latest
+@@ -42,6 +47,9 @@ jobs:
+         with:
+           java-version: '17'
+           distribution: 'temurin'
++
++      - name: Grant execute permission for gradlew
++        run: chmod +x gradlew
+
+       - name: Setup Android SDK
+         uses: android-actions/setup-android@v2
+@@ -195,19 +203,23 @@ jobs:
+           echo "::endgroup::"
+
+       - name: Store Performance Baseline
+-        if: github.ref == 'refs/heads/main'
++        if: github.ref == 'refs/heads/main' && success()
+         run: |
+           mkdir -p .performance
+-          echo "${{ steps.aggregate.outputs.report }}" > .performance/baseline.json
+-
+-          echo "::notice title=Baseline Updated::Performance baseline has been updated"
++          cat > .performance/baseline.json << 'EOF'
++          ${{ steps.aggregate.outputs.report }}
++          EOF
++          echo "::notice title=Baseline Updated::Performance baseline has been updated"
+
+       - name: Notify on Performance Issues
+-        if: steps.aggregate.outputs.has-regressions == 'true'
++        if: |
++          steps.aggregate.outputs.has-regressions == 'true' &&
++          env.SLACK_WEBHOOK != ''
+         uses: rtCamp/action-slack-notify@v2.3.3
+         env:
+           SLACK_COLOR: 'warning'
+-          SLACK_MESSAGE: |
++          SLACK_MESSAGE: |
+             ⚠️ Performance regression detected!
+             ${{ steps.aggregate.outputs.regression-summary }}
+-          SLACK_WEBHOOK: ${{ secrets.SLACK_WEBHOOK }}
++          SLACK_WEBHOOK: ${{ secrets.SLACK_WEBHOOK || '' }}
+           SLACK_CHANNEL: '#performance-alerts'
+--- a/gradle.properties
++++ b/gradle.properties
+@@ -20,8 +20,9 @@ kotlin.code.style=official
+ # AndroidX package structure to make it clearer which packages are bundled with the
+ # Android operating system, and which are packaged with your app's APK
+ # https://developer.android.com/topic/libraries/support-library/androidx-rn
+ android.useAndroidX=true
+-org.gradle.java.home=C:/Program Files/Android/Android Studio/jbr
++# Remove Windows-specific Java home to allow CI/CD to work properly
++# org.gradle.java.home=C:/Program Files/Android/Android Studio/jbr
+ # Enables namespacing of each library's R class so that its R class includes only the
+ # resources declared in the library itself and none from the library's dependencies,
+ # thereby reducing the size of the R class for that library

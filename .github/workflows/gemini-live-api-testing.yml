@@ -1,5 +1,11 @@
 name: Gemini Live API Testing Suite
 
+permissions:
+  contents: read
+  checks: write
+  pull-requests: write
+  issues: write
+
 on:
   push:
     branches: [ main, develop ]
@@ -29,6 +35,9 @@ jobs:
       with:
         java-version: ${{ env.JAVA_VERSION }}
         distribution: 'temurin'
+
+    - name: Grant execute permission for gradlew
+      run: chmod +x gradlew
 
     - name: Setup Android SDK
       uses: android-actions/setup-android@v3
@@ -88,6 +97,9 @@ jobs:
         java-version: ${{ env.JAVA_VERSION }}
         distribution: 'temurin'
 
+    - name: Grant execute permission for gradlew
+      run: chmod +x gradlew
+
     - name: Setup Android SDK
       uses: android-actions/setup-android@v3
 
@@ -133,6 +145,9 @@ jobs:
       with:
         java-version: ${{ env.JAVA_VERSION }}
         distribution: 'temurin'
+
+    - name: Grant execute permission for gradlew
+      run: chmod +x gradlew
 
     - name: Setup Android SDK
       uses: android-actions/setup-android@v3
@@ -180,6 +195,9 @@ jobs:
       with:
         java-version: ${{ env.JAVA_VERSION }}
         distribution: 'temurin'
+
+    - name: Grant execute permission for gradlew
+      run: chmod +x gradlew
 
     - name: Setup Android SDK
       uses: android-actions/setup-android@v3
@@ -254,6 +272,9 @@ jobs:
         java-version: ${{ env.JAVA_VERSION }}
         distribution: 'temurin'
 
+    - name: Grant execute permission for gradlew
+      run: chmod +x gradlew
+
     - name: Run Dependency Check
       run: |
         ./gradlew dependencyCheckAnalyze --info
@@ -290,6 +311,9 @@ jobs:
       with:
         java-version: ${{ env.JAVA_VERSION }}
         distribution: 'temurin'
+
+    - name: Grant execute permission for gradlew
+      run: chmod +x gradlew
 
     - name: Setup Android SDK
       uses: android-actions/setup-android@v3
@@ -337,6 +361,9 @@ jobs:
       with:
         java-version: ${{ env.JAVA_VERSION }}
         distribution: 'temurin'
+
+    - name: Grant execute permission for gradlew
+      run: chmod +x gradlew
 
     - name: Download All Test Artifacts
       uses: actions/download-artifact@v3
@@ -407,7 +434,7 @@ jobs:
 
     steps:
     - name: Notify Slack on Success
-      if: success()
+      if: success() && secrets.SLACK_WEBHOOK != ''
       uses: rtCamp/action-slack-notify@v2
       env:
         SLACK_WEBHOOK: ${{ secrets.SLACK_WEBHOOK }}
@@ -419,7 +446,7 @@ jobs:
           🚀 Production Ready: Yes
 
     - name: Notify Slack on Failure
-      if: failure()
+      if: failure() && secrets.SLACK_WEBHOOK != ''
       uses: rtCamp/action-slack-notify@v2
       env:
         SLACK_WEBHOOK: ${{ secrets.SLACK_WEBHOOK }}

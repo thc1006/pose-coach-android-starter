@@ -1,0 +1,69 @@
+﻿2025-09-22T19:45:57.2703424Z ##[group]Run actions/checkout@v4
+2025-09-22T19:45:57.2704057Z with:
+2025-09-22T19:45:57.2704288Z   repository: thc1006/pose-coach-android-starter
+2025-09-22T19:45:57.2704728Z   token: ***
+2025-09-22T19:45:57.2704911Z   ssh-strict: true
+2025-09-22T19:45:57.2705092Z   ssh-user: git
+2025-09-22T19:45:57.2705270Z   persist-credentials: true
+2025-09-22T19:45:57.2705704Z   clean: true
+2025-09-22T19:45:57.2705893Z   sparse-checkout-cone-mode: true
+2025-09-22T19:45:57.2706115Z   fetch-depth: 1
+2025-09-22T19:45:57.2706286Z   fetch-tags: false
+2025-09-22T19:45:57.2706470Z   show-progress: true
+2025-09-22T19:45:57.2706646Z   lfs: false
+2025-09-22T19:45:57.2706809Z   submodules: false
+2025-09-22T19:45:57.2706992Z   set-safe-directory: true
+2025-09-22T19:45:57.2707417Z ##[endgroup]
+2025-09-22T19:45:57.3771425Z Syncing repository: thc1006/pose-coach-android-starter
+2025-09-22T19:45:57.3773382Z ##[group]Getting Git version info
+2025-09-22T19:45:57.3774250Z Working directory is '/home/runner/work/pose-coach-android-starter/pose-coach-android-starter'
+2025-09-22T19:45:57.3775641Z [command]/usr/bin/git version
+2025-09-22T19:45:57.3782376Z git version 2.51.0
+2025-09-22T19:45:57.3807970Z ##[endgroup]
+2025-09-22T19:45:57.3820393Z Temporarily overriding HOME='/home/runner/work/_temp/95fe6cef-139c-4922-8b38-591817d06c26' before making global git config changes
+2025-09-22T19:45:57.3821218Z Adding repository directory to the temporary git global config as a safe directory
+2025-09-22T19:45:57.3825655Z [command]/usr/bin/git config --global --add safe.directory /home/runner/work/pose-coach-android-starter/pose-coach-android-starter
+2025-09-22T19:45:57.3867516Z Deleting the contents of '/home/runner/work/pose-coach-android-starter/pose-coach-android-starter'
+2025-09-22T19:45:57.3870895Z ##[group]Initializing the repository
+2025-09-22T19:45:57.3875256Z [command]/usr/bin/git init /home/runner/work/pose-coach-android-starter/pose-coach-android-starter
+2025-09-22T19:45:57.3977986Z hint: Using 'master' as the name for the initial branch. This default branch name
+2025-09-22T19:45:57.3978762Z hint: is subject to change. To configure the initial branch name to use in all
+2025-09-22T19:45:57.3979349Z hint: of your new repositories, which will suppress this warning, call:
+2025-09-22T19:45:57.3980193Z hint:
+2025-09-22T19:45:57.3980775Z hint: 	git config --global init.defaultBranch <name>
+2025-09-22T19:45:57.3981249Z hint:
+2025-09-22T19:45:57.3981724Z hint: Names commonly chosen instead of 'master' are 'main', 'trunk' and
+2025-09-22T19:45:57.3982507Z hint: 'development'. The just-created branch can be renamed via this command:
+2025-09-22T19:45:57.3983081Z hint:
+2025-09-22T19:45:57.3983375Z hint: 	git branch -m <name>
+2025-09-22T19:45:57.3983707Z hint:
+2025-09-22T19:45:57.3984206Z hint: Disable this message with "git config set advice.defaultBranchName false"
+2025-09-22T19:45:57.3984884Z Initialized empty Git repository in /home/runner/work/pose-coach-android-starter/pose-coach-android-starter/.git/
+2025-09-22T19:45:57.3993838Z [command]/usr/bin/git remote add origin https://github.com/thc1006/pose-coach-android-starter
+2025-09-22T19:45:57.4027705Z ##[endgroup]
+2025-09-22T19:45:57.4028130Z ##[group]Disabling automatic garbage collection
+2025-09-22T19:45:57.4031673Z [command]/usr/bin/git config --local gc.auto 0
+2025-09-22T19:45:57.4058478Z ##[endgroup]
+2025-09-22T19:45:57.4058912Z ##[group]Setting up auth
+2025-09-22T19:45:57.4065010Z [command]/usr/bin/git config --local --name-only --get-regexp core\.sshCommand
+2025-09-22T19:45:57.4093326Z [command]/usr/bin/git submodule foreach --recursive sh -c "git config --local --name-only --get-regexp 'core\.sshCommand' && git config --local --unset-all 'core.sshCommand' || :"
+2025-09-22T19:45:57.4405227Z [command]/usr/bin/git config --local --name-only --get-regexp http\.https\:\/\/github\.com\/\.extraheader
+2025-09-22T19:45:57.4433515Z [command]/usr/bin/git submodule foreach --recursive sh -c "git config --local --name-only --get-regexp 'http\.https\:\/\/github\.com\/\.extraheader' && git config --local --unset-all 'http.https://github.com/.extraheader' || :"
+2025-09-22T19:45:57.4647365Z [command]/usr/bin/git config --local http.https://github.com/.extraheader AUTHORIZATION: basic ***
+2025-09-22T19:45:57.4680387Z ##[endgroup]
+2025-09-22T19:45:57.4680967Z ##[group]Fetching the repository
+2025-09-22T19:45:57.4696931Z [command]/usr/bin/git -c protocol.version=2 fetch --no-tags --prune --no-recurse-submodules --depth=1 origin +685d758d9ae8c729893935dc590157eded077a04:refs/remotes/origin/main
+2025-09-22T19:45:58.3166739Z From https://github.com/thc1006/pose-coach-android-starter
+2025-09-22T19:45:58.3167888Z  * [new ref]         685d758d9ae8c729893935dc590157eded077a04 -> origin/main
+2025-09-22T19:45:58.3197627Z ##[endgroup]
+2025-09-22T19:45:58.3198160Z ##[group]Determining the checkout info
+2025-09-22T19:45:58.3200005Z ##[endgroup]
+2025-09-22T19:45:58.3204773Z [command]/usr/bin/git sparse-checkout disable
+2025-09-22T19:45:58.3241899Z [command]/usr/bin/git config --local --unset-all extensions.worktreeConfig
+2025-09-22T19:45:58.3268051Z ##[group]Checking out the ref
+2025-09-22T19:45:58.3271536Z [command]/usr/bin/git checkout --progress --force -B main refs/remotes/origin/main
+2025-09-22T19:45:58.4104424Z Switched to a new branch 'main'
+2025-09-22T19:45:58.4106551Z branch 'main' set up to track 'origin/main'.
+2025-09-22T19:45:58.4115076Z ##[endgroup]
+2025-09-22T19:45:58.4151942Z [command]/usr/bin/git log -1 --format=%H
+2025-09-22T19:45:58.4172799Z 685d758d9ae8c729893935dc590157eded077a04

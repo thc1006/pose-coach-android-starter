@@ -1,0 +1,32 @@
+﻿2025-09-22T19:46:13.8284253Z Current runner version: '2.328.0'
+2025-09-22T19:46:13.8307395Z ##[group]Runner Image Provisioner
+2025-09-22T19:46:13.8308501Z Hosted Compute Agent
+2025-09-22T19:46:13.8309113Z Version: 20250829.383
+2025-09-22T19:46:13.8309709Z Commit: 27cb235aab5b0e52e153a26cd86b4742e89dac5d
+2025-09-22T19:46:13.8310495Z Build Date: 2025-08-29T13:48:48Z
+2025-09-22T19:46:13.8311072Z ##[endgroup]
+2025-09-22T19:46:13.8311597Z ##[group]Operating System
+2025-09-22T19:46:13.8312106Z Ubuntu
+2025-09-22T19:46:13.8312653Z 24.04.3
+2025-09-22T19:46:13.8313077Z LTS
+2025-09-22T19:46:13.8313545Z ##[endgroup]
+2025-09-22T19:46:13.8314074Z ##[group]Runner Image
+2025-09-22T19:46:13.8314610Z Image: ubuntu-24.04
+2025-09-22T19:46:13.8315080Z Version: 20250907.24.1
+2025-09-22T19:46:13.8316120Z Included Software: https://github.com/actions/runner-images/blob/ubuntu24/20250907.24/images/ubuntu/Ubuntu2404-Readme.md
+2025-09-22T19:46:13.8317602Z Image Release: https://github.com/actions/runner-images/releases/tag/ubuntu24%2F20250907.24
+2025-09-22T19:46:13.8319116Z ##[endgroup]
+2025-09-22T19:46:13.8320165Z ##[group]GITHUB_TOKEN Permissions
+2025-09-22T19:46:13.8322004Z Contents: read
+2025-09-22T19:46:13.8322526Z Metadata: read
+2025-09-22T19:46:13.8323067Z Packages: read
+2025-09-22T19:46:13.8323559Z ##[endgroup]
+2025-09-22T19:46:13.8325511Z Secret source: Actions
+2025-09-22T19:46:13.8326180Z Prepare workflow directory
+2025-09-22T19:46:13.9049123Z Prepare all required actions
+2025-09-22T19:46:13.9085693Z Getting action download info
+2025-09-22T19:46:14.3309170Z Download action repository 'actions/checkout@v4' (SHA:08eba0b27e820071cde6df949e0beb9ba4906955)
+2025-09-22T19:46:14.5194553Z Download action repository 'actions/download-artifact@v4' (SHA:d3f86a106a0bac45b974a628896c90dbdf5c8093)
+2025-09-22T19:46:15.3845019Z Download action repository 'actions/upload-artifact@v4' (SHA:ea165f8d65b6e75b540449e92b4886f43607fa02)
+2025-09-22T19:46:15.4943604Z Download action repository 'actions/github-script@v7' (SHA:f28e40c7f34bde8b3046d885e986cb6290c5673b)
+2025-09-22T19:46:16.3640720Z Complete job name: Aggregate Performance Results

@@ -1,0 +1,30 @@
+﻿2025-09-22T19:45:39.9931355Z Current runner version: '2.328.0'
+2025-09-22T19:45:39.9959098Z ##[group]Runner Image Provisioner
+2025-09-22T19:45:39.9959911Z Hosted Compute Agent
+2025-09-22T19:45:39.9960543Z Version: 20250829.383
+2025-09-22T19:45:39.9961145Z Commit: 27cb235aab5b0e52e153a26cd86b4742e89dac5d
+2025-09-22T19:45:39.9961851Z Build Date: 2025-08-29T13:48:48Z
+2025-09-22T19:45:39.9962499Z ##[endgroup]
+2025-09-22T19:45:39.9963062Z ##[group]Operating System
+2025-09-22T19:45:39.9963630Z Ubuntu
+2025-09-22T19:45:39.9964122Z 24.04.3
+2025-09-22T19:45:39.9964625Z LTS
+2025-09-22T19:45:39.9965056Z ##[endgroup]
+2025-09-22T19:45:39.9965590Z ##[group]Runner Image
+2025-09-22T19:45:39.9966163Z Image: ubuntu-24.04
+2025-09-22T19:45:39.9966683Z Version: 20250907.24.1
+2025-09-22T19:45:39.9967735Z Included Software: https://github.com/actions/runner-images/blob/ubuntu24/20250907.24/images/ubuntu/Ubuntu2404-Readme.md
+2025-09-22T19:45:39.9969371Z Image Release: https://github.com/actions/runner-images/releases/tag/ubuntu24%2F20250907.24
+2025-09-22T19:45:39.9970585Z ##[endgroup]
+2025-09-22T19:45:39.9971718Z ##[group]GITHUB_TOKEN Permissions
+2025-09-22T19:45:39.9973920Z Contents: read
+2025-09-22T19:45:39.9974529Z Metadata: read
+2025-09-22T19:45:39.9975014Z Packages: read
+2025-09-22T19:45:39.9975571Z ##[endgroup]
+2025-09-22T19:45:39.9978009Z Secret source: Actions
+2025-09-22T19:45:39.9979360Z Prepare workflow directory
+2025-09-22T19:45:40.0306934Z Prepare all required actions
+2025-09-22T19:45:40.0345708Z Getting action download info
+2025-09-22T19:45:40.3289153Z Download action repository 'actions/checkout@v4' (SHA:08eba0b27e820071cde6df949e0beb9ba4906955)
+2025-09-22T19:45:40.5344456Z Download action repository 'actions/setup-java@v4' (SHA:c5195efecf7bdfc987ee8bae7a71cb8b11521c00)
+2025-09-22T19:45:40.8923041Z Complete job name: Dependency Quality Gate

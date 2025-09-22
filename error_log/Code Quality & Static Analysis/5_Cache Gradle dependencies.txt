@@ -1,0 +1,25 @@
+﻿2025-09-22T19:46:07.5665005Z ##[group]Run actions/cache@v4
+2025-09-22T19:46:07.5665283Z with:
+2025-09-22T19:46:07.5665551Z   path: ~/.gradle/caches
+~/.gradle/wrapper
+~/.android/build-cache
+
+2025-09-22T19:46:07.5666352Z   key: Linux-gradle-7576f76506f5c09180da8bded6b7ab671933f4a32313086dd508bce58fe5a7b5
+2025-09-22T19:46:07.5666887Z   restore-keys: Linux-gradle-
+
+2025-09-22T19:46:07.5667118Z   enableCrossOsArchive: false
+2025-09-22T19:46:07.5667341Z   fail-on-cache-miss: false
+2025-09-22T19:46:07.5667543Z   lookup-only: false
+2025-09-22T19:46:07.5667730Z   save-always: false
+2025-09-22T19:46:07.5667896Z env:
+2025-09-22T19:46:07.5668287Z   GRADLE_OPTS: -Dorg.gradle.daemon=false -Dorg.gradle.parallel=true -Dorg.gradle.configureondemand=true
+2025-09-22T19:46:07.5668722Z   JAVA_VERSION: 17
+2025-09-22T19:46:07.5668900Z   ANDROID_COMPILE_SDK: 34
+2025-09-22T19:46:07.5669108Z   ANDROID_BUILD_TOOLS: 34.0.0
+2025-09-22T19:46:07.5669309Z   ANDROID_SDK_TOOLS: 9477386
+2025-09-22T19:46:07.5669617Z   JAVA_HOME: /opt/hostedtoolcache/Java_Temurin-Hotspot_jdk/17.0.16-8/x64
+2025-09-22T19:46:07.5670087Z   JAVA_HOME_17_X64: /opt/hostedtoolcache/Java_Temurin-Hotspot_jdk/17.0.16-8/x64
+2025-09-22T19:46:07.5670440Z   ANDROID_HOME: /usr/local/lib/android/sdk
+2025-09-22T19:46:07.5670700Z   ANDROID_SDK_ROOT: /usr/local/lib/android/sdk
+2025-09-22T19:46:07.5670943Z ##[endgroup]
+2025-09-22T19:46:07.7782877Z Cache not found for input keys: Linux-gradle-7576f76506f5c09180da8bded6b7ab671933f4a32313086dd508bce58fe5a7b5, Linux-gradle-

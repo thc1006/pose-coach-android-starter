@@ -1,0 +1,29 @@
+﻿2025-09-22T19:45:42.2499142Z ##[group]Run actions/setup-java@v4
+2025-09-22T19:45:42.2500344Z with:
+2025-09-22T19:45:42.2501161Z   java-version: 17
+2025-09-22T19:45:42.2502067Z   distribution: temurin
+2025-09-22T19:45:42.2503000Z   cache: gradle
+2025-09-22T19:45:42.2503879Z   java-package: jdk
+2025-09-22T19:45:42.2504785Z   check-latest: false
+2025-09-22T19:45:42.2505706Z   server-id: github
+2025-09-22T19:45:42.2506631Z   server-username: GITHUB_ACTOR
+2025-09-22T19:45:42.2507689Z   server-password: GITHUB_TOKEN
+2025-09-22T19:45:42.2508877Z   overwrite-settings: true
+2025-09-22T19:45:42.2509873Z   job-status: success
+2025-09-22T19:45:42.2511080Z   token: ***
+2025-09-22T19:45:42.2511926Z ##[endgroup]
+2025-09-22T19:45:42.4509369Z ##[group]Installed distributions
+2025-09-22T19:45:42.4825236Z Resolved Java 17.0.16+8 from tool-cache
+2025-09-22T19:45:42.4826007Z Setting Java 17.0.16+8 as the default
+2025-09-22T19:45:42.4839709Z Creating toolchains.xml for JDK version 17 from temurin
+2025-09-22T19:45:42.4919282Z Writing to /home/runner/.m2/toolchains.xml
+2025-09-22T19:45:42.4919929Z 
+2025-09-22T19:45:42.4920133Z Java configuration:
+2025-09-22T19:45:42.4920586Z   Distribution: temurin
+2025-09-22T19:45:42.4921031Z   Version: 17.0.16+8
+2025-09-22T19:45:42.4921657Z   Path: /opt/hostedtoolcache/Java_Temurin-Hotspot_jdk/17.0.16-8/x64
+2025-09-22T19:45:42.4922188Z 
+2025-09-22T19:45:42.4923794Z ##[endgroup]
+2025-09-22T19:45:42.4941569Z Creating settings.xml with server-id: github
+2025-09-22T19:45:42.4945396Z Writing to /home/runner/.m2/settings.xml
+2025-09-22T19:45:42.7618513Z gradle cache is not found

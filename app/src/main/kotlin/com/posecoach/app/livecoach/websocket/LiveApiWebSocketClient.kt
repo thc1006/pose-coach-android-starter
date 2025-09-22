@@ -251,7 +251,8 @@ class LiveApiWebSocketClient(
         Timber.v("Received: $text")
 
         try {
-            val jsonObject = gson.fromJson(text, Map::class.java) @Suppress("UNCHECKED_CAST") as Map<String, Any>
+            @Suppress("UNCHECKED_CAST")
+            val jsonObject = gson.fromJson(text, Map::class.java) as Map<String, Any>
 
             when {
                 jsonObject.containsKey("setupComplete") -> {
@@ -261,17 +262,20 @@ class LiveApiWebSocketClient(
                 }
 
                 jsonObject.containsKey("serverContent") -> {
-                    val serverContent = parseServerContent(jsonObject["serverContent"] @Suppress("UNCHECKED_CAST") as Map<String, Any>)
+                    @Suppress("UNCHECKED_CAST")
+                    val serverContent = parseServerContent(jsonObject["serverContent"] as Map<String, Any>)
                     launch { _responses.emit(serverContent) }
                 }
 
                 jsonObject.containsKey("toolCall") -> {
-                    val toolCall = parseToolCall(jsonObject["toolCall"] @Suppress("UNCHECKED_CAST") as Map<String, Any>)
+                    @Suppress("UNCHECKED_CAST")
+                    val toolCall = parseToolCall(jsonObject["toolCall"] as Map<String, Any>)
                     launch { _responses.emit(toolCall) }
                 }
 
                 jsonObject.containsKey("toolCallCancellation") -> {
-                    val cancellation = parseToolCallCancellation(jsonObject["toolCallCancellation"] @Suppress("UNCHECKED_CAST") as Map<String, Any>)
+                    @Suppress("UNCHECKED_CAST")
+                    val cancellation = parseToolCallCancellation(jsonObject["toolCallCancellation"] as Map<String, Any>)
                     launch { _responses.emit(cancellation) }
                 }
 
@@ -310,7 +314,8 @@ class LiveApiWebSocketClient(
             when {
                 part.containsKey("text") -> Part.TextPart(part["text"] as String)
                 part.containsKey("inlineData") -> {
-                    val inlineData = part["inlineData"] @Suppress("UNCHECKED_CAST") as Map<String, Any>
+                    @Suppress("UNCHECKED_CAST")
+                    val inlineData = part["inlineData"] as Map<String, Any>
                     Part.InlineDataPart(
                         mimeType = inlineData["mimeType"] as String,
                         data = inlineData["data"] as String
@@ -327,7 +332,10 @@ class LiveApiWebSocketClient(
         val functionCalls = (data["functionCalls"] as? List<Map<String, Any>>)?.map { call ->
             FunctionCall(
                 name = call["name"] as String,
-                args = call["args"] @Suppress("UNCHECKED_CAST") as Map<String, Any>,
+                args = call["args"].let {
+                    @Suppress("UNCHECKED_CAST")
+                    it as Map<String, Any>
+                },
                 id = call["id"] as String
             )
         } ?: emptyList()

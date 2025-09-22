@@ -1,0 +1,33 @@
+﻿2025-09-22T19:45:50.3382864Z Current runner version: '2.328.0'
+2025-09-22T19:45:50.3417838Z ##[group]Runner Image Provisioner
+2025-09-22T19:45:50.3419322Z Hosted Compute Agent
+2025-09-22T19:45:50.3420220Z Version: 20250829.383
+2025-09-22T19:45:50.3421329Z Commit: 27cb235aab5b0e52e153a26cd86b4742e89dac5d
+2025-09-22T19:45:50.3422608Z Build Date: 2025-08-29T13:48:48Z
+2025-09-22T19:45:50.3423829Z ##[endgroup]
+2025-09-22T19:45:50.3424643Z ##[group]Operating System
+2025-09-22T19:45:50.3425865Z Ubuntu
+2025-09-22T19:45:50.3426667Z 24.04.3
+2025-09-22T19:45:50.3427380Z LTS
+2025-09-22T19:45:50.3428277Z ##[endgroup]
+2025-09-22T19:45:50.3429100Z ##[group]Runner Image
+2025-09-22T19:45:50.3429971Z Image: ubuntu-24.04
+2025-09-22T19:45:50.3430776Z Version: 20250907.24.1
+2025-09-22T19:45:50.3432678Z Included Software: https://github.com/actions/runner-images/blob/ubuntu24/20250907.24/images/ubuntu/Ubuntu2404-Readme.md
+2025-09-22T19:45:50.3435359Z Image Release: https://github.com/actions/runner-images/releases/tag/ubuntu24%2F20250907.24
+2025-09-22T19:45:50.3437572Z ##[endgroup]
+2025-09-22T19:45:50.3439384Z ##[group]GITHUB_TOKEN Permissions
+2025-09-22T19:45:50.3442147Z Contents: read
+2025-09-22T19:45:50.3443079Z Metadata: read
+2025-09-22T19:45:50.3443837Z Packages: read
+2025-09-22T19:45:50.3444991Z ##[endgroup]
+2025-09-22T19:45:50.3448011Z Secret source: Actions
+2025-09-22T19:45:50.3449197Z Prepare workflow directory
+2025-09-22T19:45:50.3957989Z Prepare all required actions
+2025-09-22T19:45:50.4012631Z Getting action download info
+2025-09-22T19:45:50.7164070Z Download action repository 'rtCamp/action-slack-notify@v2' (SHA:e31e87e03dd19038e411e38ae27cbad084a90661)
+2025-09-22T19:45:51.4280647Z Download action repository 'actions/github-script@v6' (SHA:d7906e4ad0b1822421a7e6a35d5ca353c962f410)
+2025-09-22T19:45:51.9036576Z Getting action download info
+2025-09-22T19:45:52.0362588Z Download action repository 'LoveToKnow/slackify-markdown-action@698a1d4d0ff1794152a93c03ee8ca5e03a310d4e' (SHA:698a1d4d0ff1794152a93c03ee8ca5e03a310d4e)
+2025-09-22T19:45:52.5857128Z Getting action download info
+2025-09-22T19:45:52.7767026Z Complete job name: Notification

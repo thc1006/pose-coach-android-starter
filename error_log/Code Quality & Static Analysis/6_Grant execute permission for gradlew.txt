@@ -1,0 +1,14 @@
+﻿2025-09-22T19:46:07.7859436Z ##[group]Run chmod +x gradlew
+2025-09-22T19:46:07.7859740Z [36;1mchmod +x gradlew[0m
+2025-09-22T19:46:07.7907628Z shell: /usr/bin/bash -e {0}
+2025-09-22T19:46:07.7907866Z env:
+2025-09-22T19:46:07.7908248Z   GRADLE_OPTS: -Dorg.gradle.daemon=false -Dorg.gradle.parallel=true -Dorg.gradle.configureondemand=true
+2025-09-22T19:46:07.7908681Z   JAVA_VERSION: 17
+2025-09-22T19:46:07.7908867Z   ANDROID_COMPILE_SDK: 34
+2025-09-22T19:46:07.7909075Z   ANDROID_BUILD_TOOLS: 34.0.0
+2025-09-22T19:46:07.7909284Z   ANDROID_SDK_TOOLS: 9477386
+2025-09-22T19:46:07.7909601Z   JAVA_HOME: /opt/hostedtoolcache/Java_Temurin-Hotspot_jdk/17.0.16-8/x64
+2025-09-22T19:46:07.7910056Z   JAVA_HOME_17_X64: /opt/hostedtoolcache/Java_Temurin-Hotspot_jdk/17.0.16-8/x64
+2025-09-22T19:46:07.7910414Z   ANDROID_HOME: /usr/local/lib/android/sdk
+2025-09-22T19:46:07.7910673Z   ANDROID_SDK_ROOT: /usr/local/lib/android/sdk
+2025-09-22T19:46:07.7910916Z ##[endgroup]

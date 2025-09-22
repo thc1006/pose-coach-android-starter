@@ -254,14 +254,15 @@ class SuggestionsOverlayView @JvmOverloads constructor(
         }
 
         fun bind(suggestion: PoseSuggestion, number: Int) {
-            (itemView as FrameLayout).removeAllViews()
+            val frameLayout = itemView as FrameLayout
+            frameLayout.removeAllViews()
 
-            itemView.setOnClickListener(null)
-            itemView.isClickable = false
+            frameLayout.setOnClickListener(null)
+            frameLayout.isClickable = false
 
-            itemView.post {
+            frameLayout.post {
                 val bitmap = Bitmap.createBitmap(
-                    itemView.width.coerceAtLeast(1),
+                    frameLayout.width.coerceAtLeast(1),
                     80,
                     Bitmap.Config.ARGB_8888
                 )
@@ -289,7 +290,7 @@ class SuggestionsOverlayView @JvmOverloads constructor(
                 var y = 55f
                 words.forEach { word ->
                     val testLine = if (line.isEmpty()) word else "$line $word"
-                    if (instructionPaint.measureText(testLine) > itemView.width - 50) {
+                    if (instructionPaint.measureText(testLine) > frameLayout.width - 50) {
                         canvas.drawText(line, 40f, y, instructionPaint)
                         line = word
                         y += 25f
@@ -301,23 +302,24 @@ class SuggestionsOverlayView @JvmOverloads constructor(
                     canvas.drawText(line, 40f, y, instructionPaint)
                 }
 
-                val imageView = android.widget.ImageView(itemView.context).apply {
+                val imageView = android.widget.ImageView(frameLayout.context).apply {
                     setImageBitmap(bitmap)
                     layoutParams = FrameLayout.LayoutParams(
                         FrameLayout.LayoutParams.MATCH_PARENT,
                         FrameLayout.LayoutParams.WRAP_CONTENT
                     )
                 }
-                itemView.addView(imageView)
+                frameLayout.addView(imageView)
             }
         }
     }
 
     private class ErrorViewHolder(itemView: View) : RecyclerView.ViewHolder(itemView) {
         fun bind(errorMessage: String) {
-            (itemView as FrameLayout).removeAllViews()
+            val frameLayout = itemView as FrameLayout
+            frameLayout.removeAllViews()
 
-            val textView = android.widget.TextView(itemView.context).apply {
+            val textView = android.widget.TextView(frameLayout.context).apply {
                 text = "⚠️ $errorMessage"
                 textSize = 14f
                 setTextColor(Color.parseColor("#D32F2F"))
@@ -326,7 +328,7 @@ class SuggestionsOverlayView @JvmOverloads constructor(
                     FrameLayout.LayoutParams.WRAP_CONTENT
                 )
             }
-            itemView.addView(textView)
+            frameLayout.addView(textView)
         }
     }
 }

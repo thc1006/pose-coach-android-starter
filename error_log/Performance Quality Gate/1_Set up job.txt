@@ -1,0 +1,31 @@
+﻿2025-09-22T19:45:42.6096792Z Current runner version: '2.328.0'
+2025-09-22T19:45:42.6121613Z ##[group]Runner Image Provisioner
+2025-09-22T19:45:42.6122429Z Hosted Compute Agent
+2025-09-22T19:45:42.6122989Z Version: 20250829.383
+2025-09-22T19:45:42.6123556Z Commit: 27cb235aab5b0e52e153a26cd86b4742e89dac5d
+2025-09-22T19:45:42.6124340Z Build Date: 2025-08-29T13:48:48Z
+2025-09-22T19:45:42.6124903Z ##[endgroup]
+2025-09-22T19:45:42.6125461Z ##[group]Operating System
+2025-09-22T19:45:42.6126458Z Ubuntu
+2025-09-22T19:45:42.6126933Z 24.04.3
+2025-09-22T19:45:42.6127397Z LTS
+2025-09-22T19:45:42.6127887Z ##[endgroup]
+2025-09-22T19:45:42.6128385Z ##[group]Runner Image
+2025-09-22T19:45:42.6128928Z Image: ubuntu-24.04
+2025-09-22T19:45:42.6129483Z Version: 20250907.24.1
+2025-09-22T19:45:42.6130468Z Included Software: https://github.com/actions/runner-images/blob/ubuntu24/20250907.24/images/ubuntu/Ubuntu2404-Readme.md
+2025-09-22T19:45:42.6131843Z Image Release: https://github.com/actions/runner-images/releases/tag/ubuntu24%2F20250907.24
+2025-09-22T19:45:42.6133024Z ##[endgroup]
+2025-09-22T19:45:42.6134141Z ##[group]GITHUB_TOKEN Permissions
+2025-09-22T19:45:42.6136125Z Contents: read
+2025-09-22T19:45:42.6136652Z Metadata: read
+2025-09-22T19:45:42.6137227Z Packages: read
+2025-09-22T19:45:42.6137734Z ##[endgroup]
+2025-09-22T19:45:42.6139761Z Secret source: Actions
+2025-09-22T19:45:42.6140540Z Prepare workflow directory
+2025-09-22T19:45:42.6457560Z Prepare all required actions
+2025-09-22T19:45:42.6493667Z Getting action download info
+2025-09-22T19:45:43.1357543Z Download action repository 'actions/checkout@v4' (SHA:08eba0b27e820071cde6df949e0beb9ba4906955)
+2025-09-22T19:45:43.3398176Z Download action repository 'actions/setup-java@v4' (SHA:c5195efecf7bdfc987ee8bae7a71cb8b11521c00)
+2025-09-22T19:45:44.2191210Z Download action repository 'android-actions/setup-android@v3' (SHA:9fc6c4e9069bf8d3d10b2204b1fb8f6ef7065407)
+2025-09-22T19:45:44.7895169Z Complete job name: Performance Quality Gate

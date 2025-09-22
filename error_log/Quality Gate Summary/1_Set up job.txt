@@ -1,0 +1,27 @@
+﻿2025-09-22T19:46:18.9650475Z Current runner version: '2.328.0'
+2025-09-22T19:46:18.9675579Z ##[group]Runner Image Provisioner
+2025-09-22T19:46:18.9676328Z Hosted Compute Agent
+2025-09-22T19:46:18.9676947Z Version: 20250829.383
+2025-09-22T19:46:18.9677507Z Commit: 27cb235aab5b0e52e153a26cd86b4742e89dac5d
+2025-09-22T19:46:18.9678585Z Build Date: 2025-08-29T13:48:48Z
+2025-09-22T19:46:18.9679223Z ##[endgroup]
+2025-09-22T19:46:18.9679799Z ##[group]Operating System
+2025-09-22T19:46:18.9680315Z Ubuntu
+2025-09-22T19:46:18.9680822Z 24.04.3
+2025-09-22T19:46:18.9681293Z LTS
+2025-09-22T19:46:18.9681703Z ##[endgroup]
+2025-09-22T19:46:18.9682217Z ##[group]Runner Image
+2025-09-22T19:46:18.9682765Z Image: ubuntu-24.04
+2025-09-22T19:46:18.9683263Z Version: 20250907.24.1
+2025-09-22T19:46:18.9684220Z Included Software: https://github.com/actions/runner-images/blob/ubuntu24/20250907.24/images/ubuntu/Ubuntu2404-Readme.md
+2025-09-22T19:46:18.9685678Z Image Release: https://github.com/actions/runner-images/releases/tag/ubuntu24%2F20250907.24
+2025-09-22T19:46:18.9686883Z ##[endgroup]
+2025-09-22T19:46:18.9688251Z ##[group]GITHUB_TOKEN Permissions
+2025-09-22T19:46:18.9690024Z Contents: read
+2025-09-22T19:46:18.9690642Z Metadata: read
+2025-09-22T19:46:18.9691127Z Packages: read
+2025-09-22T19:46:18.9691575Z ##[endgroup]
+2025-09-22T19:46:18.9693830Z Secret source: Actions
+2025-09-22T19:46:18.9694532Z Prepare workflow directory
+2025-09-22T19:46:19.0056786Z Prepare all required actions
+2025-09-22T19:46:19.0160119Z Complete job name: Quality Gate Summary

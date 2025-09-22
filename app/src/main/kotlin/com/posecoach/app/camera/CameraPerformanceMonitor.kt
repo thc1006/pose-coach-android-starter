@@ -340,9 +340,13 @@ class CameraPerformanceMonitor {
         frameTimestamps.offer(currentTime)
 
         // Remove old timestamps outside the window
-        while (frameTimestamps.isNotEmpty() &&
-               currentTime - frameTimestamps.peek() > FPS_CALCULATION_WINDOW_MS) {
-            frameTimestamps.poll()
+        while (frameTimestamps.isNotEmpty()) {
+            val oldestTimestamp = frameTimestamps.peek()
+            if (oldestTimestamp != null && currentTime - oldestTimestamp > FPS_CALCULATION_WINDOW_MS) {
+                frameTimestamps.poll()
+            } else {
+                break
+            }
         }
     }
 

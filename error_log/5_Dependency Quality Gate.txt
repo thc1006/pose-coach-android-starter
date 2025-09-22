@@ -1,0 +1,155 @@
+﻿2025-09-22T19:45:39.9932245Z Current runner version: '2.328.0'
+2025-09-22T19:45:39.9959122Z ##[group]Runner Image Provisioner
+2025-09-22T19:45:39.9959916Z Hosted Compute Agent
+2025-09-22T19:45:39.9960548Z Version: 20250829.383
+2025-09-22T19:45:39.9961149Z Commit: 27cb235aab5b0e52e153a26cd86b4742e89dac5d
+2025-09-22T19:45:39.9961854Z Build Date: 2025-08-29T13:48:48Z
+2025-09-22T19:45:39.9962503Z ##[endgroup]
+2025-09-22T19:45:39.9963066Z ##[group]Operating System
+2025-09-22T19:45:39.9963633Z Ubuntu
+2025-09-22T19:45:39.9964125Z 24.04.3
+2025-09-22T19:45:39.9964627Z LTS
+2025-09-22T19:45:39.9965059Z ##[endgroup]
+2025-09-22T19:45:39.9965594Z ##[group]Runner Image
+2025-09-22T19:45:39.9966166Z Image: ubuntu-24.04
+2025-09-22T19:45:39.9966686Z Version: 20250907.24.1
+2025-09-22T19:45:39.9967739Z Included Software: https://github.com/actions/runner-images/blob/ubuntu24/20250907.24/images/ubuntu/Ubuntu2404-Readme.md
+2025-09-22T19:45:39.9969562Z Image Release: https://github.com/actions/runner-images/releases/tag/ubuntu24%2F20250907.24
+2025-09-22T19:45:39.9970590Z ##[endgroup]
+2025-09-22T19:45:39.9971722Z ##[group]GITHUB_TOKEN Permissions
+2025-09-22T19:45:39.9973940Z Contents: read
+2025-09-22T19:45:39.9974533Z Metadata: read
+2025-09-22T19:45:39.9975017Z Packages: read
+2025-09-22T19:45:39.9975574Z ##[endgroup]
+2025-09-22T19:45:39.9978028Z Secret source: Actions
+2025-09-22T19:45:39.9979372Z Prepare workflow directory
+2025-09-22T19:45:40.0306970Z Prepare all required actions
+2025-09-22T19:45:40.0345746Z Getting action download info
+2025-09-22T19:45:40.3289219Z Download action repository 'actions/checkout@v4' (SHA:08eba0b27e820071cde6df949e0beb9ba4906955)
+2025-09-22T19:45:40.5344488Z Download action repository 'actions/setup-java@v4' (SHA:c5195efecf7bdfc987ee8bae7a71cb8b11521c00)
+2025-09-22T19:45:40.8923071Z Complete job name: Dependency Quality Gate
+2025-09-22T19:45:40.9603238Z ##[group]Run actions/checkout@v4
+2025-09-22T19:45:40.9604081Z with:
+2025-09-22T19:45:40.9604546Z   repository: thc1006/pose-coach-android-starter
+2025-09-22T19:45:40.9605304Z   token: ***
+2025-09-22T19:45:40.9605722Z   ssh-strict: true
+2025-09-22T19:45:40.9606127Z   ssh-user: git
+2025-09-22T19:45:40.9606664Z   persist-credentials: true
+2025-09-22T19:45:40.9607118Z   clean: true
+2025-09-22T19:45:40.9607535Z   sparse-checkout-cone-mode: true
+2025-09-22T19:45:40.9608018Z   fetch-depth: 1
+2025-09-22T19:45:40.9608675Z   fetch-tags: false
+2025-09-22T19:45:40.9609093Z   show-progress: true
+2025-09-22T19:45:40.9609505Z   lfs: false
+2025-09-22T19:45:40.9609887Z   submodules: false
+2025-09-22T19:45:40.9610300Z   set-safe-directory: true
+2025-09-22T19:45:40.9611025Z ##[endgroup]
+2025-09-22T19:45:41.0778913Z Syncing repository: thc1006/pose-coach-android-starter
+2025-09-22T19:45:41.0781751Z ##[group]Getting Git version info
+2025-09-22T19:45:41.0783372Z Working directory is '/home/runner/work/pose-coach-android-starter/pose-coach-android-starter'
+2025-09-22T19:45:41.0785471Z [command]/usr/bin/git version
+2025-09-22T19:45:41.0858711Z git version 2.51.0
+2025-09-22T19:45:41.0888098Z ##[endgroup]
+2025-09-22T19:45:41.0904847Z Temporarily overriding HOME='/home/runner/work/_temp/97df68be-25dd-4d9e-8cd4-71cf2d338710' before making global git config changes
+2025-09-22T19:45:41.0907212Z Adding repository directory to the temporary git global config as a safe directory
+2025-09-22T19:45:41.0921960Z [command]/usr/bin/git config --global --add safe.directory /home/runner/work/pose-coach-android-starter/pose-coach-android-starter
+2025-09-22T19:45:41.0965563Z Deleting the contents of '/home/runner/work/pose-coach-android-starter/pose-coach-android-starter'
+2025-09-22T19:45:41.0969830Z ##[group]Initializing the repository
+2025-09-22T19:45:41.0975537Z [command]/usr/bin/git init /home/runner/work/pose-coach-android-starter/pose-coach-android-starter
+2025-09-22T19:45:41.1075605Z hint: Using 'master' as the name for the initial branch. This default branch name
+2025-09-22T19:45:41.1076727Z hint: is subject to change. To configure the initial branch name to use in all
+2025-09-22T19:45:41.1077683Z hint: of your new repositories, which will suppress this warning, call:
+2025-09-22T19:45:41.1079017Z hint:
+2025-09-22T19:45:41.1079509Z hint: 	git config --global init.defaultBranch <name>
+2025-09-22T19:45:41.1080095Z hint:
+2025-09-22T19:45:41.1080645Z hint: Names commonly chosen instead of 'master' are 'main', 'trunk' and
+2025-09-22T19:45:41.1081642Z hint: 'development'. The just-created branch can be renamed via this command:
+2025-09-22T19:45:41.1082793Z hint:
+2025-09-22T19:45:41.1083400Z hint: 	git branch -m <name>
+2025-09-22T19:45:41.1084103Z hint:
+2025-09-22T19:45:41.1085043Z hint: Disable this message with "git config set advice.defaultBranchName false"
+2025-09-22T19:45:41.1086258Z Initialized empty Git repository in /home/runner/work/pose-coach-android-starter/pose-coach-android-starter/.git/
+2025-09-22T19:45:41.1095046Z [command]/usr/bin/git remote add origin https://github.com/thc1006/pose-coach-android-starter
+2025-09-22T19:45:41.1133658Z ##[endgroup]
+2025-09-22T19:45:41.1134391Z ##[group]Disabling automatic garbage collection
+2025-09-22T19:45:41.1137938Z [command]/usr/bin/git config --local gc.auto 0
+2025-09-22T19:45:41.1165965Z ##[endgroup]
+2025-09-22T19:45:41.1166656Z ##[group]Setting up auth
+2025-09-22T19:45:41.1173010Z [command]/usr/bin/git config --local --name-only --get-regexp core\.sshCommand
+2025-09-22T19:45:41.1202310Z [command]/usr/bin/git submodule foreach --recursive sh -c "git config --local --name-only --get-regexp 'core\.sshCommand' && git config --local --unset-all 'core.sshCommand' || :"
+2025-09-22T19:45:41.1539265Z [command]/usr/bin/git config --local --name-only --get-regexp http\.https\:\/\/github\.com\/\.extraheader
+2025-09-22T19:45:41.1571139Z [command]/usr/bin/git submodule foreach --recursive sh -c "git config --local --name-only --get-regexp 'http\.https\:\/\/github\.com\/\.extraheader' && git config --local --unset-all 'http.https://github.com/.extraheader' || :"
+2025-09-22T19:45:41.1800245Z [command]/usr/bin/git config --local http.https://github.com/.extraheader AUTHORIZATION: basic ***
+2025-09-22T19:45:41.1835789Z ##[endgroup]
+2025-09-22T19:45:41.1837051Z ##[group]Fetching the repository
+2025-09-22T19:45:41.1854680Z [command]/usr/bin/git -c protocol.version=2 fetch --no-tags --prune --no-recurse-submodules --depth=1 origin +685d758d9ae8c729893935dc590157eded077a04:refs/remotes/origin/main
+2025-09-22T19:45:42.1119861Z From https://github.com/thc1006/pose-coach-android-starter
+2025-09-22T19:45:42.1121220Z  * [new ref]         685d758d9ae8c729893935dc590157eded077a04 -> origin/main
+2025-09-22T19:45:42.1155620Z ##[endgroup]
+2025-09-22T19:45:42.1156955Z ##[group]Determining the checkout info
+2025-09-22T19:45:42.1158902Z ##[endgroup]
+2025-09-22T19:45:42.1164698Z [command]/usr/bin/git sparse-checkout disable
+2025-09-22T19:45:42.1207968Z [command]/usr/bin/git config --local --unset-all extensions.worktreeConfig
+2025-09-22T19:45:42.1239450Z ##[group]Checking out the ref
+2025-09-22T19:45:42.1243943Z [command]/usr/bin/git checkout --progress --force -B main refs/remotes/origin/main
+2025-09-22T19:45:42.2083356Z Switched to a new branch 'main'
+2025-09-22T19:45:42.2084893Z branch 'main' set up to track 'origin/main'.
+2025-09-22T19:45:42.2093892Z ##[endgroup]
+2025-09-22T19:45:42.2132859Z [command]/usr/bin/git log -1 --format=%H
+2025-09-22T19:45:42.2157486Z 685d758d9ae8c729893935dc590157eded077a04
+2025-09-22T19:45:42.2499183Z ##[group]Run actions/setup-java@v4
+2025-09-22T19:45:42.2500349Z with:
+2025-09-22T19:45:42.2501166Z   java-version: 17
+2025-09-22T19:45:42.2502071Z   distribution: temurin
+2025-09-22T19:45:42.2503004Z   cache: gradle
+2025-09-22T19:45:42.2503883Z   java-package: jdk
+2025-09-22T19:45:42.2504789Z   check-latest: false
+2025-09-22T19:45:42.2505709Z   server-id: github
+2025-09-22T19:45:42.2506634Z   server-username: GITHUB_ACTOR
+2025-09-22T19:45:42.2507692Z   server-password: GITHUB_TOKEN
+2025-09-22T19:45:42.2508889Z   overwrite-settings: true
+2025-09-22T19:45:42.2509877Z   job-status: success
+2025-09-22T19:45:42.2511085Z   token: ***
+2025-09-22T19:45:42.2511930Z ##[endgroup]
+2025-09-22T19:45:42.4509464Z ##[group]Installed distributions
+2025-09-22T19:45:42.4825294Z Resolved Java 17.0.16+8 from tool-cache
+2025-09-22T19:45:42.4826024Z Setting Java 17.0.16+8 as the default
+2025-09-22T19:45:42.4839737Z Creating toolchains.xml for JDK version 17 from temurin
+2025-09-22T19:45:42.4919433Z Writing to /home/runner/.m2/toolchains.xml
+2025-09-22T19:45:42.4919948Z 
+2025-09-22T19:45:42.4920142Z Java configuration:
+2025-09-22T19:45:42.4920596Z   Distribution: temurin
+2025-09-22T19:45:42.4921040Z   Version: 17.0.16+8
+2025-09-22T19:45:42.4921667Z   Path: /opt/hostedtoolcache/Java_Temurin-Hotspot_jdk/17.0.16-8/x64
+2025-09-22T19:45:42.4922208Z 
+2025-09-22T19:45:42.4923814Z ##[endgroup]
+2025-09-22T19:45:42.4941589Z Creating settings.xml with server-id: github
+2025-09-22T19:45:42.4945438Z Writing to /home/runner/.m2/settings.xml
+2025-09-22T19:45:42.7618583Z gradle cache is not found
+2025-09-22T19:45:42.7752724Z ##[group]Run ./gradlew dependencyUpdates
+2025-09-22T19:45:42.7753192Z [36;1m./gradlew dependencyUpdates[0m
+2025-09-22T19:45:42.7753515Z [36;1m[0m
+2025-09-22T19:45:42.7753788Z [36;1m# Check if critical security updates are available[0m
+2025-09-22T19:45:42.7754222Z [36;1mif grep -q "security" build/dependencyUpdates/report.txt; then[0m
+2025-09-22T19:45:42.7754686Z [36;1m  echo "❌ Security-related dependency updates available"[0m
+2025-09-22T19:45:42.7755045Z [36;1m  exit 1[0m
+2025-09-22T19:45:42.7755277Z [36;1mfi[0m
+2025-09-22T19:45:42.7815008Z shell: /usr/bin/bash -e {0}
+2025-09-22T19:45:42.7815321Z env:
+2025-09-22T19:45:42.7815669Z   JAVA_HOME: /opt/hostedtoolcache/Java_Temurin-Hotspot_jdk/17.0.16-8/x64
+2025-09-22T19:45:42.7816166Z   JAVA_HOME_17_X64: /opt/hostedtoolcache/Java_Temurin-Hotspot_jdk/17.0.16-8/x64
+2025-09-22T19:45:42.7816564Z ##[endgroup]
+2025-09-22T19:45:42.7895901Z /home/runner/work/_temp/052c9b9f-a39b-4f50-9148-67709b14c2cb.sh: line 1: ./gradlew: Permission denied
+2025-09-22T19:45:42.7911078Z ##[error]Process completed with exit code 126.
+2025-09-22T19:45:42.8024258Z Post job cleanup.
+2025-09-22T19:45:42.9973142Z Post job cleanup.
+2025-09-22T19:45:43.0937016Z [command]/usr/bin/git version
+2025-09-22T19:45:43.0973715Z git version 2.51.0
+2025-09-22T19:45:43.1018691Z Temporarily overriding HOME='/home/runner/work/_temp/93e52a0f-62b5-4a6b-bd3a-5167bce05004' before making global git config changes
+2025-09-22T19:45:43.1019522Z Adding repository directory to the temporary git global config as a safe directory
+2025-09-22T19:45:43.1024568Z [command]/usr/bin/git config --global --add safe.directory /home/runner/work/pose-coach-android-starter/pose-coach-android-starter
+2025-09-22T19:45:43.1062837Z [command]/usr/bin/git config --local --name-only --get-regexp core\.sshCommand
+2025-09-22T19:45:43.1095717Z [command]/usr/bin/git submodule foreach --recursive sh -c "git config --local --name-only --get-regexp 'core\.sshCommand' && git config --local --unset-all 'core.sshCommand' || :"
+2025-09-22T19:45:43.1315978Z fatal: No url found for submodule path 'pose-coach-skeleton' in .gitmodules
+2025-09-22T19:45:43.1355167Z ##[warning]The process '/usr/bin/git' failed with exit code 128
+2025-09-22T19:45:43.1434276Z Cleaning up orphan processes
