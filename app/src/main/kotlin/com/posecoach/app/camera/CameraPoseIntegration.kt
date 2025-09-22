@@ -197,9 +197,9 @@ class CameraPoseIntegration(
      * Update pose detection settings
      */
     fun updatePoseSettings(
-        maxDetectedPoses: Int = 5,
-        confidenceThreshold: Float = 0.5f,
-        enableMultiPerson: Boolean = true
+        @Suppress("UNUSED_PARAMETER") maxDetectedPoses: Int = 5,
+        @Suppress("UNUSED_PARAMETER") confidenceThreshold: Float = 0.5f,
+        @Suppress("UNUSED_PARAMETER") enableMultiPerson: Boolean = true
     ) {
         // TODO: Update settings when method is available
         // multiPersonManager.updateSettings(
@@ -256,7 +256,7 @@ class CameraPoseIntegration(
         }
     }
 
-    private fun handleImageAnalysis(imageProxy: ImageProxy) {
+    private fun handleImageAnalysis(@Suppress("UNUSED_PARAMETER") imageProxy: ImageProxy) {
         val startTime = System.nanoTime()
 
         try {
@@ -352,15 +352,15 @@ class CameraPoseIntegration(
         )
     }
 
-    private fun updateOverlayCoordinateMapper(mapper: CoordinateMapper) {
+    private fun updateOverlayCoordinateMapper(@Suppress("UNUSED_PARAMETER") mapper: CoordinateMapper) {
         overlayView?.setCoordinateMapper(mapper)
     }
 
-    private fun updateOverlayTransform(transformInfo: CameraXManager.TransformInfo) {
+    private fun updateOverlayTransform(@Suppress("UNUSED_PARAMETER") transformInfo: CameraXManager.TransformInfo) {
         overlayView?.setTransformMatrix(transformInfo.matrix)
     }
 
-    private fun updateOverlayPoses(poses: List<PoseData>, cameraState: CameraXManager.CameraState) {
+    private fun updateOverlayPoses(@Suppress("UNUSED_PARAMETER") poses: List<PoseData>, @Suppress("UNUSED_PARAMETER") cameraState: CameraXManager.CameraState) {
         // Update overlay with the most confident pose if available
         val bestPose = poses.maxByOrNull { it.confidence }
         if (bestPose != null) {
@@ -370,14 +370,14 @@ class CameraPoseIntegration(
         }
     }
 
-    private fun handleCameraStateChange(state: CameraXManager.CameraState) {
+    private fun handleCameraStateChange(@Suppress("UNUSED_PARAMETER") state: CameraXManager.CameraState) {
         if (!state.isCameraRunning) {
             _currentPoses.value = emptyList()
             overlayView?.clearPoses()
         }
     }
 
-    private fun handleRotationChange(newRotation: Int) {
+    private fun handleRotationChange(@Suppress("UNUSED_PARAMETER") newRotation: Int) {
         // Clear poses during rotation to avoid display artifacts
         overlayView?.clearPoses()
 
@@ -415,12 +415,12 @@ class CameraPoseIntegration(
     /**
      * Extension function for PoseOverlayView to integrate with camera pipeline
      */
-    private fun PoseOverlayView.setCoordinateMapper(mapper: CoordinateMapper) {
+    private fun PoseOverlayView.setCoordinateMapper(@Suppress("UNUSED_PARAMETER") mapper: CoordinateMapper) {
         // This would be implemented in the actual PoseOverlayView
         // Setting the coordinate mapper for proper pose rendering
     }
 
-    private fun PoseOverlayView.setTransformMatrix(matrix: Matrix) {
+    private fun PoseOverlayView.setTransformMatrix(@Suppress("UNUSED_PARAMETER") matrix: Matrix) {
         // This would be implemented in the actual PoseOverlayView
         // Setting the transformation matrix for pose rendering
     }

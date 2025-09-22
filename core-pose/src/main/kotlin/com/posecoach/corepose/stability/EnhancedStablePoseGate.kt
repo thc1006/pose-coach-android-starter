@@ -109,7 +109,6 @@ class EnhancedStablePoseGate(
         val isStable = overallScore >= config.stabilityScoreThreshold
 
         // Update stability state
-        val wasStable = isCurrentlyStable
         isCurrentlyStable = isStable
 
         if (isStable) {

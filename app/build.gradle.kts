@@ -1,11 +1,11 @@
+import java.util.Properties
+import java.io.FileInputStream
+
 plugins {
     id("com.android.application")
     id("org.jetbrains.kotlin.android")
     id("org.jetbrains.kotlin.plugin.serialization") version "1.9.25"
 }
-
-import java.util.Properties
-import java.io.FileInputStream
 
 // Load local.properties file
 val localProperties = Properties()
@@ -84,7 +84,8 @@ android {
             excludes += "COPYRIGHT.txt"
         }
         jniLibs {
-            // Force 16KB alignment with AGP 8.13+ and NDK r28
+            // CRITICAL: For 16KB alignment, we must NOT use legacy packaging
+            // The system needs to be able to extract and align libraries properly
             useLegacyPackaging = false
 
             // Keep debug symbols for critical libraries
@@ -175,9 +176,11 @@ dependencies {
     implementation("androidx.camera:camera-extensions:$cameraxVersion")
     // camera-mlkit-vision not needed - we use MediaPipe instead
 
-    // MediaPipe for pose detection - latest version
-    // Note: Pre-built libraries may not have 16KB alignment
-    // Consider using custom builds or waiting for official 16KB support
+    // ML Kit Pose Detection - 16KB aligned alternative to MediaPipe
+    implementation("com.google.mlkit:pose-detection:18.0.0-beta5")
+    implementation("com.google.mlkit:pose-detection-accurate:18.0.0-beta5")
+
+    // MediaPipe libraries - using latest version with potential 16KB fixes
     implementation("com.google.mediapipe:tasks-vision:0.10.14")
 
     // ReLinker for runtime library loading with alignment fixes

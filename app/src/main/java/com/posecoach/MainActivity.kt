@@ -274,12 +274,13 @@ class MainActivity : AppCompatActivity() {
     /**
      * TDD Green Phase: Handle back press
      */
+    @Suppress("DEPRECATION")
     override fun onBackPressed() {
         if (!hasPrivacyConsent) {
             // Allow exit without consent
-            super.onBackPressed()
+            @Suppress("DEPRECATION") super.onBackPressed()
         } else {
-            super.onBackPressed()
+            @Suppress("DEPRECATION") super.onBackPressed()
         }
     }
 }

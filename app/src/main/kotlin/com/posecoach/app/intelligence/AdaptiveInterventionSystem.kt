@@ -1074,26 +1074,26 @@ class AdaptiveInterventionSystem {
         } else 0f
     }
 
-    private fun calculateAngularVelocity(current: PoseLandmarkResult, previous: PoseLandmarkResult): Float {
+    private fun calculateAngularVelocity(@Suppress("UNUSED_PARAMETER") current: PoseLandmarkResult, @Suppress("UNUSED_PARAMETER") previous: PoseLandmarkResult): Float {
         // Simplified angular velocity calculation
         return 0f
     }
 
     private fun calculateBodyPartVelocities(
-        current: PoseLandmarkResult,
-        previous: PoseLandmarkResult,
-        deltaTime: Double
+        @Suppress("UNUSED_PARAMETER") current: PoseLandmarkResult,
+        @Suppress("UNUSED_PARAMETER") previous: PoseLandmarkResult,
+        @Suppress("UNUSED_PARAMETER") deltaTime: Double
     ): Map<BodyRegion, Float> {
         // Simplified body part velocity calculation
         return emptyMap()
     }
 
     private fun calculatePosturalSway(): Float = 0.1f
-    private fun calculateBalanceConfidence(landmarks: List<PoseLandmarkResult.Landmark>): Float = 0.8f
-    private fun estimateGroundReactionForce(landmarks: List<PoseLandmarkResult.Landmark>): Float = 1.0f
-    private fun calculateMovementEfficiency(pose: PoseLandmarkResult, velocity: MovementVelocity): Float = 0.8f
-    private fun detectTremor(pose: PoseLandmarkResult): Float = 0.1f
-    private fun assessCoordination(pose: PoseLandmarkResult): Float = 0.9f
+    private fun calculateBalanceConfidence(@Suppress("UNUSED_PARAMETER") landmarks: List<PoseLandmarkResult.Landmark>): Float = 0.8f
+    private fun estimateGroundReactionForce(@Suppress("UNUSED_PARAMETER") landmarks: List<PoseLandmarkResult.Landmark>): Float = 1.0f
+    private fun calculateMovementEfficiency(@Suppress("UNUSED_PARAMETER") pose: PoseLandmarkResult, @Suppress("UNUSED_PARAMETER") velocity: MovementVelocity): Float = 0.8f
+    private fun detectTremor(@Suppress("UNUSED_PARAMETER") pose: PoseLandmarkResult): Float = 0.1f
+    private fun assessCoordination(@Suppress("UNUSED_PARAMETER") pose: PoseLandmarkResult): Float = 0.9f
     private fun estimateReactionTime(): Float = 0.3f
 
     /**

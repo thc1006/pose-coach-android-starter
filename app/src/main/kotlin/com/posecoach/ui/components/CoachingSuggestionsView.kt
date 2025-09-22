@@ -170,7 +170,7 @@ class CoachingSuggestionsView @JvmOverloads constructor(
                 .alpha(1f)
                 .translationY(0f)
                 .setDuration(200)
-                .setStartDelay(adapterPosition * 50L)
+                .setStartDelay(bindingAdapterPosition * 50L)
                 .start()
         }
     }

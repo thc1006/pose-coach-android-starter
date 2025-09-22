@@ -8,6 +8,7 @@ import com.posecoach.app.livecoach.audio.AudioStreamManager
 import com.posecoach.app.livecoach.camera.ImageSnapshotManager
 import com.posecoach.app.livecoach.config.LiveApiKeyManager
 import com.posecoach.app.livecoach.models.*
+import com.posecoach.gemini.live.models.SessionState as GeminiSessionState
 import com.posecoach.app.livecoach.state.LiveCoachStateManager
 import com.posecoach.app.livecoach.websocket.LiveApiWebSocketClient
 import com.posecoach.app.privacy.EnhancedPrivacyManager
@@ -53,8 +54,31 @@ class LiveCoachManager(
     )
     val errors: SharedFlow<String> = _errors.asSharedFlow()
 
-    // Expose state for UI
-    val sessionState: StateFlow<SessionState> = stateManager.sessionState
+    // Expose state for UI (map internal SessionState to Gemini's SessionState enum)
+    val sessionState: StateFlow<GeminiSessionState> = stateManager.sessionState
+        .map { state ->
+            when (state.connectionState) {
+                ConnectionState.DISCONNECTED -> GeminiSessionState.DISCONNECTED
+                ConnectionState.CONNECTING -> GeminiSessionState.CONNECTING
+                ConnectionState.CONNECTED -> {
+                    if (state.isRecording && state.isSpeaking) {
+                        GeminiSessionState.ACTIVE
+                    } else if (state.isRecording) {
+                        GeminiSessionState.SETUP_COMPLETE
+                    } else {
+                        GeminiSessionState.CONNECTED
+                    }
+                }
+                ConnectionState.RECONNECTING -> GeminiSessionState.DISCONNECTING
+                ConnectionState.ERROR -> GeminiSessionState.ERROR
+                else -> GeminiSessionState.DISCONNECTED
+            }
+        }
+        .stateIn(
+            scope = lifecycleScope,
+            started = SharingStarted.WhileSubscribed(5000),
+            initialValue = GeminiSessionState.DISCONNECTED
+        )
 
     init {
         setupDataFlows()
@@ -120,6 +144,20 @@ class LiveCoachManager(
                 handleCloudError(error)
             }
         }
+    }
+
+    /**
+     * Start the Live coaching session
+     */
+    fun start() {
+        startPushToTalkSession()
+    }
+
+    /**
+     * Connect alias for backwards compatibility
+     */
+    fun connect() {
+        start()
     }
 
     fun startPushToTalkSession() {
@@ -214,6 +252,20 @@ class LiveCoachManager(
         } catch (e: Exception) {
             handleCloudError("Failed to send pose context: ${e.message}")
         }
+    }
+
+    /**
+     * Stop the Live coaching session
+     */
+    fun stop() {
+        stopPushToTalkSession()
+    }
+
+    /**
+     * Disconnect alias for backwards compatibility
+     */
+    fun disconnect() {
+        stop()
     }
 
     fun stopPushToTalkSession() {

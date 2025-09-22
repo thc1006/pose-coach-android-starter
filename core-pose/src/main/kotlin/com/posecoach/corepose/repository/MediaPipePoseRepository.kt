@@ -111,7 +111,7 @@ class MediaPipePoseRepository : PoseRepository {
 
     private fun handlePoseLandmarkerResult(
         result: PoseLandmarkerResult,
-        inputImage: com.google.mediapipe.framework.image.MPImage
+        @Suppress("UNUSED_PARAMETER") inputImage: com.google.mediapipe.framework.image.MPImage
     ) {
         val startTime = System.currentTimeMillis()
 
@@ -159,7 +159,6 @@ class MediaPipePoseRepository : PoseRepository {
                         }
                     }
 
-                    val processingTime = System.currentTimeMillis() - startTime
                     val inferenceTimeMs = System.currentTimeMillis() - startTime
 
                     val poseResult = PoseLandmarkResult(

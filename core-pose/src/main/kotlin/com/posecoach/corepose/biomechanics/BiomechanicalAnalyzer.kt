@@ -124,7 +124,6 @@ class BiomechanicalAnalyzer(
         landmarks: PoseLandmarkResult,
         jointAngles: JointAngleMap
     ): KineticChainAnalysis {
-        val links = mutableListOf<KineticChainLink>()
 
         // Upper body kinetic chain: shoulder -> elbow -> wrist
         val leftArmChain = analyzeArmChain(landmarks, jointAngles, isLeft = true)
@@ -209,6 +208,7 @@ class BiomechanicalAnalyzer(
         )
     }
 
+    @Suppress("UNUSED_PARAMETER")
     private fun assessCoreStability(
         landmarks: PoseLandmarkResult,
         jointAngles: JointAngleMap
@@ -278,6 +278,7 @@ class BiomechanicalAnalyzer(
         )
     }
 
+    @Suppress("UNUSED_PARAMETER")
     private fun detectFatigueIndicators(landmarks: PoseLandmarkResult): FatigueIndicators {
         if (recentPoses.size < 20) {
             return FatigueIndicators.none()

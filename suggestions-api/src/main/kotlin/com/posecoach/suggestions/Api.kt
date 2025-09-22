@@ -2,6 +2,7 @@ package com.posecoach.suggestions
 
 import com.posecoach.suggestions.models.PoseLandmarksData
 import com.posecoach.suggestions.models.PoseSuggestionsResponse
+import com.posecoach.suggestions.models.PoseSuggestion
 
 /**
  * Legacy compatibility layer - keeping for backward compatibility
@@ -11,7 +12,7 @@ import com.posecoach.suggestions.models.PoseSuggestionsResponse
 data class Landmark(val x: Double, val y: Double, val z: Double, val visibility: Double? = null)
 
 @Deprecated("Use PoseSuggestionsResponse instead", ReplaceWith("PoseSuggestionsResponse"))
-data class PoseSuggestions(val suggestions: List<Suggestion>) {
+data class PoseSuggestions(val suggestions: List<PoseSuggestion>) {
     @Deprecated("Use PoseSuggestion instead", ReplaceWith("PoseSuggestion"))
     data class Suggestion(
         val title: String,

@@ -73,13 +73,14 @@ object PoseRepositoryErrorHandler {
         listener?.onPoseDetectionError(
             PoseDetectionError(message = message)
         )
+        logRecoveryGuidance(errorContext)
     }
 
     /**
      * Handles cases where no pose is detected.
      */
     fun handleNoPoseDetected(
-        frameCount: Int,
+        @Suppress("UNUSED_PARAMETER") frameCount: Int,
         consecutiveFailures: Int,
         listener: PoseDetectionListener?
     ) {
@@ -97,6 +98,7 @@ object PoseRepositoryErrorHandler {
             listener?.onPoseDetectionError(
                 PoseDetectionError(message = message)
             )
+            logRecoveryGuidance(errorContext)
         }
     }
 
@@ -121,6 +123,7 @@ object PoseRepositoryErrorHandler {
             listener?.onPoseDetectionError(
                 PoseDetectionError(message = message)
             )
+            logRecoveryGuidance(errorContext)
         }
     }
 
@@ -207,9 +210,8 @@ object PoseRepositoryErrorHandler {
 
         // Check memory availability
         val runtime = Runtime.getRuntime()
-        val freeMemory = runtime.freeMemory()
         val totalMemory = runtime.totalMemory()
-        val usedMemory = totalMemory - freeMemory
+        val usedMemory = totalMemory - runtime.freeMemory()
         val memoryUsagePercent = (usedMemory.toDouble() / totalMemory) * 100
 
         if (memoryUsagePercent > 85) {

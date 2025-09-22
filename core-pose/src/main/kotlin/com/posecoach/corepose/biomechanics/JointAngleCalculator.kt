@@ -223,7 +223,6 @@ class JointAngleCalculator {
      * Calculate spine alignment angle
      */
     internal fun calculateSpineAlignment(landmarks: PoseLandmarkResult): JointAngle {
-        val nose = landmarks.worldLandmarks[PoseLandmarks.NOSE]
         val leftShoulder = landmarks.worldLandmarks[PoseLandmarks.LEFT_SHOULDER]
         val rightShoulder = landmarks.worldLandmarks[PoseLandmarks.RIGHT_SHOULDER]
         val leftHip = landmarks.worldLandmarks[PoseLandmarks.LEFT_HIP]
@@ -455,6 +454,7 @@ class JointAngleCalculator {
         }
     }
 
+    @Suppress("UNUSED_PARAMETER")
     private fun generateElbowRecommendation(angle: Float, range: RangeOfMotion): String {
         return when {
             angle < 30f -> "Increase elbow bend for better biomechanics"
@@ -463,6 +463,7 @@ class JointAngleCalculator {
         }
     }
 
+    @Suppress("UNUSED_PARAMETER")
     private fun generateHipRecommendation(angle: Float, range: RangeOfMotion): String {
         return when {
             angle < 60f -> "Increase hip flexion for better movement pattern"
@@ -471,6 +472,7 @@ class JointAngleCalculator {
         }
     }
 
+    @Suppress("UNUSED_PARAMETER")
     private fun generateKneeRecommendation(angle: Float, range: RangeOfMotion): String {
         return when {
             angle < 30f -> "Increase knee bend for better shock absorption"
@@ -479,6 +481,7 @@ class JointAngleCalculator {
         }
     }
 
+    @Suppress("UNUSED_PARAMETER")
     private fun generateAnkleRecommendation(angle: Float, range: RangeOfMotion): String {
         return when {
             angle < -15f -> "Improve ankle dorsiflexion mobility"

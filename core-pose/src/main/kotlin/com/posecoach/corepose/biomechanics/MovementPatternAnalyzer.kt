@@ -472,6 +472,7 @@ class MovementPatternAnalyzer {
     /**
      * Calculate movement efficiency
      */
+    @Suppress("UNUSED_PARAMETER")
     private fun calculateMovementEfficiency(
         poses: List<TimestampedPose>,
         patternType: MovementPatternType
@@ -541,6 +542,7 @@ class MovementPatternAnalyzer {
         )
     }
 
+    @Suppress("UNUSED_PARAMETER")
     private fun calculateAngleChange(
         pose1: PoseLandmarkResult,
         pose2: PoseLandmarkResult,
@@ -592,6 +594,7 @@ class MovementPatternAnalyzer {
         return (durationMatch * 0.5f + rangeMatch * 0.5f).coerceIn(0f, 1f)
     }
 
+    @Suppress("UNUSED_PARAMETER")
     private fun assessPhaseQuality(poses: List<TimestampedPose>, phase: MovementPhase): Float {
         // Assess quality specific to movement phase
         return poses.map { calculatePoseQuality(it.pose) }.average().toFloat()
@@ -602,16 +605,19 @@ class MovementPatternAnalyzer {
         return pose.landmarks.map { it.visibility * it.presence }.average()
     }
 
+    @Suppress("UNUSED_PARAMETER")
     private fun determineCurrentPhase(pose: TimestampedPose, patternType: MovementPatternType): MovementPhase {
         // Simplified phase determination
         return MovementPhase.PREPARATION
     }
 
+    @Suppress("UNUSED_PARAMETER")
     private fun calculatePatternConfidence(features: MovementFeatures, patternType: MovementPatternType): Float {
         // Calculate confidence based on feature matching
         return if (patternType == MovementPatternType.UNKNOWN) 0.3f else 0.8f
     }
 
+    @Suppress("UNUSED_PARAMETER")
     private fun generateMovementRecommendations(
         patternType: MovementPatternType,
         qualityScore: Float,
@@ -643,17 +649,20 @@ class MovementPatternAnalyzer {
         return recommendations
     }
 
+    @Suppress("UNUSED_PARAMETER")
     private fun assessSquatQuality(poses: List<TimestampedPose>): Float {
         // Squat-specific quality assessment
         // Check depth, knee tracking, back position, etc.
         return 0.8f // Placeholder
     }
 
+    @Suppress("UNUSED_PARAMETER")
     private fun assessPushUpQuality(poses: List<TimestampedPose>): Float {
         // Push-up specific quality assessment
         return 0.8f // Placeholder
     }
 
+    @Suppress("UNUSED_PARAMETER")
     private fun assessDeadliftQuality(poses: List<TimestampedPose>): Float {
         // Deadlift specific quality assessment
         return 0.8f // Placeholder

@@ -216,6 +216,7 @@ class AsymmetryDetector {
     /**
      * Calculate movement asymmetry based on temporal changes
      */
+    @Suppress("UNUSED_PARAMETER")
     private fun calculateMovementAsymmetry(
         jointName: String,
         leftLandmark: PoseLandmarkResult.Landmark,
@@ -385,7 +386,6 @@ class AsymmetryDetector {
 
         // Left-right asymmetry recommendations
         if (abs(snapshot.leftRightAsymmetry) > 0.2f) {
-            val dominantSide = if (snapshot.leftRightAsymmetry > 0) "right" else "left"
             val weakerSide = if (snapshot.leftRightAsymmetry > 0) "left" else "right"
 
             recommendations.add("Significant left-right imbalance detected")

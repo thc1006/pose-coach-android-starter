@@ -14,7 +14,7 @@ class FakePoseRepository : PoseRepository {
     private var isRunning = false
     private val coroutineScope = CoroutineScope(Dispatchers.Default)
 
-    suspend fun init(context: Context, modelPath: String?) {
+    suspend fun init(@Suppress("UNUSED_PARAMETER") context: Context, @Suppress("UNUSED_PARAMETER") modelPath: String?) {
         Timber.d("FakePoseRepository initialized")
         delay(100)
     }
@@ -91,7 +91,7 @@ class FakePoseRepository : PoseRepository {
         }
     }
 
-    fun generateNoPoseDetected(timestampMs: Long): PoseLandmarkResult? = null
+    fun generateNoPoseDetected(@Suppress("UNUSED_PARAMETER") timestampMs: Long): PoseLandmarkResult? = null
 
     fun generateLowVisibilityPose(timestampMs: Long): PoseLandmarkResult {
         val landmarks = generateRealisticPoseLandmarks(lowVisibility = true)

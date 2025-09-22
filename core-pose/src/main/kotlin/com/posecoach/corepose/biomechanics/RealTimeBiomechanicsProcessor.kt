@@ -106,7 +106,7 @@ class RealTimeBiomechanicsProcessor(
     private fun startProcessingPipeline() {
         processingScope.launch {
             inputChannel.consumeAsFlow()
-                .onEach { landmarks ->
+                .onEach { _ ->
                     processNextTask()
                 }
                 .launchIn(this)
@@ -369,6 +369,7 @@ class RealTimeBiomechanicsProcessor(
     }
 
     // Simplified analysis methods for performance optimization
+    @Suppress("UNUSED_PARAMETER")
     private fun createSimplifiedKineticChain(
         landmarks: PoseLandmarkResult,
         jointAngles: JointAngleMap
@@ -401,6 +402,7 @@ class RealTimeBiomechanicsProcessor(
         )
     }
 
+    @Suppress("UNUSED_PARAMETER")
     private fun createSimplifiedQualityScore(
         jointAngles: JointAngleMap,
         asymmetryAnalysis: AsymmetryAnalysis,
@@ -434,6 +436,7 @@ class RealTimeBiomechanicsProcessor(
         )
     }
 
+    @Suppress("UNUSED_PARAMETER")
     private fun createBasicPosturalAnalysis(landmarks: PoseLandmarkResult): PosturalAnalysis {
         val basicComponent = PosturalComponent(
             name = "basic",
@@ -454,6 +457,7 @@ class RealTimeBiomechanicsProcessor(
         )
     }
 
+    @Suppress("UNUSED_PARAMETER")
     private fun createMinimalJointMap(landmarks: PoseLandmarkResult): JointAngleMap {
         // Only calculate 2-3 most important angles
         val range = RangeOfMotion(0f, 180f, 90f)

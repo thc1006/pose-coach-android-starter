@@ -23,7 +23,7 @@ fun List<Float>.averageOrNull(): Float? {
  * Extension function to measure operation performance
  */
 suspend fun <T> PerformanceTracker.measureOperation(
-    operationName: String,
+    @Suppress("UNUSED_PARAMETER") operationName: String,
     operation: suspend () -> T
 ): T = coroutineScope {
     val startTime = System.nanoTime()

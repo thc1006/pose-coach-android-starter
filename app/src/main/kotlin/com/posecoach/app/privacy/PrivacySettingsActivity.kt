@@ -345,6 +345,7 @@ class PrivacySettingsActivity : AppCompatActivity() {
         }
     }
 
+    @Suppress("DEPRECATION")
     override fun onBackPressed() {
         super.onBackPressed()
         setResult(Activity.RESULT_OK)

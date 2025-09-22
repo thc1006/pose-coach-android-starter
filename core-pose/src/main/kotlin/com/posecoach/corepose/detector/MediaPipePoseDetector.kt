@@ -379,7 +379,7 @@ class MediaPipePoseDetector {
 
     private fun handlePoseLandmarkerResult(
         result: PoseLandmarkerResult,
-        inputImage: MPImage
+        @Suppress("UNUSED_PARAMETER") inputImage: MPImage
     ) {
         callbackScope.launch {
             try {

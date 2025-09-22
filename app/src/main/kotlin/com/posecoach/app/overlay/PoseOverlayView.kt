@@ -5,6 +5,7 @@ import android.graphics.*
 import android.util.AttributeSet
 import android.view.View
 import com.posecoach.corepose.models.PoseLandmarkResult
+import timber.log.Timber
 
 /**
  * Custom overlay view for rendering pose skeleton with proper rotation support
@@ -29,18 +30,26 @@ class PoseOverlayView @JvmOverloads constructor(
     private var isFrontFacing: Boolean = true
     private var fitMode: FitMode = FitMode.CENTER_CROP
 
-    // Paint objects for drawing
+    // Paint objects for drawing - make them more visible
     private val landmarkPaint = Paint().apply {
-        color = Color.GREEN
+        color = Color.RED  // Changed to red for better visibility
         style = Paint.Style.FILL
-        strokeWidth = 8f
+        strokeWidth = 12f  // Increased size
         isAntiAlias = true
     }
 
     private val connectionPaint = Paint().apply {
-        color = Color.BLUE
+        color = Color.YELLOW  // Changed to yellow for better visibility
         style = Paint.Style.STROKE
-        strokeWidth = 4f
+        strokeWidth = 6f  // Increased thickness
+        isAntiAlias = true
+    }
+
+    // Debug paint for drawing info
+    private val debugPaint = Paint().apply {
+        color = Color.WHITE
+        textSize = 40f
+        style = Paint.Style.FILL
         isAntiAlias = true
     }
 
@@ -60,6 +69,7 @@ class PoseOverlayView @JvmOverloads constructor(
         isFrontFacing = frontFacing
         fitMode = aspectFitMode
 
+        Timber.d("Camera display configured: ${cameraWidth}x${cameraHeight}, rotation: $rotation, frontFacing: $frontFacing")
         updateCoordinateMapper()
     }
 
@@ -91,20 +101,37 @@ class PoseOverlayView @JvmOverloads constructor(
      */
     fun updatePose(pose: PoseLandmarkResult?) {
         currentPose = pose
+        pose?.let {
+            Timber.d("PoseOverlayView: Received pose with ${it.landmarks.size} landmarks")
+        } ?: Timber.d("PoseOverlayView: Cleared pose")
         invalidate() // Trigger onDraw
     }
 
     override fun onDraw(canvas: Canvas) {
         super.onDraw(canvas)
 
+        // Draw debug info
+        canvas.drawText("Overlay Active", 50f, 50f, debugPaint)
+
         currentPose?.let { pose ->
+            Timber.i("Drawing pose skeleton with ${pose.landmarks.size} landmarks")
             drawPoseSkeleton(canvas, pose)
+
+            // Draw landmark count
+            canvas.drawText("Landmarks: ${pose.landmarks.size}", 50f, 100f, debugPaint)
+        } ?: run {
+            Timber.v("No pose to draw")
+            canvas.drawText("No pose detected", 50f, 100f, debugPaint)
         }
     }
 
     private fun drawPoseSkeleton(canvas: Canvas, pose: PoseLandmarkResult) {
         val landmarks = pose.landmarks
-        if (landmarks.isEmpty()) return
+        if (landmarks.isEmpty()) {
+            Timber.w("No landmarks to draw")
+            return
+        }
+        Timber.d("Drawing skeleton with ${landmarks.size} landmarks")
 
         // Batch transform all landmarks for better performance
         val transformedLandmarks = batchTransformLandmarksToScreen(landmarks)
@@ -112,14 +139,19 @@ class PoseOverlayView @JvmOverloads constructor(
         // Draw connections between landmarks first (skeleton structure)
         drawPoseConnections(canvas, landmarks, transformedLandmarks)
 
-        // Draw landmarks on top
+        // Draw landmarks on top with larger circles
         landmarks.forEachIndexed { index, landmark ->
             if (isLandmarkVisible(landmark) && index < transformedLandmarks.size) {
                 val screenPoint = transformedLandmarks[index]
-                val radius = 6f * landmark.visibility
-                landmarkPaint.alpha = (landmark.visibility * 255).toInt()
+                val radius = 10f * landmark.visibility  // Increased base radius
+                landmarkPaint.alpha = Math.max(128, (landmark.visibility * 255).toInt())  // Minimum alpha of 128
 
                 canvas.drawCircle(screenPoint.x, screenPoint.y, radius, landmarkPaint)
+
+                // Draw landmark index for debugging (only for first few)
+                if (index < 5) {
+                    canvas.drawText(index.toString(), screenPoint.x + 15, screenPoint.y, debugPaint)
+                }
             }
         }
     }

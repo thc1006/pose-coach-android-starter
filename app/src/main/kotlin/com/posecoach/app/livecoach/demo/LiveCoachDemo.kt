@@ -71,10 +71,25 @@ class LiveCoachDemo(
         // 觀察連線狀態
         lifecycleScope.launch {
             liveCoachManager.sessionState.collect { state ->
-                liveCoachOverlay.updateConnectionState(state.connectionState)
-                liveCoachOverlay.setRecording(state.isRecording)
+                // Map enum state to connection state for overlay
+                val connectionState = when (state) {
+                    com.posecoach.gemini.live.models.SessionState.DISCONNECTED -> com.posecoach.app.livecoach.models.ConnectionState.DISCONNECTED
+                    com.posecoach.gemini.live.models.SessionState.CONNECTING -> com.posecoach.app.livecoach.models.ConnectionState.CONNECTING
+                    com.posecoach.gemini.live.models.SessionState.CONNECTED,
+                    com.posecoach.gemini.live.models.SessionState.SETUP_PENDING,
+                    com.posecoach.gemini.live.models.SessionState.SETUP_COMPLETE,
+                    com.posecoach.gemini.live.models.SessionState.ACTIVE -> com.posecoach.app.livecoach.models.ConnectionState.CONNECTED
+                    com.posecoach.gemini.live.models.SessionState.DISCONNECTING -> com.posecoach.app.livecoach.models.ConnectionState.RECONNECTING
+                    com.posecoach.gemini.live.models.SessionState.ERROR -> com.posecoach.app.livecoach.models.ConnectionState.ERROR
+                }
 
-                Timber.d("Session state: ${state.connectionState}, Recording: ${state.isRecording}")
+                val isRecording = state == com.posecoach.gemini.live.models.SessionState.ACTIVE ||
+                                  state == com.posecoach.gemini.live.models.SessionState.SETUP_COMPLETE
+
+                liveCoachOverlay.updateConnectionState(connectionState)
+                liveCoachOverlay.setRecording(isRecording)
+
+                Timber.d("Session state: $state, Recording: $isRecording")
             }
         }
 

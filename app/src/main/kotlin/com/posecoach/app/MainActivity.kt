@@ -14,19 +14,19 @@ import androidx.camera.view.PreviewView
 import androidx.core.content.ContextCompat
 import androidx.lifecycle.lifecycleScope
 import com.posecoach.app.pose.PoseDetectionManager
+import timber.log.Timber
 import com.posecoach.app.overlay.PoseOverlayView
 import com.posecoach.app.overlay.FitMode
 import com.posecoach.app.suggestions.SuggestionManager
 import com.posecoach.app.privacy.ConsentManager
 import com.posecoach.app.R
 import com.posecoach.app.livecoach.LiveCoachManager
-import com.posecoach.app.livecoach.models.SessionState
+import com.posecoach.gemini.live.models.SessionState
 import kotlinx.coroutines.flow.collectLatest
 import kotlinx.coroutines.launch
 import java.util.concurrent.ExecutorService
 import java.util.concurrent.Executors
 import com.google.android.material.floatingactionbutton.FloatingActionButton
-import timber.log.Timber
 
 /**
  * Main Activity with CameraX PreviewView for pose detection
@@ -59,6 +59,7 @@ class MainActivity : AppCompatActivity() {
     // Camera components
     private var imageAnalysis: ImageAnalysis? = null
     private var camera: Camera? = null
+    private var cameraSelector = CameraSelector.DEFAULT_BACK_CAMERA
 
     // Permission launcher
     private val permissionLauncher = registerForActivityResult(
@@ -108,7 +109,9 @@ class MainActivity : AppCompatActivity() {
         cameraExecutor = Executors.newSingleThreadExecutor()
 
         // Initialize core managers
+        Timber.i("Initializing PoseDetectionManager...")
         poseDetectionManager = PoseDetectionManager(this, lifecycleScope)
+        Timber.i("Initializing SuggestionManager...")
         suggestionManager = SuggestionManager(this, lifecycleScope)
 
         // Initialize LIVE API manager with API key from BuildConfig
@@ -127,11 +130,19 @@ class MainActivity : AppCompatActivity() {
     private fun setupPoseDetectionCallbacks() {
         lifecycleScope.launch {
             poseDetectionManager.poseLandmarks.collect { landmarks ->
+                // Log pose detection for debugging
+                Timber.i("MainActivity: Received pose with ${landmarks.landmarks.size} landmarks")
+
                 // Update overlay with pose skeleton (CLAUDE.md requirement: OverlayView)
                 overlayView.updatePose(landmarks)
 
                 // Send to Gemini for suggestions (CLAUDE.md requirement: responseSchema usage)
                 suggestionManager.analyzePose(landmarks)
+
+                // Show status to user
+                runOnUiThread {
+                    statusText.text = "Pose detected: ${landmarks.landmarks.size} landmarks"
+                }
             }
         }
 
@@ -144,7 +155,12 @@ class MainActivity : AppCompatActivity() {
 
         lifecycleScope.launch {
             poseDetectionManager.processingErrors.collect { error ->
+                Timber.e("Pose detection error: $error")
                 showError(error)
+                // Update status to show the error
+                runOnUiThread {
+                    statusText.text = "Error: $error"
+                }
             }
         }
 
@@ -195,17 +211,22 @@ class MainActivity : AppCompatActivity() {
                             cameraWidth = imageProxy.width,
                             cameraHeight = imageProxy.height,
                             rotation = imageProxy.imageInfo.rotationDegrees,
-                            frontFacing = cameraSelector == CameraSelector.DEFAULT_FRONT_CAMERA,
+                            frontFacing = this@MainActivity.cameraSelector == CameraSelector.DEFAULT_FRONT_CAMERA,
                             aspectFitMode = FitMode.CENTER_CROP
                         )
 
                         // Process frame with MediaPipe pose detection
-                        poseDetectionManager.processFrame(imageProxy)
+                        try {
+                            poseDetectionManager.processFrame(imageProxy)
+                        } catch (e: Exception) {
+                            Timber.e(e, "Error processing frame")
+                            imageProxy.close()
+                        }
                     }
                 }
 
-            // Select back camera (changed to var for tracking)
-            val cameraSelector = CameraSelector.DEFAULT_BACK_CAMERA
+            // Use class property for camera selector
+            cameraSelector = CameraSelector.DEFAULT_BACK_CAMERA
 
             try {
                 // Unbind use cases before rebinding
@@ -386,9 +407,10 @@ class MainActivity : AppCompatActivity() {
 
     private fun updateLiveCoachUI(state: SessionState) {
         when (state) {
-            SessionState.IDLE -> {
+            SessionState.DISCONNECTED -> {
                 liveCoachButton?.setImageResource(android.R.drawable.ic_btn_speak_now)
                 liveCoachStatus?.visibility = View.GONE
+                isLiveCoachActive = false
             }
             SessionState.CONNECTING -> {
                 liveCoachStatus?.text = "Connecting to Live API..."
@@ -399,22 +421,21 @@ class MainActivity : AppCompatActivity() {
                 liveCoachStatus?.text = "Live coach connected"
                 liveCoachStatus?.visibility = View.VISIBLE
             }
-            SessionState.LISTENING -> {
-                liveCoachStatus?.text = "Listening..."
+            SessionState.SETUP_PENDING -> {
+                liveCoachStatus?.text = "Setting up session..."
                 liveCoachStatus?.visibility = View.VISIBLE
             }
-            SessionState.SPEAKING -> {
-                liveCoachStatus?.text = "Coach speaking..."
+            SessionState.SETUP_COMPLETE -> {
+                liveCoachStatus?.text = "Ready for interaction"
                 liveCoachStatus?.visibility = View.VISIBLE
             }
-            SessionState.INTERRUPTED -> {
-                liveCoachStatus?.text = "Interrupted"
+            SessionState.ACTIVE -> {
+                liveCoachStatus?.text = "Session active"
                 liveCoachStatus?.visibility = View.VISIBLE
             }
-            SessionState.DISCONNECTED -> {
-                liveCoachButton?.setImageResource(android.R.drawable.ic_btn_speak_now)
-                liveCoachStatus?.visibility = View.GONE
-                isLiveCoachActive = false
+            SessionState.DISCONNECTING -> {
+                liveCoachStatus?.text = "Disconnecting..."
+                liveCoachStatus?.visibility = View.VISIBLE
             }
             SessionState.ERROR -> {
                 liveCoachButton?.setImageResource(android.R.drawable.ic_btn_speak_now)

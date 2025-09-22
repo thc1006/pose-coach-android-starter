@@ -5,6 +5,7 @@ import androidx.lifecycle.LifecycleCoroutineScope
 import com.posecoach.app.livecoach.LiveCoachManager
 import com.posecoach.app.livecoach.performance.LiveCoachPerformanceMonitor
 import com.posecoach.app.livecoach.models.*
+import com.posecoach.gemini.live.models.SessionState as GeminiSessionState
 import com.posecoach.app.livecoach.ui.PushToTalkButton
 import com.posecoach.corepose.models.PoseLandmarkResult
 import kotlinx.coroutines.*
@@ -101,7 +102,9 @@ class EnhancedLiveCoachIntegration(
                 liveCoachManager.sessionState,
                 performanceMonitor.performanceAlerts,
                 performanceMonitor.optimizationRecommendations
-            ) { sessionState, alert, recommendation ->
+            ) { geminiSessionState, alert, recommendation ->
+                // Convert GeminiSessionState enum to data class SessionState
+                val sessionState = mapGeminiStateToSessionState(geminiSessionState)
                 Triple(sessionState, alert, recommendation)
             }.collect { (sessionState, alert, recommendation) ->
                 updateIntegratedState(sessionState, alert, recommendation)
@@ -182,6 +185,51 @@ class EnhancedLiveCoachIntegration(
 
                 delay(10000)
             }
+        }
+    }
+
+    private fun mapGeminiStateToSessionState(geminiState: GeminiSessionState): SessionState {
+        return when (geminiState) {
+            GeminiSessionState.DISCONNECTED -> SessionState(
+                connectionState = ConnectionState.DISCONNECTED,
+                isRecording = false,
+                isSpeaking = false
+            )
+            GeminiSessionState.CONNECTING -> SessionState(
+                connectionState = ConnectionState.CONNECTING,
+                isRecording = false,
+                isSpeaking = false
+            )
+            GeminiSessionState.CONNECTED -> SessionState(
+                connectionState = ConnectionState.CONNECTED,
+                isRecording = false,
+                isSpeaking = false
+            )
+            GeminiSessionState.SETUP_PENDING -> SessionState(
+                connectionState = ConnectionState.CONNECTED,
+                isRecording = false,
+                isSpeaking = false
+            )
+            GeminiSessionState.SETUP_COMPLETE -> SessionState(
+                connectionState = ConnectionState.CONNECTED,
+                isRecording = true,
+                isSpeaking = false
+            )
+            GeminiSessionState.ACTIVE -> SessionState(
+                connectionState = ConnectionState.CONNECTED,
+                isRecording = true,
+                isSpeaking = true
+            )
+            GeminiSessionState.DISCONNECTING -> SessionState(
+                connectionState = ConnectionState.RECONNECTING,
+                isRecording = false,
+                isSpeaking = false
+            )
+            GeminiSessionState.ERROR -> SessionState(
+                connectionState = ConnectionState.ERROR,
+                isRecording = false,
+                isSpeaking = false
+            )
         }
     }
 

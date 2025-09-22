@@ -93,7 +93,6 @@ class PosturalAssessment {
      * Assess head and neck position
      */
     private fun assessHeadPosition(landmarks: PoseLandmarkResult): PosturalComponent {
-        val nose = landmarks.landmarks[PoseLandmarks.NOSE]
         val leftEar = landmarks.landmarks[PoseLandmarks.LEFT_EAR]
         val rightEar = landmarks.landmarks[PoseLandmarks.RIGHT_EAR]
         val leftShoulder = landmarks.landmarks[PoseLandmarks.LEFT_SHOULDER]

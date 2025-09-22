@@ -207,6 +207,7 @@ class SuggestionsOrchestrator(
         return PoseSuggestionsResponse(finalSuggestions)
     }
 
+    @Suppress("UNUSED_PARAMETER")
     private fun generateContextualDefaults(
         landmarks: PoseLandmarksData,
         count: Int
