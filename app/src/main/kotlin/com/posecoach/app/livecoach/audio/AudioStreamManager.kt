@@ -261,7 +261,7 @@ class AudioStreamManager(
             maxAmplitude = kotlin.math.max(maxAmplitude, amplitude)
 
             // Check for clipping (near max 16-bit value)
-            if (kotlin.math.abs(buffer[i]) > 30000) {
+            if (kotlin.math.abs(buffer[i].toInt()) > 30000) {
                 clippedCount++
             }
         }

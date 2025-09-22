@@ -18,6 +18,7 @@ package com.posecoach.gemini.live.models
 
 import com.google.gson.annotations.SerializedName
 import kotlinx.serialization.Serializable
+import kotlinx.serialization.Contextual
 import java.util.Base64
 
 /**
@@ -156,13 +157,13 @@ data class ToolResponse(
 @Serializable
 data class FunctionResponse(
     @SerializedName("name") val name: String,
-    @SerializedName("response") val response: Map<String, Any>
+    @SerializedName("response") @Contextual val response: Map<String, @Contextual Any>
 )
 
 @Serializable
 data class FunctionCall(
     @SerializedName("name") val name: String,
-    @SerializedName("args") val args: Map<String, Any>
+    @SerializedName("args") @Contextual val args: Map<String, @Contextual Any>
 )
 
 // Server response messages
@@ -231,7 +232,7 @@ data class FunctionDeclaration(
 @Serializable
 data class Schema(
     @SerializedName("type") val type: String,
-    @SerializedName("properties") val properties: Map<String, Property>? = null,
+    @SerializedName("properties") val properties: @Contextual Map<String, Property>? = null,
     @SerializedName("required") val required: List<String>? = null,
     @SerializedName("items") val items: Property? = null
 )
@@ -242,7 +243,7 @@ data class Property(
     @SerializedName("description") val description: String? = null,
     @SerializedName("enum") val enum: List<String>? = null,
     @SerializedName("format") val format: String? = null,
-    @SerializedName("properties") val properties: Map<String, Property>? = null,
+    @SerializedName("properties") val properties: @Contextual Map<String, Property>? = null,
     @SerializedName("items") val items: Property? = null
 )
 

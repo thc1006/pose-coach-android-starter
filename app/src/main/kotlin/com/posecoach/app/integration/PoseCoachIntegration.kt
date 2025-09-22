@@ -21,9 +21,10 @@ class PoseCoachIntegration(
 
     private val apiKeyManager = ApiKeyManager(context)
     private val privacyManager = PrivacyManager(context)
+    private val clientFactory = com.posecoach.suggestions.PoseSuggestionClientFactory(context)
     private val suggestionsOrchestrator = SuggestionsOrchestrator(
         context,
-        apiKeyManager,
+        clientFactory,
         privacyEnabled = true
     )
 
@@ -64,7 +65,9 @@ class PoseCoachIntegration(
         if (!privacyManager.hasApiConsent()) {
             privacyManager.showConsentDialog(
                 onAccept = {
-                    suggestionsOrchestrator.updateClient()
+                    lifecycleScope.launch {
+                        suggestionsOrchestrator.updateClient()
+                    }
                     Timber.d("User accepted AI suggestions")
                 },
                 onDecline = {
@@ -95,7 +98,9 @@ class PoseCoachIntegration(
     }
 
     fun onPrivacySettingsChanged() {
-        suggestionsOrchestrator.updateClient()
+        lifecycleScope.launch {
+            suggestionsOrchestrator.updateClient()
+        }
         Timber.d("Privacy settings updated")
     }
 
@@ -119,7 +124,8 @@ class PoseCoachIntegration(
             val integration = PoseCoachIntegration(context, lifecycleScope, suggestionsOverlay)
             integration.initialize()
 
-            poseRepository.start(integration)
+            // TODO: Fix method name - start method not available
+            // poseRepository.start(integration)
 
             return integration
         }

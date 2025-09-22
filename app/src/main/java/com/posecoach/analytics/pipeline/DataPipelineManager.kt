@@ -219,7 +219,7 @@ class DataPipelineManager @Inject constructor(
         val analyzedPose = analyzePoseRealtime(poseData)
 
         // Quality assessment
-        val quality = assessPoseQuality(poseData)
+        val quality = dataQualityMonitor.assessPoseQuality(poseData)
 
         // Store for immediate access
         cacheRealtimeData("current_pose", analyzedPose)
@@ -519,7 +519,7 @@ class DataPipelineManager @Inject constructor(
         // Implement retry logic
         if (message.retryCount < 3) {
             scope.launch {
-                delay(1000 * (message.retryCount + 1)) // Exponential backoff
+                delay(1000L * (message.retryCount + 1)) // Exponential backoff
                 val retryMessage = message.copy(retryCount = message.retryCount + 1)
 
                 when (message.priority) {
@@ -576,6 +576,112 @@ class DataPipelineManager @Inject constructor(
             networkSavings = totalImpact * 0.25f,
             storageSavings = totalImpact * 0.25f
         )
+    }
+
+    // Missing processor methods implementation
+    private suspend fun processSystemAlert(message: PipelineMessage): ProcessedData {
+        val alertData = message.data as SystemAlert
+
+        return ProcessedData(
+            dataId = "alert_${alertData.alertId}",
+            processedAt = System.currentTimeMillis(),
+            data = alertData,
+            processingTime = message.processingTime,
+            quality = DataQuality(1.0f, 1.0f, 1.0f, 1.0f)
+        )
+    }
+
+    private suspend fun processPerformanceMetric(message: PipelineMessage): ProcessedData {
+        val metricData = message.data as SystemPerformanceMetrics
+
+        // Update performance tracking
+        processingMetrics.recordProcessing("performance_metric", message.processingTime)
+
+        return ProcessedData(
+            dataId = "perf_${System.currentTimeMillis()}",
+            processedAt = System.currentTimeMillis(),
+            data = metricData,
+            processingTime = message.processingTime,
+            quality = DataQuality(1.0f, 1.0f, 1.0f, 1.0f)
+        )
+    }
+
+    private suspend fun processUserProgress(message: PipelineMessage): ProcessedData {
+        val progressData = message.data as UserPerformanceMetrics
+
+        // Store for analytics
+        scope.launch {
+            repository.storeUserMetrics(progressData)
+        }
+
+        return ProcessedData(
+            dataId = "progress_${progressData.userId}",
+            processedAt = System.currentTimeMillis(),
+            data = progressData,
+            processingTime = message.processingTime,
+            quality = dataQualityMonitor.assessUserPerformanceQuality(progressData)
+        )
+    }
+
+    private suspend fun processBatchAnalytics(message: PipelineMessage): ProcessedData {
+        val batchData = message.data
+
+        // Process batch analytics data
+        val processedBatch = processBatchData(batchData)
+
+        return ProcessedData(
+            dataId = "batch_${System.currentTimeMillis()}",
+            processedAt = System.currentTimeMillis(),
+            data = processedBatch,
+            processingTime = message.processingTime,
+            quality = DataQuality(1.0f, 1.0f, 1.0f, 1.0f)
+        )
+    }
+
+    private suspend fun processHistoricalData(message: PipelineMessage): ProcessedData {
+        val historicalData = message.data
+
+        // Process historical data for analysis
+        val processedHistorical = processHistoricalAnalysis(historicalData)
+
+        return ProcessedData(
+            dataId = "historical_${System.currentTimeMillis()}",
+            processedAt = System.currentTimeMillis(),
+            data = processedHistorical,
+            processingTime = message.processingTime,
+            quality = DataQuality(0.9f, 0.9f, 0.9f, 0.7f) // Lower timeliness for historical data
+        )
+    }
+
+    private suspend fun processAggregationData(message: PipelineMessage): ProcessedData {
+        val aggregationData = message.data
+
+        // Process aggregation data
+        val processedAggregation = processAggregation(aggregationData)
+
+        return ProcessedData(
+            dataId = "agg_data_${System.currentTimeMillis()}",
+            processedAt = System.currentTimeMillis(),
+            data = processedAggregation,
+            processingTime = message.processingTime,
+            quality = DataQuality(1.0f, 1.0f, 1.0f, 1.0f)
+        )
+    }
+
+    // Helper methods for processing
+    private suspend fun processBatchData(data: Any): Any {
+        // Implement batch processing logic
+        return data
+    }
+
+    private suspend fun processHistoricalAnalysis(data: Any): Any {
+        // Implement historical data analysis
+        return data
+    }
+
+    private suspend fun processAggregation(data: Any): Any {
+        // Implement aggregation processing
+        return data
     }
 
     // Utility methods with placeholder implementations
@@ -925,7 +1031,7 @@ class DataQualityMonitor {
         )
     }
 
-    private fun assessUserPerformanceQuality(metrics: UserPerformanceMetrics): DataQuality {
+    fun assessUserPerformanceQuality(metrics: UserPerformanceMetrics): DataQuality {
         var completeness = 1.0f
         var accuracy = 1.0f
 

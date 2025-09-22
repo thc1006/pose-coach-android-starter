@@ -3,11 +3,17 @@ package com.posecoach.analytics.dashboard
 import androidx.compose.foundation.*
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.*
+import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.lazy.LazyRow
 import androidx.compose.material3.*
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.drawscope.Stroke
 import androidx.compose.ui.platform.LocalConfiguration
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.*
@@ -131,14 +137,27 @@ class MultiPlatformDashboard @Inject constructor(
                 ) {
                     TabletHeaderSection(view)
 
-                    LazyVerticalGrid(
-                        columns = GridCells.Fixed(2),
-                        horizontalArrangement = Arrangement.spacedBy(12.dp),
+                    LazyColumn(
                         verticalArrangement = Arrangement.spacedBy(12.dp),
                         modifier = Modifier.weight(1f)
                     ) {
-                        items(view.widgets.take(6)) { widget ->
-                            MediumWidget(widget)
+                        val rows = view.widgets.take(6).chunked(2)
+                        items(rows) { rowWidgets ->
+                            Row(
+                                horizontalArrangement = Arrangement.spacedBy(12.dp),
+                                modifier = Modifier.fillMaxWidth()
+                            ) {
+                                rowWidgets.forEach { widget ->
+                                    MediumWidget(
+                                        widget = widget,
+                                        modifier = Modifier.weight(1f)
+                                    )
+                                }
+                                // Add empty space if row is not full
+                                repeat(2 - rowWidgets.size) {
+                                    Spacer(modifier = Modifier.weight(1f))
+                                }
+                            }
                         }
                     }
                 }
@@ -197,14 +216,27 @@ class MultiPlatformDashboard @Inject constructor(
                         DesktopMetricsRow(view.widgets.take(4))
 
                         // Main dashboard grid
-                        LazyVerticalGrid(
-                            columns = GridCells.Fixed(3),
-                            horizontalArrangement = Arrangement.spacedBy(16.dp),
+                        LazyColumn(
                             verticalArrangement = Arrangement.spacedBy(16.dp),
                             modifier = Modifier.weight(1f)
                         ) {
-                            items(view.widgets.drop(4)) { widget ->
-                                LargeWidget(widget)
+                            val rows = view.widgets.drop(4).chunked(3)
+                            items(rows) { rowWidgets ->
+                                Row(
+                                    horizontalArrangement = Arrangement.spacedBy(16.dp),
+                                    modifier = Modifier.fillMaxWidth()
+                                ) {
+                                    rowWidgets.forEach { widget ->
+                                        LargeWidget(
+                                            widget = widget,
+                                            modifier = Modifier.weight(1f)
+                                        )
+                                    }
+                                    // Add empty space if row is not full
+                                    repeat(3 - rowWidgets.size) {
+                                        Spacer(modifier = Modifier.weight(1f))
+                                    }
+                                }
                             }
                         }
                     }
@@ -735,13 +767,13 @@ private fun TabletHeaderSection(view: DashboardView) {
             ) {
                 IconButton(onClick = { /* Refresh */ }) {
                     Icon(
-                        imageVector = androidx.compose.material.icons.Icons.Default.Refresh,
+                        imageVector = Icons.Default.Refresh,
                         contentDescription = "Refresh"
                     )
                 }
                 IconButton(onClick = { /* Settings */ }) {
                     Icon(
-                        imageVector = androidx.compose.material.icons.Icons.Default.Settings,
+                        imageVector = Icons.Default.Settings,
                         contentDescription = "Settings"
                     )
                 }
@@ -751,9 +783,12 @@ private fun TabletHeaderSection(view: DashboardView) {
 }
 
 @Composable
-private fun MediumWidget(widget: RenderedWidget) {
+private fun MediumWidget(
+    widget: RenderedWidget,
+    modifier: Modifier = Modifier
+) {
     Card(
-        modifier = Modifier
+        modifier = modifier
             .fillMaxWidth()
             .height(120.dp)
     ) {
@@ -916,9 +951,12 @@ private fun DesktopMetricsRow(widgets: List<RenderedWidget>) {
 }
 
 @Composable
-private fun LargeWidget(widget: RenderedWidget) {
+private fun LargeWidget(
+    widget: RenderedWidget,
+    modifier: Modifier = Modifier
+) {
     Card(
-        modifier = Modifier
+        modifier = modifier
             .fillMaxWidth()
             .height(200.dp)
     ) {

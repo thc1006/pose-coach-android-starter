@@ -28,7 +28,7 @@ class TemporalSynchronizationProcessor {
      * Analyze temporal patterns across multiple inputs
      */
     suspend fun analyzeTemporalPatterns(
-        inputs: List<MultiModalFusionEngine.MultiModalInput>
+        inputs: List<MultiModalInput>
     ): TemporalPattern = withContext(Dispatchers.Default) {
 
         try {
@@ -80,7 +80,7 @@ class TemporalSynchronizationProcessor {
      * Synchronize inputs within a temporal window
      */
     suspend fun synchronizeInputs(
-        inputs: List<MultiModalFusionEngine.MultiModalInput>,
+        inputs: List<MultiModalInput>,
         referenceTimestamp: Long = System.currentTimeMillis()
     ): List<SynchronizedInput> = withContext(Dispatchers.Default) {
 
@@ -110,7 +110,7 @@ class TemporalSynchronizationProcessor {
      * Detect timing drift between modalities
      */
     suspend fun detectTimingDrift(
-        inputs: List<MultiModalFusionEngine.MultiModalInput>
+        inputs: List<MultiModalInput>
     ): TimingDriftAnalysis = withContext(Dispatchers.Default) {
 
         try {
@@ -160,9 +160,9 @@ class TemporalSynchronizationProcessor {
      * Compensate for temporal misalignment
      */
     suspend fun compensateTemporalMisalignment(
-        inputs: List<MultiModalFusionEngine.MultiModalInput>,
+        inputs: List<MultiModalInput>,
         driftAnalysis: TimingDriftAnalysis
-    ): List<MultiModalFusionEngine.MultiModalInput> = withContext(Dispatchers.Default) {
+    ): List<MultiModalInput> = withContext(Dispatchers.Default) {
 
         try {
             if (driftAnalysis.maxDrift < MAX_TIME_DRIFT) {
@@ -170,7 +170,7 @@ class TemporalSynchronizationProcessor {
                 return@withContext inputs
             }
 
-            val compensatedInputs = mutableListOf<MultiModalFusionEngine.MultiModalInput>()
+            val compensatedInputs = mutableListOf<MultiModalInput>()
 
             // Apply temporal compensation based on drift analysis
             inputs.forEach { input ->
@@ -192,7 +192,7 @@ class TemporalSynchronizationProcessor {
 
     // Pattern detection methods
 
-    private fun detectTrendPattern(inputs: List<MultiModalFusionEngine.MultiModalInput>): TemporalPatternCandidate {
+    private fun detectTrendPattern(inputs: List<MultiModalInput>): TemporalPatternCandidate {
         // Analyze quality trends across modalities
         val poseQualityTrend = extractPoseQualityTrend(inputs)
         val audioQualityTrend = extractAudioQualityTrend(inputs)
@@ -211,7 +211,7 @@ class TemporalSynchronizationProcessor {
         )
     }
 
-    private fun detectPeriodicPattern(inputs: List<MultiModalFusionEngine.MultiModalInput>): TemporalPatternCandidate {
+    private fun detectPeriodicPattern(inputs: List<MultiModalInput>): TemporalPatternCandidate {
         // Look for periodic patterns in the data
         val intervals = inputs.zipWithNext { a, b -> b.timestamp - a.timestamp }
 
@@ -234,7 +234,7 @@ class TemporalSynchronizationProcessor {
         }
     }
 
-    private fun detectStabilityPattern(inputs: List<MultiModalFusionEngine.MultiModalInput>): TemporalPatternCandidate {
+    private fun detectStabilityPattern(inputs: List<MultiModalInput>): TemporalPatternCandidate {
         // Analyze stability across different modalities
         val poseStability = calculatePoseStability(inputs)
         val audioStability = calculateAudioStability(inputs)
@@ -256,7 +256,7 @@ class TemporalSynchronizationProcessor {
     }
 
     private fun extractKeyTemporalPoints(
-        inputs: List<MultiModalFusionEngine.MultiModalInput>,
+        inputs: List<MultiModalInput>,
         pattern: TemporalPatternCandidate
     ): List<TemporalKeyPoint> {
         val keyPoints = mutableListOf<TemporalKeyPoint>()
@@ -285,11 +285,11 @@ class TemporalSynchronizationProcessor {
     // Synchronization methods
 
     private fun createSynchronizationWindows(
-        inputs: List<MultiModalFusionEngine.MultiModalInput>,
+        inputs: List<MultiModalInput>,
         referenceTimestamp: Long
-    ): List<List<MultiModalFusionEngine.MultiModalInput>> {
-        val windows = mutableListOf<List<MultiModalFusionEngine.MultiModalInput>>()
-        var currentWindow = mutableListOf<MultiModalFusionEngine.MultiModalInput>()
+    ): List<List<MultiModalInput>> {
+        val windows = mutableListOf<List<MultiModalInput>>()
+        var currentWindow = mutableListOf<MultiModalInput>()
         var windowStart = referenceTimestamp
 
         inputs.sortedBy { it.timestamp }.forEach { input ->
@@ -312,7 +312,7 @@ class TemporalSynchronizationProcessor {
     }
 
     private fun synchronizeWindow(
-        inputs: List<MultiModalFusionEngine.MultiModalInput>
+        inputs: List<MultiModalInput>
     ): SynchronizedInput {
         if (inputs.isEmpty()) {
             return SynchronizedInput(
@@ -342,7 +342,7 @@ class TemporalSynchronizationProcessor {
     // Drift analysis methods
 
     private fun groupInputsByModality(
-        inputs: List<MultiModalFusionEngine.MultiModalInput>
+        inputs: List<MultiModalInput>
     ): Map<String, List<Long>> {
         val modalityTimestamps = mutableMapOf<String, MutableList<Long>>()
 
@@ -391,7 +391,7 @@ class TemporalSynchronizationProcessor {
     }
 
     private fun calculateCompensationDelay(
-        input: MultiModalFusionEngine.MultiModalInput,
+        input: MultiModalInput,
         driftAnalysis: TimingDriftAnalysis
     ): Long {
         // Simplified compensation - in production would be more sophisticated
@@ -400,14 +400,16 @@ class TemporalSynchronizationProcessor {
 
     // Helper methods for pattern analysis
 
-    private fun extractPoseQualityTrend(inputs: List<MultiModalFusionEngine.MultiModalInput>): Float {
-        val poseQualities = inputs.mapNotNull { it.poseLandmarks?.confidence }
+    private fun extractPoseQualityTrend(inputs: List<MultiModalInput>): Float {
+        val poseQualities = inputs.mapNotNull {
+            it.poseLandmarks?.landmarks?.mapNotNull { landmark -> landmark.visibility }?.average()?.toFloat()
+        }
         return if (poseQualities.size >= 2) {
             calculateLinearTrend(poseQualities)
         } else 0f
     }
 
-    private fun extractAudioQualityTrend(inputs: List<MultiModalFusionEngine.MultiModalInput>): Float {
+    private fun extractAudioQualityTrend(inputs: List<MultiModalInput>): Float {
         val audioQualities = inputs.mapNotNull { it.audioSignal?.qualityScore }
         return if (audioQualities.size >= 2) {
             calculateLinearTrend(audioQualities)
@@ -427,8 +429,10 @@ class TemporalSynchronizationProcessor {
         return (n * sumXY - sumX * sumY) / (n * sumX2 - sumX * sumX)
     }
 
-    private fun calculatePoseStability(inputs: List<MultiModalFusionEngine.MultiModalInput>): Float {
-        val poseQualities = inputs.mapNotNull { it.poseLandmarks?.confidence }
+    private fun calculatePoseStability(inputs: List<MultiModalInput>): Float {
+        val poseQualities = inputs.mapNotNull {
+            it.poseLandmarks?.landmarks?.mapNotNull { landmark -> landmark.visibility }?.average()?.toFloat()
+        }
         return if (poseQualities.isNotEmpty()) {
             val mean = poseQualities.average().toFloat()
             val variance = poseQualities.map { (it - mean).pow(2) }.average().toFloat()
@@ -436,7 +440,7 @@ class TemporalSynchronizationProcessor {
         } else 0.5f
     }
 
-    private fun calculateAudioStability(inputs: List<MultiModalFusionEngine.MultiModalInput>): Float {
+    private fun calculateAudioStability(inputs: List<MultiModalInput>): Float {
         val audioQualities = inputs.mapNotNull { it.audioSignal?.qualityScore }
         return if (audioQualities.isNotEmpty()) {
             val mean = audioQualities.average().toFloat()
@@ -445,17 +449,17 @@ class TemporalSynchronizationProcessor {
         } else 0.5f
     }
 
-    private fun findImprovementPoints(inputs: List<MultiModalFusionEngine.MultiModalInput>): List<TemporalKeyPoint> {
+    private fun findImprovementPoints(inputs: List<MultiModalInput>): List<TemporalKeyPoint> {
         // Simplified improvement detection
         return emptyList()
     }
 
-    private fun findDegradationPoints(inputs: List<MultiModalFusionEngine.MultiModalInput>): List<TemporalKeyPoint> {
+    private fun findDegradationPoints(inputs: List<MultiModalInput>): List<TemporalKeyPoint> {
         // Simplified degradation detection
         return emptyList()
     }
 
-    private fun findPeriodicPoints(inputs: List<MultiModalFusionEngine.MultiModalInput>): List<TemporalKeyPoint> {
+    private fun findPeriodicPoints(inputs: List<MultiModalInput>): List<TemporalKeyPoint> {
         // Simplified periodic point detection
         return emptyList()
     }
@@ -469,7 +473,7 @@ class TemporalSynchronizationProcessor {
 
     data class SynchronizedInput(
         val timestamp: Long,
-        val inputs: List<MultiModalFusionEngine.MultiModalInput>,
+        val inputs: List<MultiModalInput>,
         val confidence: Float,
         val synchronizationQuality: Float
     )

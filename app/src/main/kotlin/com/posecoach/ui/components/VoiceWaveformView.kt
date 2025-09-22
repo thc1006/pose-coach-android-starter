@@ -6,7 +6,7 @@ import android.graphics.*
 import android.util.AttributeSet
 import android.view.View
 import androidx.core.content.ContextCompat
-import com.posecoach.R
+import com.posecoach.app.R
 import kotlin.math.*
 import kotlin.random.Random
 

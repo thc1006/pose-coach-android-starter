@@ -131,9 +131,9 @@ class MediaPipePoseRepository : PoseRepository {
 
                     val landmarks = poseLandmarks.map { landmark ->
                         PoseLandmarkResult.Landmark(
-                            x = landmark.x,
-                            y = landmark.y,
-                            z = landmark.z,
+                            x = landmark.x(),
+                            y = landmark.y(),
+                            z = landmark.z(),
                             visibility = 0.9f,  // MediaPipe doesn't provide visibility in basic API
                             presence = 0.95f    // MediaPipe doesn't provide presence in basic API
                         )
@@ -142,16 +142,16 @@ class MediaPipePoseRepository : PoseRepository {
                     val worldLandmarksList = worldLandmarks.map { landmark ->
                         when (landmark) {
                             is NormalizedLandmark -> PoseLandmarkResult.Landmark(
-                                x = landmark.x,
-                                y = landmark.y,
-                                z = landmark.z,
+                                x = landmark.x(),
+                                y = landmark.y(),
+                                z = landmark.z(),
                                 visibility = 0.9f,  // MediaPipe doesn't provide visibility in basic API
                                 presence = 0.95f    // MediaPipe doesn't provide presence in basic API
                             )
                             is Landmark -> PoseLandmarkResult.Landmark(
-                                x = landmark.x,
-                                y = landmark.y,
-                                z = landmark.z,
+                                x = landmark.x(),
+                                y = landmark.y(),
+                                z = landmark.z(),
                                 visibility = 0.9f,  // MediaPipe doesn't provide visibility in basic API
                                 presence = 0.95f    // MediaPipe doesn't provide presence in basic API
                             )

@@ -1,6 +1,7 @@
 package com.posecoach.app.camera
 
 import android.content.Context
+import android.graphics.ImageFormat
 import android.graphics.Matrix
 import android.hardware.camera2.CameraCharacteristics
 import android.hardware.camera2.CameraManager

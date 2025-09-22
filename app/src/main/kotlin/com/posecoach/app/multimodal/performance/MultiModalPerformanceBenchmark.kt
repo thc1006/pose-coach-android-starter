@@ -6,6 +6,7 @@ import android.os.Build
 import androidx.lifecycle.LifecycleCoroutineScope
 import com.posecoach.app.multimodal.MultiModalFusionEngine
 import com.posecoach.app.multimodal.integration.LiveCoachMultiModalIntegration
+import com.posecoach.app.multimodal.models.MultiModalInput
 import com.posecoach.app.multimodal.pipeline.MultiModalProcessingPipeline
 import com.posecoach.app.privacy.EnhancedPrivacyManager
 import com.posecoach.corepose.models.PoseLandmarkResult
@@ -560,7 +561,7 @@ class MultiModalPerformanceBenchmark(
         try {
             val latencies = mutableListOf<Long>()
             var successCount = 0
-            val memorySnapshots = mutableListOf<Long>()
+            val memorySnapshots = mutableListOf<Double>()
 
             val memoryBefore = getCurrentMemoryUsage()
 
@@ -733,8 +734,8 @@ class MultiModalPerformanceBenchmark(
             memoryUsageMB = memoryUsage,
             cpuUsagePercent = getCpuUsage(),
             successRate = successCount.toDouble() / totalIterations,
-            p95LatencyMs = if (sortedLatencies.isNotEmpty()) sortedLatencies[(sortedLatencies.size * 0.95).toInt()] else 0.0,
-            p99LatencyMs = if (sortedLatencies.isNotEmpty()) sortedLatencies[(sortedLatencies.size * 0.99).toInt()] else 0.0,
+            p95LatencyMs = if (sortedLatencies.isNotEmpty()) sortedLatencies[(sortedLatencies.size * 0.95).toInt()].toDouble() else 0.0,
+            p99LatencyMs = if (sortedLatencies.isNotEmpty()) sortedLatencies[(sortedLatencies.size * 0.99).toInt()].toDouble() else 0.0,
             deviceInfo = getDeviceInfo()
         )
     }
@@ -860,8 +861,9 @@ class MultiModalPerformanceBenchmark(
 
         return PoseLandmarkResult(
             landmarks = landmarks,
-            confidence = 0.8f,
-            timestamp = System.currentTimeMillis()
+            worldLandmarks = landmarks, // Using same landmarks for simplicity
+            timestampMs = System.currentTimeMillis(),
+            inferenceTimeMs = 50L
         )
     }
 
@@ -876,15 +878,15 @@ class MultiModalPerformanceBenchmark(
 
         for (i in 0 until sampleCount) {
             val sample = (32767 * sin(2 * PI * 440 * i / sampleRate)).toInt().toShort()
-            audioData[i * 2] = (sample and 0xFF).toByte()
+            audioData[i * 2] = (sample.toInt() and 0xFF).toByte()
             audioData[i * 2 + 1] = ((sample.toInt() shr 8) and 0xFF).toByte()
         }
 
         return audioData
     }
 
-    private fun createTestMultiModalInput(): MultiModalFusionEngine.MultiModalInput {
-        return MultiModalFusionEngine.MultiModalInput(
+    private fun createTestMultiModalInput(): MultiModalInput {
+        return MultiModalInput(
             timestamp = System.currentTimeMillis(),
             inputId = "benchmark_input",
             poseLandmarks = createTestPoseLandmarks(),

@@ -6,11 +6,12 @@ import android.animation.ValueAnimator
 import android.content.Context
 import android.graphics.*
 import android.util.AttributeSet
+import android.view.HapticFeedbackConstants
 import android.view.MotionEvent
 import android.view.View
 import android.view.animation.AccelerateDecelerateInterpolator
 import androidx.core.content.ContextCompat
-import com.posecoach.R
+import com.posecoach.app.R
 import kotlin.math.cos
 import kotlin.math.sin
 
@@ -118,7 +119,7 @@ class PushToTalkButton @JvmOverloads constructor(
 
     private fun handleTouchDown() {
         isPressed = true
-        performHapticFeedback(HAPTIC_FEEDBACK_VIRTUAL_KEY)
+        performHapticFeedback(HapticFeedbackConstants.VIRTUAL_KEY)
 
         // Start talking
         onTalkStartListener?.invoke()

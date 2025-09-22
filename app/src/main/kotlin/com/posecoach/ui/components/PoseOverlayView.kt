@@ -5,7 +5,7 @@ import android.graphics.*
 import android.util.AttributeSet
 import android.view.View
 import androidx.core.content.ContextCompat
-import com.posecoach.R
+import com.posecoach.app.R
 import kotlin.math.*
 
 /**
@@ -37,7 +37,7 @@ class PoseOverlayView @JvmOverloads constructor(
     private val correctionColor = ContextCompat.getColor(context, R.color.pose_correction)
 
     // Pose data
-    private var currentPoses: List<PoseData> = emptyList()
+    private var currentPoses: List<OverlayPoseData> = emptyList()
     private var corrections: List<PoseCorrection> = emptyList()
 
     // Configuration
@@ -81,7 +81,7 @@ class PoseOverlayView @JvmOverloads constructor(
         }
     }
 
-    fun updatePoses(poses: List<PoseData>) {
+    fun updatePoses(poses: List<OverlayPoseData>) {
         currentPoses = poses
         invalidate()
     }
@@ -105,7 +105,7 @@ class PoseOverlayView @JvmOverloads constructor(
         }
     }
 
-    private fun drawPose(canvas: Canvas, pose: PoseData) {
+    private fun drawPose(canvas: Canvas, pose: OverlayPoseData) {
         val landmarks = pose.landmarks
 
         // Draw pose connections
@@ -189,7 +189,7 @@ class PoseOverlayView @JvmOverloads constructor(
         }
     }
 
-    private fun drawPoseQuality(canvas: Canvas, pose: PoseData) {
+    private fun drawPoseQuality(canvas: Canvas, pose: OverlayPoseData) {
         val x = width * 0.1f
         val y = height * 0.1f
         val qualityText = "Pose Quality: ${(pose.overallConfidence * 100).toInt()}%"
@@ -309,8 +309,8 @@ class PoseOverlayView @JvmOverloads constructor(
         val angle2 = atan2(point2.y - center.y, point2.x - center.x)
         var diff = angle2 - angle1
 
-        if (diff > PI) diff -= 2 * PI
-        if (diff < -PI) diff += 2 * PI
+        if (diff > PI) diff -= 2 * PI.toFloat()
+        if (diff < -PI) diff += 2 * PI.toFloat()
 
         return abs(diff * 180f / PI.toFloat())
     }
@@ -323,7 +323,7 @@ class PoseOverlayView @JvmOverloads constructor(
 }
 
 // Data classes for pose information
-data class PoseData(
+data class OverlayPoseData(
     val landmarks: List<PoseLandmark>,
     val overallConfidence: Float,
     val timestamp: Long = System.currentTimeMillis()

@@ -201,11 +201,12 @@ class CameraPoseIntegration(
         confidenceThreshold: Float = 0.5f,
         enableMultiPerson: Boolean = true
     ) {
-        multiPersonManager.updateSettings(
-            maxDetectedPoses = maxDetectedPoses,
-            confidenceThreshold = confidenceThreshold,
-            enableTracking = enableMultiPerson
-        )
+        // TODO: Update settings when method is available
+        // multiPersonManager.updateSettings(
+        //     maxDetectedPoses = maxDetectedPoses,
+        //     confidenceThreshold = confidenceThreshold,
+        //     enableTracking = enableMultiPerson
+        // )
     }
 
     /**
@@ -360,18 +361,13 @@ class CameraPoseIntegration(
     }
 
     private fun updateOverlayPoses(poses: List<PoseData>, cameraState: CameraXManager.CameraState) {
-        // Convert poses to overlay format and update overlay
-        val overlayPoses = poses.map { pose ->
-            PoseOverlayView.OverlayPose(
-                personId = pose.personId,
-                landmarks = pose.landmarks,
-                confidence = pose.confidence,
-                boundingBox = pose.boundingBox,
-                visible = pose.visible
-            )
+        // Update overlay with the most confident pose if available
+        val bestPose = poses.maxByOrNull { it.confidence }
+        if (bestPose != null) {
+            // Convert PoseData to PoseLandmarkResult for overlay
+            // TODO: Implement proper conversion when PoseLandmarkResult structure is finalized
+            // overlayView?.updatePose(convertToPoseLandmarkResult(bestPose))
         }
-
-        overlayView?.updatePoses(overlayPoses)
     }
 
     private fun handleCameraStateChange(state: CameraXManager.CameraState) {
@@ -429,10 +425,11 @@ class CameraPoseIntegration(
         // Setting the transformation matrix for pose rendering
     }
 
-    private fun PoseOverlayView.updatePoses(poses: List<PoseOverlayView.OverlayPose>) {
-        // This would be implemented in the actual PoseOverlayView
-        // Updating the poses for rendering
-    }
+    // TODO: Implement when PoseOverlayView has updatePoses method
+    // private fun PoseOverlayView.updatePoses(poses: List<Any>) {
+    //     // This would be implemented in the actual PoseOverlayView
+    //     // Updating the poses for rendering
+    // }
 
     private fun PoseOverlayView.clearPoses() {
         // This would be implemented in the actual PoseOverlayView

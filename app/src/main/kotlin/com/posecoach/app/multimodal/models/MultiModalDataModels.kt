@@ -1,5 +1,7 @@
 package com.posecoach.app.multimodal.models
 
+import com.posecoach.corepose.models.PoseLandmarkResult
+import kotlinx.serialization.Contextual
 import kotlinx.serialization.Serializable
 import kotlin.collections.emptyList
 
@@ -248,4 +250,39 @@ data class PrivacyComplianceData(
     val consentCompliance: Boolean,
     val localProcessingRatio: Float,
     val encryptionStatus: String
+)
+
+// Cross-Modal Analysis Data Models
+@Serializable
+data class ModalityAnalysis(
+    val modality: String,
+    val confidence: Float,
+    val insights: List<String>,
+    val timestamp: Long
+)
+
+// Multi-Modal Input Data Model
+@Serializable
+data class MultiModalInput(
+    val timestamp: Long = System.currentTimeMillis(),
+    val inputId: String,
+    val poseLandmarks: @Contextual PoseLandmarkResult? = null,
+    val visualContext: VisualContextData? = null,
+    val audioSignal: AudioSignalData? = null,
+    val environmentContext: EnvironmentContextData? = null,
+    val userContext: UserContextData? = null
+)
+
+@Serializable
+data class ContextualFactor(
+    val type: String,
+    val value: String,
+    val confidence: Float
+)
+
+@Serializable
+data class FusionPerformanceMetrics(
+    val processingTimeMs: Long,
+    val modalitiesProcessed: Int,
+    val confidenceScore: Float
 )

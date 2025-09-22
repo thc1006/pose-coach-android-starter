@@ -1,6 +1,7 @@
 package com.posecoach.analytics.models
 
 import kotlinx.serialization.Serializable
+import kotlinx.serialization.Contextual
 import java.time.Instant
 import java.util.*
 
@@ -12,7 +13,7 @@ import java.util.*
 data class UserPerformanceMetrics(
     val userId: String,
     val sessionId: String,
-    val timestamp: Long = Instant.now().epochSecond,
+    val timestamp: Long,
     val workoutType: String,
     val duration: Long, // seconds
     val poseAccuracy: Float, // 0.0 - 1.0
@@ -49,7 +50,7 @@ enum class IntensityLevel {
 data class CoachingEffectivenessMetrics(
     val coachingSessionId: String,
     val userId: String,
-    val timestamp: Long = Instant.now().epochSecond,
+    val timestamp: Long,
     val suggestionAccuracy: Float,
     val userCompliance: Float,
     val feedbackEffectiveness: Float,
@@ -66,7 +67,7 @@ enum class CoachingModality {
 @Serializable
 data class SystemPerformanceMetrics(
     val sessionId: String,
-    val timestamp: Long = Instant.now().epochSecond,
+    val timestamp: Long,
     val appLatency: Long, // milliseconds
     val aiProcessingTime: Long, // milliseconds
     val memoryUsage: Long, // bytes
@@ -81,7 +82,7 @@ data class SystemPerformanceMetrics(
 @Serializable
 data class BusinessIntelligenceMetrics(
     val aggregationId: String,
-    val timestamp: Long = Instant.now().epochSecond,
+    val timestamp: Long,
     val activeUsers: Int,
     val sessionCount: Int,
     val averageSessionDuration: Float,
@@ -106,13 +107,13 @@ enum class PrivacyLevel {
 
 @Serializable
 data class AnalyticsEvent(
-    val eventId: String = UUID.randomUUID().toString(),
+    val eventId: String,
     val userId: String?,
     val sessionId: String,
-    val timestamp: Long = Instant.now().epochSecond,
+    val timestamp: Long,
     val eventType: EventType,
     val category: EventCategory,
-    val properties: Map<String, Any>,
+    val properties: Map<String, @Contextual Any>,
     val privacyLevel: PrivacyLevel,
     val retentionDays: Int = 30
 )
@@ -135,7 +136,7 @@ data class DashboardConfiguration(
     val widgets: List<WidgetConfiguration>,
     val refreshInterval: Long, // seconds
     val privacySettings: PrivacySettings,
-    val customization: Map<String, Any>
+    val customization: Map<String, @Contextual Any>
 )
 
 @Serializable
@@ -158,7 +159,7 @@ data class WidgetConfiguration(
     val size: Size,
     val dataSource: String,
     val refreshRate: Long,
-    val customProperties: Map<String, Any>
+    val customProperties: Map<String, @Contextual Any>
 )
 
 @Serializable
@@ -199,7 +200,7 @@ data class AnalyticsInsight(
     val recommendation: String,
     val confidence: Float,
     val impact: ImpactLevel,
-    val timestamp: Long = Instant.now().epochSecond,
+    val timestamp: Long,
     val validUntil: Long,
     val actionable: Boolean,
     val relatedMetrics: List<String>
@@ -217,7 +218,7 @@ enum class ImpactLevel {
 @Serializable
 data class RealtimeAnalyticsData(
     val streamId: String,
-    val timestamp: Long = Instant.now().epochSecond,
+    val timestamp: Long,
     val metrics: Map<String, Float>,
     val events: List<AnalyticsEvent>,
     val alerts: List<AnalyticsAlert>,
@@ -230,7 +231,7 @@ data class AnalyticsAlert(
     val type: AlertType,
     val severity: AlertSeverity,
     val message: String,
-    val timestamp: Long = Instant.now().epochSecond,
+    val timestamp: Long,
     val acknowledged: Boolean = false,
     val actionRequired: Boolean,
     val relatedMetrics: List<String>
@@ -244,3 +245,4 @@ enum class AlertType {
 enum class AlertSeverity {
     INFO, WARNING, ERROR, CRITICAL
 }
+

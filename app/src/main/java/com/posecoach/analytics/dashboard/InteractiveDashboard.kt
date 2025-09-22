@@ -6,6 +6,9 @@ import androidx.compose.foundation.*
 import androidx.compose.foundation.gestures.*
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.*
+import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.lazy.LazyRow
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
@@ -16,11 +19,14 @@ import androidx.compose.ui.draw.shadow
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.graphics.*
 import androidx.compose.ui.graphics.drawscope.DrawScope
+import androidx.compose.ui.graphics.drawscope.Stroke
 import androidx.compose.ui.platform.LocalConfiguration
 import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.*
 import androidx.compose.ui.viewinterop.AndroidView
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Warning
 import com.posecoach.analytics.interfaces.*
 import com.posecoach.analytics.models.*
 import kotlinx.coroutines.flow.*
@@ -215,18 +221,28 @@ fun GridDashboardLayout(
 ) {
     val columns = if (isTablet) config.layout.columns * 2 else config.layout.columns
 
-    LazyVerticalGrid(
-        columns = GridCells.Fixed(columns),
+    LazyColumn(
         contentPadding = PaddingValues(16.dp),
-        horizontalArrangement = Arrangement.spacedBy(8.dp),
         verticalArrangement = Arrangement.spacedBy(8.dp),
         modifier = modifier
     ) {
-        items(widgets) { widget ->
-            DashboardWidget(
-                widget = widget,
+        val rows = widgets.chunked(columns)
+        items(rows) { rowWidgets ->
+            Row(
+                horizontalArrangement = Arrangement.spacedBy(8.dp),
                 modifier = Modifier.fillMaxWidth()
-            )
+            ) {
+                rowWidgets.forEach { widget ->
+                    DashboardWidget(
+                        widget = widget,
+                        modifier = Modifier.weight(1f)
+                    )
+                }
+                // Add empty space if row is not full
+                repeat(columns - rowWidgets.size) {
+                    Spacer(modifier = Modifier.weight(1f))
+                }
+            }
         }
     }
 }
@@ -274,18 +290,28 @@ fun MasonryDashboardLayout(
 ) {
     // Masonry layout implementation
     // This is a simplified version - a full implementation would use a custom layout
-    LazyVerticalGrid(
-        columns = GridCells.Fixed(config.layout.columns),
+    LazyColumn(
         contentPadding = PaddingValues(16.dp),
-        horizontalArrangement = Arrangement.spacedBy(8.dp),
         verticalArrangement = Arrangement.spacedBy(8.dp),
         modifier = modifier
     ) {
-        items(widgets) { widget ->
-            DashboardWidget(
-                widget = widget,
+        val rows = widgets.chunked(config.layout.columns)
+        items(rows) { rowWidgets ->
+            Row(
+                horizontalArrangement = Arrangement.spacedBy(8.dp),
                 modifier = Modifier.fillMaxWidth()
-            )
+            ) {
+                rowWidgets.forEach { widget ->
+                    DashboardWidget(
+                        widget = widget,
+                        modifier = Modifier.weight(1f)
+                    )
+                }
+                // Add empty space if row is not full
+                repeat(config.layout.columns - rowWidgets.size) {
+                    Spacer(modifier = Modifier.weight(1f))
+                }
+            }
         }
     }
 }
@@ -373,7 +399,7 @@ fun WidgetHeader(
         ) {
             if (isStale) {
                 Icon(
-                    imageVector = androidx.compose.material.icons.Icons.Default.Warning,
+                    imageVector = Icons.Default.Warning,
                     contentDescription = "Stale data",
                     tint = MaterialTheme.colorScheme.error,
                     modifier = Modifier.size(16.dp)

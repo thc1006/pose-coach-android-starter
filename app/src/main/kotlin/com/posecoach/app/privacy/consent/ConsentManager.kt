@@ -222,12 +222,12 @@ class ConsentManager(private val context: Context) {
             recordId = updatedRecord.id,
             changeType = ChangeType.MODIFICATION,
             oldValues = mapOf(
-                "purposes" -> currentRecord.purposes.toString(),
-                "dataTypes" -> currentRecord.dataTypes.toString()
+                "purposes" to currentRecord.purposes.toString(),
+                "dataTypes" to currentRecord.dataTypes.toString()
             ),
             newValues = mapOf(
-                "purposes" -> updatedRecord.purposes.toString(),
-                "dataTypes" -> updatedRecord.dataTypes.toString()
+                "purposes" to updatedRecord.purposes.toString(),
+                "dataTypes" to updatedRecord.dataTypes.toString()
             ),
             reason = "User granted consent for: ${request.description}",
             userInitiated = true
@@ -276,12 +276,12 @@ class ConsentManager(private val context: Context) {
             recordId = updatedRecord.id,
             changeType = ChangeType.WITHDRAWAL,
             oldValues = mapOf(
-                "purposes" -> currentRecord.purposes.toString(),
-                "dataTypes" -> currentRecord.dataTypes.toString()
+                "purposes" to currentRecord.purposes.toString(),
+                "dataTypes" to currentRecord.dataTypes.toString()
             ),
             newValues = mapOf(
-                "purposes" -> updatedRecord.purposes.toString(),
-                "dataTypes" -> updatedRecord.dataTypes.toString()
+                "purposes" to updatedRecord.purposes.toString(),
+                "dataTypes" to updatedRecord.dataTypes.toString()
             ),
             reason = reason,
             userInitiated = true
@@ -353,8 +353,8 @@ class ConsentManager(private val context: Context) {
         logConsentChange(
             recordId = renewedRecord.id,
             changeType = ChangeType.RENEWAL,
-            oldValues = mapOf("expiryTimestamp" -> currentRecord.expiryTimestamp.toString()),
-            newValues = mapOf("expiryTimestamp" -> renewedRecord.expiryTimestamp.toString()),
+            oldValues = mapOf("expiryTimestamp" to currentRecord.expiryTimestamp.toString()),
+            newValues = mapOf("expiryTimestamp" to renewedRecord.expiryTimestamp.toString()),
             reason = "Consent renewed",
             userInitiated = true
         )

@@ -63,7 +63,7 @@ class TddPoseGeminiIntegrator(
         // TDD Green Phase: Minimal stability check
         // Real implementation would use StablePoseGate from core-pose
         return poseLandmarkResult.landmarks.isNotEmpty() &&
-                poseLandmarkResult.confidence > 0.7f
+                poseLandmarkResult.landmarks.map { it.visibility }.average() > 0.7f
     }
 
     /**
@@ -90,17 +90,23 @@ class TddPoseGeminiIntegrator(
                 val poseLandmarksData = convertToGeminiFormat(poseLandmarkResult)
 
                 // Call Gemini with structured output (responseSchema enforced in client)
-                val response = geminiClient.getSuggestions(poseLandmarksData)
+                val result = geminiClient.getPoseSuggestions(poseLandmarksData)
 
-                // Validate exactly 3 suggestions as per CLAUDE.md requirements
-                if (response.suggestions.size == 3) {
-                    val suggestionTexts = response.suggestions.map { it.description }
-                    suggestionsListener?.onSuggestionsReceived(suggestionTexts)
-                    Timber.d("TDD Green Phase: Received exactly 3 suggestions from Gemini")
-                } else {
-                    val error = "Invalid suggestion count: ${response.suggestions.size}, expected 3"
+                result.onSuccess { response ->
+                    // Validate exactly 3 suggestions as per CLAUDE.md requirements
+                    if (response.suggestions.size == 3) {
+                        val suggestionTexts = response.suggestions.map { it.instruction }
+                        suggestionsListener?.onSuggestionsReceived(suggestionTexts)
+                        Timber.d("TDD Green Phase: Received exactly 3 suggestions from Gemini")
+                    } else {
+                        val error = "Invalid suggestion count: ${response.suggestions.size}, expected 3"
+                        suggestionsListener?.onSuggestionsError(error)
+                        Timber.e("TDD Green Phase: $error")
+                    }
+                }.onFailure { e ->
+                    val error = "Gemini API error: ${e.message}"
                     suggestionsListener?.onSuggestionsError(error)
-                    Timber.e("TDD Green Phase: $error")
+                    Timber.e(e, "TDD Green Phase: Failed to get Gemini suggestions")
                 }
 
             } catch (e: Exception) {
@@ -119,20 +125,17 @@ class TddPoseGeminiIntegrator(
         // TDD Green Phase: Minimal conversion
         // Real implementation would include more comprehensive data mapping
         return PoseLandmarksData(
-            landmarks = poseLandmarkResult.landmarks.map { landmark ->
-                mapOf(
-                    "x" to landmark.x(),
-                    "y" to landmark.y(),
-                    "z" to landmark.z(),
-                    "visibility" to landmark.visibility().orElse(1.0f)
+            landmarks = poseLandmarkResult.landmarks.mapIndexed { index, landmark ->
+                PoseLandmarksData.LandmarkPoint(
+                    index = index,
+                    x = landmark.x,
+                    y = landmark.y,
+                    z = landmark.z,
+                    visibility = landmark.visibility,
+                    presence = landmark.presence
                 )
             },
-            timestamp = System.currentTimeMillis(),
-            confidence = poseLandmarkResult.confidence,
-            metadata = mapOf(
-                "source" to "TDD_Green_Phase",
-                "integration_version" to "1.0"
-            )
+            timestamp = System.currentTimeMillis()
         )
     }
 
@@ -153,8 +156,9 @@ class TddPoseGeminiIntegrator(
         // This would be replaced with real pose detection data
         return PoseLandmarkResult(
             landmarks = emptyList(), // Mock landmarks
-            confidence = 0.85f,
-            timestamp = System.currentTimeMillis()
+            worldLandmarks = emptyList(),
+            timestampMs = System.currentTimeMillis(),
+            inferenceTimeMs = 0L
         )
     }
 

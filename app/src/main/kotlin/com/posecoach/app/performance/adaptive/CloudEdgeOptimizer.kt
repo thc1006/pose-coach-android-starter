@@ -396,7 +396,7 @@ class CloudEdgeOptimizer(
         }
 
         val cpuFactor = device.cpuBenchmark / 1000f // Normalize
-        val memoryFactor = (device.availableMemory / (1024 * 1024 * 1024)).coerceAtMost(1f) // GB, max 1
+        val memoryFactor = (device.availableMemory / (1024L * 1024L * 1024L)).toFloat().coerceAtMost(1f) // GB, max 1
         val thermalFactor = if (device.thermalState >= MAX_THERMAL_FOR_LOCAL) 2f else 1f
 
         val estimatedLatency = baseLatency / (cpuFactor * memoryFactor) * thermalFactor
@@ -502,8 +502,8 @@ class CloudEdgeOptimizer(
         network: NetworkConditions
     ): ProcessingOption {
         val networkLatency = network.latency
-        val uploadTime = (workload.inputSize * 8f) / (network.bandwidth * 1024 * 1024) * 1000 // Convert to ms
-        val downloadTime = (workload.outputSize * 8f) / (network.bandwidth * 1024 * 1024) * 1000
+        val uploadTime = (workload.inputSize * 8f) / (network.bandwidth * 1024 * 1024) * 1000f // Convert to ms
+        val downloadTime = (workload.outputSize * 8f) / (network.bandwidth * 1024 * 1024) * 1000f
         val processingTime = endpoint.latency
 
         val totalLatency = networkLatency + uploadTime + processingTime + downloadTime
@@ -704,7 +704,7 @@ class CloudEdgeOptimizer(
         workload: WorkloadProfile
     ): Float {
         val thermalPenalty = device.thermalState * 0.1f
-        val memoryScore = (device.availableMemory / (1024 * 1024 * 1024)).coerceAtMost(1f)
+        val memoryScore = (device.availableMemory / (1024L * 1024L * 1024L)).toFloat().coerceAtMost(1f)
         val batteryScore = (device.batteryLevel / 100f).coerceAtMost(1f)
 
         return (0.8f + memoryScore * 0.1f + batteryScore * 0.1f - thermalPenalty).coerceIn(0f, 1f)

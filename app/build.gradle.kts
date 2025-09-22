@@ -1,20 +1,31 @@
 plugins {
     id("com.android.application")
     id("org.jetbrains.kotlin.android")
+    id("org.jetbrains.kotlin.plugin.serialization") version "1.9.25"
 }
 
 android {
     namespace = "com.posecoach.app"
-    compileSdk = 34
+    compileSdk = 35  // Android 15 for 16KB page size support
+    ndkVersion = "28.0.12433566" // NDK r28+ compiles 16KB-aligned by default
 
     defaultConfig {
         applicationId = "com.posecoach.camera"
         minSdk = 26
-        targetSdk = 34
+        targetSdk = 35  // Target Android 15+ for 16KB support
         versionCode = 1
         versionName = "1.0"
 
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
+
+        // NDK r28+ automatically handles 16KB alignment
+        // No explicit configuration needed with NDK r28+
+        // The following is only needed if you want to disable flexible page sizes
+        // externalNativeBuild {
+        //     cmake {
+        //         arguments += "-DANDROID_SUPPORT_FLEXIBLE_PAGE_SIZES=OFF"
+        //     }
+        // }
     }
 
     buildTypes {
@@ -32,6 +43,16 @@ android {
         }
     }
 
+    // Split APKs by ABI - properly configured for 16KB alignment
+    splits {
+        abi {
+            isEnable = true
+            reset()
+            include("arm64-v8a", "x86_64")  // Both architectures support 16KB
+            isUniversalApk = false
+        }
+    }
+
     compileOptions {
         sourceCompatibility = JavaVersion.VERSION_17
         targetCompatibility = JavaVersion.VERSION_17
@@ -44,6 +65,49 @@ android {
     buildFeatures {
         viewBinding = true
         buildConfig = true
+        compose = true
+    }
+
+    composeOptions {
+        kotlinCompilerExtensionVersion = "1.5.15"
+    }
+
+    packaging {
+        resources {
+            excludes += "COPYRIGHT.txt"
+        }
+        jniLibs {
+            // With AGP 8.5.1+ and NDK r28+, 16KB alignment is automatic
+            // useLegacyPackaging = false ensures libraries are uncompressed and aligned
+            useLegacyPackaging = false
+
+            // Keep debug symbols for critical libraries
+            keepDebugSymbols += listOf(
+                "**/libimage_processing_util_jni.so",
+                "**/libmediapipe_tasks_vision_jni.so",
+                "**/libtensorflowlite_gpu_jni.so",
+                "**/libtensorflowlite_jni.so"
+            )
+
+            // Handle duplicate libraries
+            pickFirsts += listOf(
+                "**/libimage_processing_util_jni.so",
+                "**/libmediapipe_tasks_vision_jni.so",
+                "**/libtensorflowlite_gpu_jni.so",
+                "**/libtensorflowlite_jni.so"
+            )
+        }
+        // Ensure proper DEX packaging
+        dex {
+            useLegacyPackaging = false
+        }
+    }
+
+    // Add lint options for 16KB alignment checks
+    lint {
+        checkDependencies = true
+        abortOnError = false
+        warningsAsErrors = false
     }
 }
 
@@ -62,11 +126,16 @@ dependencies {
     implementation("androidx.camera:camera-extensions:$cameraxVersion")
     // camera-mlkit-vision not needed - we use MediaPipe instead
 
-    // MediaPipe for pose detection - only tasks-vision needed
-    implementation("com.google.mediapipe:tasks-vision:0.10.9")
+    // MediaPipe for pose detection - latest version
+    // Note: Pre-built libraries may not have 16KB alignment
+    // Consider using custom builds or waiting for official 16KB support
+    implementation("com.google.mediapipe:tasks-vision:0.10.14")
+
+    // ReLinker for runtime library loading with alignment fixes
+    implementation("com.getkeepsafe.relinker:relinker:1.4.5")
 
     // Kotlin & Coroutines
-    implementation("org.jetbrains.kotlin:kotlin-stdlib:1.9.22")
+    implementation("org.jetbrains.kotlin:kotlin-stdlib:1.9.25")
     implementation("org.jetbrains.kotlinx:kotlinx-coroutines-android:1.7.3")
     implementation("org.jetbrains.kotlinx:kotlinx-coroutines-core:1.7.3")
 
@@ -101,15 +170,21 @@ dependencies {
     implementation("io.github.resilience4j:resilience4j-circuitbreaker:2.1.0")
     implementation("io.github.resilience4j:resilience4j-retry:2.1.0")
 
-    // Advanced Audio Features
-    implementation("org.tensorflow:tensorflow-lite:2.14.0")
+    // TensorFlow Lite - latest versions
+    // Note: Official 16KB support pending, using latest available
+    implementation("org.tensorflow:tensorflow-lite:2.16.1")
     implementation("org.tensorflow:tensorflow-lite-support:0.4.4")
+    implementation("org.tensorflow:tensorflow-lite-gpu:2.16.1")
 
     // Metrics & Analytics
     implementation("io.micrometer:micrometer-core:1.12.0")
 
     // JSON Serialization
     implementation("com.google.code.gson:gson:2.10.1")
+    implementation("org.jetbrains.kotlinx:kotlinx-serialization-json:1.6.0")
+
+    // Google AI Generative SDK
+    implementation("com.google.ai.client.generativeai:generativeai:0.9.0")
 
     // Reactive Streams
     implementation("io.reactivex.rxjava3:rxjava:3.1.8")
@@ -117,6 +192,27 @@ dependencies {
 
     // Security - Encrypted Preferences
     implementation("androidx.security:security-crypto:1.1.0-alpha06")
+
+    // Jetpack Compose
+    implementation(platform("androidx.compose:compose-bom:2024.10.00"))
+    implementation("androidx.compose.ui:ui")
+    implementation("androidx.compose.ui:ui-tooling-preview")
+    implementation("androidx.compose.material3:material3")
+    implementation("androidx.compose.material:material-icons-core")
+    implementation("androidx.compose.material:material-icons-extended")
+    implementation("androidx.activity:activity-compose:1.8.2")
+    implementation("androidx.lifecycle:lifecycle-viewmodel-compose:2.7.0")
+    implementation("androidx.compose.runtime:runtime-livedata")
+    implementation("androidx.compose.foundation:foundation")
+    implementation("androidx.compose.foundation:foundation-layout")
+    implementation("androidx.compose.animation:animation")
+    implementation("androidx.compose.animation:animation-core")
+    implementation("androidx.compose.ui:ui-graphics")
+    implementation("androidx.compose.ui:ui-viewbinding")
+
+    // Compose debugging tools (debug builds only)
+    debugImplementation("androidx.compose.ui:ui-tooling")
+    debugImplementation("androidx.compose.ui:ui-test-manifest")
 
     // Testing
     testImplementation("junit:junit:4.13.2")

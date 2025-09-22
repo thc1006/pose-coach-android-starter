@@ -198,7 +198,7 @@ class PredictiveResourceManager(
 
         try {
             val currentSample = resourceSamples.lastOrNull() ?: return
-            val recentSamples = resourceSamples.takeLast(10)
+            val recentSamples = resourceSamples.toList().takeLast(10)
 
             val features = extractFeatures(recentSamples)
 
@@ -566,7 +566,7 @@ class PredictiveResourceManager(
 
     private fun getAverageInferenceTime(): Float {
         // This would integrate with PerformanceMetrics
-        return resourceSamples.takeLast(10).map { it.inferenceTimeMs }.average().toFloat()
+        return resourceSamples.toList().takeLast(10).map { it.inferenceTimeMs }.average().toFloat()
     }
 
     private fun getRecentFrameDrops(): Int {

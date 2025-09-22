@@ -399,7 +399,9 @@ class CameraXPipelineExample : AppCompatActivity() {
     }
 
     fun getCurrentCameraState(): CameraXManager.CameraState? {
-        return cameraPoseIntegration.getCameraManager()?.cameraState?.value
+        // TODO: Implement when getCameraManager is available
+        // return cameraPoseIntegration.getCameraManager()?.cameraState?.value
+        return null
     }
 
     fun getPerformanceReport(): String {

@@ -32,6 +32,7 @@ import kotlinx.coroutines.flow.launchIn
 import kotlinx.coroutines.flow.onEach
 import kotlinx.coroutines.launch
 import timber.log.Timber
+import com.posecoach.app.R
 
 /**
  * Example Activity demonstrating complete Gemini Live API integration
@@ -57,7 +58,7 @@ class PoseCoachingActivity : ComponentActivity() {
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-        setContentView(R.layout.activity_pose_coaching)
+        setContentView(R.layout.activity_live_coaching)
 
         checkPermissionsAndInitialize()
     }

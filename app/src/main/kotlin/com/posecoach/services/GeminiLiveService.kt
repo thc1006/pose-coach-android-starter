@@ -8,7 +8,7 @@ import android.content.Intent
 import android.os.Build
 import android.os.IBinder
 import androidx.core.app.NotificationCompat
-import com.posecoach.R
+import com.posecoach.app.R
 
 /**
  * Gemini Live API Background Service

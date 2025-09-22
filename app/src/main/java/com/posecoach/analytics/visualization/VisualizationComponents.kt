@@ -119,8 +119,8 @@ class VisualizationEngine @Inject constructor() : com.posecoach.analytics.interf
 
     private fun renderBarChart(data: Any): ChartVisualization {
         val chartData = when (data) {
-            is Map<*, *> -> data.entries.associate {
-                it.key.toString() to (it.value as? Number)?.toFloat() ?: 0f
+            is Map<*, *> -> data.entries.associate { entry ->
+                entry.key.toString() to ((entry.value as? Number)?.toFloat() ?: 0f)
             }
             is List<*> -> data.filterIsInstance<Number>()
                 .mapIndexed { index, value -> "Item $index" to value.toFloat() }
@@ -152,8 +152,8 @@ class VisualizationEngine @Inject constructor() : com.posecoach.analytics.interf
 
     private fun renderPieChart(data: Any): ChartVisualization {
         val chartData = when (data) {
-            is Map<*, *> -> data.entries.associate {
-                it.key.toString() to (it.value as? Number)?.toFloat() ?: 0f
+            is Map<*, *> -> data.entries.associate { entry ->
+                entry.key.toString() to ((entry.value as? Number)?.toFloat() ?: 0f)
             }
             is CoachingEffectivenessMetrics -> mapOf(
                 "Accuracy" to data.suggestionAccuracy,
@@ -635,7 +635,7 @@ class VisualizationOptimizer {
     }
 
     private fun optimizeHeatmap(heatmap: HeatmapVisualization): HeatmapVisualization {
-        val dataSize = heatmap.data.size * heatmap.data.firstOrNull()?.size ?: 1
+        val dataSize = heatmap.data.size * (heatmap.data.firstOrNull()?.size ?: 1)
 
         // Reduce resolution for large heatmaps
         val optimizedData = if (dataSize > 2500) { // 50x50

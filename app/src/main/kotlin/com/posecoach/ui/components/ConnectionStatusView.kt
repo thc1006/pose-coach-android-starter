@@ -8,7 +8,7 @@ import android.view.View
 import android.widget.LinearLayout
 import android.widget.TextView
 import androidx.core.content.ContextCompat
-import com.posecoach.R
+import com.posecoach.app.R
 import com.posecoach.ui.activities.ConnectionStatus
 
 /**

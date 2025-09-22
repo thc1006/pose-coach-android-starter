@@ -199,12 +199,12 @@ class SuggestionsOverlayView @JvmOverloads constructor(
         }
 
         override fun getItemViewType(position: Int): Int {
-            return if (errorMessage != null) VIEW_TYPE_ERROR else VIEW_TYPE_SUGGESTION
+            return if (errorMessage != null) 1 else 0  // 1 for error, 0 for suggestion
         }
 
         override fun onCreateViewHolder(parent: android.view.ViewGroup, viewType: Int): RecyclerView.ViewHolder {
             return when (viewType) {
-                VIEW_TYPE_ERROR -> ErrorViewHolder(createErrorView(parent))
+                1 -> ErrorViewHolder(createErrorView(parent))  // error view type
                 else -> SuggestionViewHolder(createSuggestionView(parent))
             }
         }
@@ -237,11 +237,6 @@ class SuggestionsOverlayView @JvmOverloads constructor(
                 setPadding(12, 8, 12, 8)
             }
         }
-
-        companion object {
-            const val VIEW_TYPE_SUGGESTION = 0
-            const val VIEW_TYPE_ERROR = 1
-        }
     }
 
     private class SuggestionViewHolder(itemView: View) : RecyclerView.ViewHolder(itemView) {
@@ -253,7 +248,7 @@ class SuggestionsOverlayView @JvmOverloads constructor(
         }
 
         private val instructionPaint = Paint().apply {
-            color = Color.DARK_GRAY
+            color = Color.DKGRAY  // Using DKGRAY instead of DARK_GRAY
             textSize = 24f
             isAntiAlias = true
         }

@@ -2,6 +2,7 @@ package com.posecoach.app.multimodal.processors
 
 import android.content.Context
 import com.posecoach.app.multimodal.models.*
+import com.posecoach.corepose.models.PoseLandmarkResult
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
 import kotlinx.serialization.Serializable
@@ -69,7 +70,7 @@ class EmotionalIntelligenceEngine(private val context: Context) {
      * Analyze emotional state from multi-modal input
      */
     suspend fun analyzeEmotionalState(
-        multiModalInput: MultiModalFusionEngine.MultiModalInput
+        multiModalInput: MultiModalInput
     ): EmotionalStateAnalysis = withContext(Dispatchers.Default) {
 
         try {
@@ -191,7 +192,7 @@ class EmotionalIntelligenceEngine(private val context: Context) {
             // Combine pose indicators
             val emotion = classifyPoseEmotion(shoulderTension, headPosition, armPosition, overallPosture)
             val intensity = calculatePoseEmotionIntensity(shoulderTension, headPosition, armPosition)
-            val confidence = poseLandmarks.confidence
+            val confidence = poseLandmarks.landmarks.mapNotNull { it.visibility }.average().toFloat()
 
             return EmotionalIndicator(emotion, intensity, confidence)
 
@@ -373,7 +374,7 @@ class EmotionalIntelligenceEngine(private val context: Context) {
      * Analyze stress indicators across modalities
      */
     private fun analyzeStressIndicators(
-        multiModalInput: MultiModalFusionEngine.MultiModalInput
+        multiModalInput: MultiModalInput
     ): List<StressIndicator> {
         val indicators = mutableListOf<StressIndicator>()
 
@@ -429,16 +430,17 @@ class EmotionalIntelligenceEngine(private val context: Context) {
      * Analyze fatigue indicators across modalities
      */
     private fun analyzeFatigueIndicators(
-        multiModalInput: MultiModalFusionEngine.MultiModalInput
+        multiModalInput: MultiModalInput
     ): List<FatigueIndicator> {
         val indicators = mutableListOf<FatigueIndicator>()
 
         // Physical fatigue from pose quality
         multiModalInput.poseLandmarks?.let { pose ->
-            if (pose.confidence < 0.7f) {
+            val avgVisibility = pose.landmarks.mapNotNull { it.visibility }.average().toFloat()
+            if (avgVisibility < 0.7f) {
                 indicators.add(FatigueIndicator(
                     type = "physical",
-                    level = 1.0f - pose.confidence,
+                    level = 1.0f - avgVisibility,
                     manifestation = "Decreased pose stability and control"
                 ))
             }
@@ -474,7 +476,7 @@ class EmotionalIntelligenceEngine(private val context: Context) {
     private fun calculateMotivationLevel(
         fusedEmotion: FusedEmotionalState,
         stressIndicators: List<StressIndicator>,
-        multiModalInput: MultiModalFusionEngine.MultiModalInput
+        multiModalInput: MultiModalInput
     ): Float {
         // Base motivation from emotional state
         val emotionMotivation = when (fusedEmotion.emotion) {
@@ -500,7 +502,7 @@ class EmotionalIntelligenceEngine(private val context: Context) {
      */
     private fun calculateEngagementLevel(
         fusedEmotion: FusedEmotionalState,
-        multiModalInput: MultiModalFusionEngine.MultiModalInput
+        multiModalInput: MultiModalInput
     ): Float {
         val emotionEngagement = when (fusedEmotion.emotion) {
             "focused", "motivated", "determined" -> 0.8f + fusedEmotion.intensity * 0.2f
@@ -508,7 +510,7 @@ class EmotionalIntelligenceEngine(private val context: Context) {
             else -> 0.5f
         }
 
-        val poseEngagement = multiModalInput.poseLandmarks?.confidence ?: 0.5f
+        val poseEngagement = multiModalInput.poseLandmarks?.landmarks?.mapNotNull { it.visibility }?.average()?.toFloat() ?: 0.5f
         val audioEngagement = multiModalInput.audioSignal?.voiceActivityLevel ?: 0.5f
 
         return (emotionEngagement + poseEngagement + audioEngagement) / 3f
@@ -519,7 +521,7 @@ class EmotionalIntelligenceEngine(private val context: Context) {
      */
     private fun calculateConfidenceLevel(
         fusedEmotion: FusedEmotionalState,
-        multiModalInput: MultiModalFusionEngine.MultiModalInput
+        multiModalInput: MultiModalInput
     ): Float {
         val emotionConfidence = when (fusedEmotion.emotion) {
             "confident", "determined", "focused" -> 0.8f + fusedEmotion.intensity * 0.2f
@@ -527,7 +529,7 @@ class EmotionalIntelligenceEngine(private val context: Context) {
             else -> 0.5f
         }
 
-        val performanceConfidence = multiModalInput.poseLandmarks?.confidence ?: 0.5f
+        val performanceConfidence = multiModalInput.poseLandmarks?.landmarks?.mapNotNull { it.visibility }?.average()?.toFloat() ?: 0.5f
 
         return (emotionConfidence + performanceConfidence) / 2f
     }
@@ -724,7 +726,7 @@ class EmotionalIntelligenceEngine(private val context: Context) {
     }
 
     private fun analyzeOverallPosture(landmarks: PoseLandmarkResult): Float {
-        return landmarks.confidence // Use pose confidence as posture quality indicator
+        return landmarks.landmarks.mapNotNull { it.visibility }.average().toFloat() // Use pose visibility as posture quality indicator
     }
 
     private fun classifyPoseEmotion(
@@ -761,7 +763,7 @@ class EmotionalIntelligenceEngine(private val context: Context) {
 
     private fun updateEmotionalHistory(
         emotionalState: EmotionalStateAnalysis,
-        multiModalInput: MultiModalFusionEngine.MultiModalInput
+        multiModalInput: MultiModalInput
     ) {
         val snapshot = EmotionalSnapshot(
             timestamp = System.currentTimeMillis(),
@@ -821,7 +823,7 @@ class EmotionalIntelligenceEngine(private val context: Context) {
     private fun analyzeLocationEmotion(location: String): String = "neutral"
     private fun analyzeTimeContextEmotion(time: String): String = "neutral"
     private fun combineEnvironmentalEmotions(social: String, location: String, time: String): String = "neutral"
-    private fun calculateEngagementFromInput(input: MultiModalFusionEngine.MultiModalInput): Float = 0.6f
+    private fun calculateEngagementFromInput(input: MultiModalInput): Float = 0.6f
 
     private fun getEmotionNumericValue(emotion: String): Float {
         return when (emotion) {

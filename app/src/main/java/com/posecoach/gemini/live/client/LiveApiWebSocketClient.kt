@@ -290,7 +290,7 @@ class LiveApiWebSocketClient(
     /**
      * Attempt to reconnect after connection loss
      */
-    private suspend fun attemptReconnect() = withContext(Dispatchers.IO) {
+    private suspend fun attemptReconnect(): Unit = withContext(Dispatchers.IO) {
         if (reconnectAttempts >= MAX_RECONNECT_ATTEMPTS) {
             Timber.e("Max reconnection attempts reached")
             _connectionErrors.emit(
@@ -305,13 +305,15 @@ class LiveApiWebSocketClient(
         delay(delay)
         reconnectAttempts++
 
-        connect().onSuccess {
+        val result: Result<Unit> = connect()
+        result.onSuccess {
             reconnectAttempts = 0
-            setupSession()
-        }.onFailure { error ->
+            launch { setupSession() }
+        }.onFailure { error: Throwable ->
             Timber.e("Reconnection attempt $reconnectAttempts failed: ${error.message}")
             if (reconnectAttempts < MAX_RECONNECT_ATTEMPTS) {
-                attemptReconnect()
+                // Schedule next attempt without direct recursion
+                scope.launch { attemptReconnect() }
             }
         }
     }

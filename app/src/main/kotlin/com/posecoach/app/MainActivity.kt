@@ -16,8 +16,8 @@ import androidx.lifecycle.lifecycleScope
 import com.posecoach.app.pose.PoseDetectionManager
 import com.posecoach.app.overlay.PoseOverlayView
 import com.posecoach.app.suggestions.SuggestionManager
-import com.posecoach.app.privacy.consent.ConsentManager
-import com.posecoach.R
+import com.posecoach.app.privacy.ConsentManager
+import com.posecoach.app.R
 import kotlinx.coroutines.launch
 import java.util.concurrent.ExecutorService
 import java.util.concurrent.Executors

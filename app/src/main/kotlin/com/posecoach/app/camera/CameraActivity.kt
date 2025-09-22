@@ -2,7 +2,7 @@ package com.posecoach.app.camera
 
 import android.os.Bundle
 import androidx.appcompat.app.AppCompatActivity
-import com.posecoach.R
+import com.posecoach.app.R
 
 /**
  * Enhanced Camera Activity for pose detection

@@ -640,8 +640,9 @@ class AdaptivePerformanceOptimizer(
         val inferenceScore = if (context.currentMetrics.inferenceTimeMs <= PerformanceMetrics.TARGET_INFERENCE_TIME_MS) {
             1.0f
         } else {
-            (PerformanceMetrics.CRITICAL_INFERENCE_TIME_MS - context.currentMetrics.inferenceTimeMs) /
-            (PerformanceMetrics.CRITICAL_INFERENCE_TIME_MS - PerformanceMetrics.TARGET_INFERENCE_TIME_MS)
+            val ratio = (PerformanceMetrics.CRITICAL_INFERENCE_TIME_MS - context.currentMetrics.inferenceTimeMs).toFloat() /
+            (PerformanceMetrics.CRITICAL_INFERENCE_TIME_MS - PerformanceMetrics.TARGET_INFERENCE_TIME_MS).toFloat()
+            ratio
         }.coerceIn(0f, 1f)
 
         val resourceScore = 1f - ((context.systemResources.cpuUsage + context.systemResources.memoryUsage) / 2f)

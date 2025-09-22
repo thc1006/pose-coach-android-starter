@@ -792,12 +792,14 @@ class PrivacyAuditFramework(private val context: Context) {
     enum class NodeType { COMPONENT, STORAGE, EXTERNAL_SERVICE }
     enum class FlowVolume { LOW, MEDIUM, HIGH }
 
+    @Serializable
     data class TrendsAnalysis(
         val privacyScoreTrend: TrendDirection,
         val complianceViolationsTrend: TrendDirection,
         val userEngagementTrend: TrendDirection
     )
 
+    @Serializable
     data class PrivacyRecommendation(
         val category: PrivacyCategory,
         val priority: RecommendationPriority,
@@ -806,6 +808,7 @@ class PrivacyAuditFramework(private val context: Context) {
         val actionItems: List<String>
     )
 
+    @Serializable
     data class ComplianceGap(
         val regulation: String,
         val requirement: String,
@@ -814,12 +817,14 @@ class PrivacyAuditFramework(private val context: Context) {
         val recommendedActions: List<String>
     )
 
+    @Serializable
     data class RiskAssessment(
         val overallRiskLevel: RiskLevel,
         val identifiedRisks: List<IdentifiedRisk>,
         val riskTrend: TrendDirection
     )
 
+    @Serializable
     data class IdentifiedRisk(
         val type: String,
         val likelihood: RiskLevel,
@@ -827,6 +832,7 @@ class PrivacyAuditFramework(private val context: Context) {
         val mitigations: List<String>
     )
 
+    @Serializable
     data class ProcessingActivity(
         val name: String,
         val purpose: String,
@@ -837,47 +843,55 @@ class PrivacyAuditFramework(private val context: Context) {
         val transfers: List<String>
     )
 
+    @Serializable
     data class RiskAnalysis(
         val overallRiskLevel: RiskLevel,
         val riskFactors: List<String>,
         val mitigationStrategies: List<String>
     )
 
+    @Serializable
     data class PrivacyRightsAnalysis(
         val affectedRights: List<String>,
         val riskToRights: RiskLevel
     )
 
+    @Serializable
     data class Safeguard(
         val type: String,
         val description: String,
         val implementation: String
     )
 
+    @Serializable
     data class PIAConclusion(
         val recommendation: String,
         val residualRisk: RiskLevel,
         val monitoringRequirements: List<String>
     )
 
+    @Serializable
     data class ReviewSchedule(
         val nextReviewDate: Long,
         val intervalMonths: Int,
         val triggers: List<String>
     )
 
+    @Serializable
     data class DataFlowVisualization(
         val nodes: List<DataFlowNode>,
         val edges: List<DataFlowEdge>,
         val metadata: DataFlowMetadata
     )
 
+    @Serializable
     data class DataFlowNode(
         val id: String,
         val type: NodeType,
         val classification: DataClassification
     )
 
+    @Serializable
     data class DataFlowEdge(
         val source: String,
         val destination: String,
@@ -888,6 +902,7 @@ class PrivacyAuditFramework(private val context: Context) {
         val riskLevel: RiskLevel
     )
 
+    @Serializable
     data class DataFlowMetadata(
         val totalFlows: Int,
         val riskFlows: Int,
@@ -895,6 +910,7 @@ class PrivacyAuditFramework(private val context: Context) {
         val consentedFlows: Int
     )
 
+    @Serializable
     data class AuditReport(
         val reportId: String,
         val generatedAt: Long,
@@ -909,8 +925,10 @@ class PrivacyAuditFramework(private val context: Context) {
         val integrityVerification: String
     )
 
+    @Serializable
     data class ReportPeriod(val startDate: Long, val endDate: Long)
 
+    @Serializable
     data class ReportSummary(
         val totalEvents: Int,
         val criticalEvents: Int,
@@ -923,6 +941,7 @@ class PrivacyAuditFramework(private val context: Context) {
         data class Invalid(val message: String, val failedChecks: List<IntegrityCheck>) : IntegrityVerificationResult()
     }
 
+    @Serializable
     data class IntegrityCheck(
         val entryId: String,
         val hashValid: Boolean,

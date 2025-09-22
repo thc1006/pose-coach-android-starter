@@ -38,13 +38,14 @@ class ConfidenceWeightingProcessor {
      * Weight insights based on confidence and reliability
      */
     suspend fun weightInsights(
-        modalityAnalyses: List<ModalityAnalysis>
+        validatedAnalyses: List<CrossModalValidationProcessor.ValidatedModalityAnalysis>
     ): List<WeightedModalityAnalysis> = withContext(Dispatchers.Default) {
 
         try {
             val weightedAnalyses = mutableListOf<WeightedModalityAnalysis>()
 
-            modalityAnalyses.forEach { analysis ->
+            validatedAnalyses.forEach { validatedAnalysis ->
+                val analysis = validatedAnalysis.originalAnalysis
                 // Update confidence history
                 updateConfidenceHistory(analysis)
 
@@ -94,10 +95,11 @@ class ConfidenceWeightingProcessor {
         } catch (e: Exception) {
             Timber.e(e, "Error weighting insights")
             // Return analyses with equal weights as fallback
-            modalityAnalyses.map { analysis ->
+            validatedAnalyses.map { validatedAnalysis ->
+                val analysis = validatedAnalysis.originalAnalysis
                 WeightedModalityAnalysis(
                     originalAnalysis = analysis,
-                    weight = 1.0f / modalityAnalyses.size,
+                    weight = 1.0f / validatedAnalyses.size,
                     confidence = analysis.confidence,
                     reliability = 0.5f,
                     temporalConsistency = 0.5f,

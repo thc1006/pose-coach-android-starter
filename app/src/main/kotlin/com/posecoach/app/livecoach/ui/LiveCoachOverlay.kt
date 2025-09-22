@@ -66,7 +66,7 @@ class LiveCoachOverlay @JvmOverloads constructor(
                 topMargin = 32
                 rightMargin = 32
             }
-            cardBackgroundColor = Color.parseColor("#E0000000") // Semi-transparent black
+            setCardBackgroundColor(Color.parseColor("#E0000000")) // Semi-transparent black
             radius = 12f
             cardElevation = 8f
         }
@@ -95,7 +95,7 @@ class LiveCoachOverlay @JvmOverloads constructor(
                 topMargin = 120
                 rightMargin = 32
             }
-            cardBackgroundColor = Color.parseColor("#E0000000")
+            setCardBackgroundColor(Color.parseColor("#E0000000"))
             radius = 12f
             cardElevation = 8f
             isVisible = false
@@ -110,7 +110,7 @@ class LiveCoachOverlay @JvmOverloads constructor(
             }
             setTextColor(Color.WHITE)
             textSize = 16f
-            lineSpacing = 4f, 1.2f
+            setLineSpacing(4f, 1.2f)
         }
 
         responseCard.addView(responseText)
@@ -126,7 +126,7 @@ class LiveCoachOverlay @JvmOverloads constructor(
                 bottomMargin = 200 // Space for push-to-talk button
                 gravity = android.view.Gravity.BOTTOM
             }
-            cardBackgroundColor = Color.parseColor("#B0000000") // More transparent
+            setCardBackgroundColor(Color.parseColor("#B0000000")) // More transparent
             radius = 12f
             cardElevation = 4f
             isVisible = false
@@ -194,6 +194,14 @@ class LiveCoachOverlay @JvmOverloads constructor(
 
             override fun onConnectionStateChanged(isConnected: Boolean) {
                 // This could trigger additional UI changes if needed
+            }
+
+            override fun onRetryConnection() {
+                listener?.onRetryConnection()
+            }
+
+            override fun onShowConnectionInfo() {
+                // Could show connection diagnostics or settings
             }
         })
     }

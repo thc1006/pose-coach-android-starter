@@ -21,6 +21,7 @@ import com.posecoach.gemini.live.audio.AudioProcessor
 import com.posecoach.gemini.live.client.LiveApiWebSocketClient
 import com.posecoach.gemini.live.models.*
 import com.posecoach.gemini.live.security.EphemeralTokenManager
+import com.posecoach.gemini.live.security.TokenState
 import com.posecoach.gemini.live.tools.PoseAnalysisTools
 import kotlinx.coroutines.*
 import kotlinx.coroutines.flow.*
@@ -190,7 +191,7 @@ class LiveApiSessionManager(
 
         return client.sendText(text).also { result ->
             if (result.isSuccess) {
-                updateContextWindow(text.length * 4) // Estimate tokens
+                updateContextWindow(text.length.toLong() * 4) // Estimate tokens
             }
         }
     }
@@ -250,7 +251,15 @@ class LiveApiSessionManager(
             Timber.i("Resuming session: $currentSessionId")
 
             // Restart with same session ID
-            return@withContext startSession()
+            startSession().fold(
+                onSuccess = { sessionId ->
+                    Timber.i("Session resumed successfully: $sessionId")
+                    return@withContext Result.success(Unit)
+                },
+                onFailure = { error ->
+                    return@withContext Result.failure(error)
+                }
+            )
 
         } catch (e: Exception) {
             Timber.e(e, "Failed to resume session")
@@ -305,7 +314,7 @@ class LiveApiSessionManager(
             when (part) {
                 is TextPart -> {
                     _textResponse.emit(part.text)
-                    updateContextWindow(part.text.length * 4) // Estimate tokens
+                    updateContextWindow(part.text.length.toLong() * 4) // Estimate tokens
                 }
 
                 is InlineDataPart -> {
@@ -350,7 +359,7 @@ class LiveApiSessionManager(
             goAwayMessage.reason.contains("session_limit", ignoreCase = true) ||
             goAwayMessage.reason.contains("timeout", ignoreCase = true) -> {
                 // Attempt session resumption
-                delay(1000) // Brief delay before resuming
+                delay(1000L) // Brief delay before resuming
                 resumeSession()
             }
 
@@ -382,7 +391,7 @@ class LiveApiSessionManager(
     private fun startContextWindowMonitoring() {
         contextCompressionJob = scope.launch {
             while (isSessionActive.get()) {
-                delay(60_000) // Check every minute
+                delay(60_000L) // Check every minute
 
                 if (shouldCompressContext()) {
                     compressContextWindow()
@@ -472,7 +481,7 @@ class LiveApiSessionManager(
         return "session_${System.currentTimeMillis()}_${(1000..9999).random()}"
     }
 
-    private fun cleanup() {
+    fun cleanup() {
         audioStreamingJob?.cancel()
         responseProcessingJob?.cancel()
         heartbeatJob?.cancel()
@@ -510,7 +519,7 @@ class LiveApiSessionManager(
                !tokenManager.canStartNewSession()
     }
 
-    fun cleanup() {
+    fun destroy() {
         cleanup()
         scope.cancel()
         tokenManager.cleanup()

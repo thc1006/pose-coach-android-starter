@@ -93,12 +93,15 @@ class ContextualAIManager(
      * Generate contextual recommendations based on multi-modal insights
      */
     suspend fun generateRecommendations(
-        modalityAnalyses: List<ModalityAnalysis>,
+        weightedAnalyses: List<ConfidenceWeightingProcessor.WeightedModalityAnalysis>,
         emotionalState: EmotionalStateAnalysis?,
-        multiModalInput: MultiModalFusionEngine.MultiModalInput
+        multiModalInput: MultiModalInput
     ): List<ActionableRecommendation> = withContext(Dispatchers.Default) {
 
         try {
+            // Extract original analyses from weighted analyses
+            val modalityAnalyses = weightedAnalyses.map { it.originalAnalysis }
+
             // Aggregate contextual understanding
             val contextualSnapshot = aggregateContext(modalityAnalyses, emotionalState, multiModalInput)
 
@@ -175,7 +178,7 @@ class ContextualAIManager(
     private fun aggregateContext(
         modalityAnalyses: List<ModalityAnalysis>,
         emotionalState: EmotionalStateAnalysis?,
-        multiModalInput: MultiModalFusionEngine.MultiModalInput
+        multiModalInput: MultiModalInput
     ): ContextualSnapshot {
 
         val modalityData = modalityAnalyses.associate { analysis ->
@@ -207,7 +210,7 @@ class ContextualAIManager(
     private fun aggregateUserState(
         emotionalState: EmotionalStateAnalysis?,
         modalityAnalyses: List<ModalityAnalysis>,
-        multiModalInput: MultiModalFusionEngine.MultiModalInput
+        multiModalInput: MultiModalInput
     ): UserStateContext {
 
         val engagementLevel = calculateEngagementLevel(emotionalState, modalityAnalyses)
@@ -231,7 +234,7 @@ class ContextualAIManager(
      * Aggregate environment state from contextual data
      */
     private fun aggregateEnvironmentState(
-        multiModalInput: MultiModalFusionEngine.MultiModalInput,
+        multiModalInput: MultiModalInput,
         modalityAnalyses: List<ModalityAnalysis>
     ): EnvironmentStateContext {
 
@@ -482,7 +485,7 @@ class ContextualAIManager(
 
     private fun estimateSkillLevel(
         modalityAnalyses: List<ModalityAnalysis>,
-        multiModalInput: MultiModalFusionEngine.MultiModalInput
+        multiModalInput: MultiModalInput
     ): Float {
         val poseQuality = modalityAnalyses.find { it.modality == "pose" }?.confidence ?: 0.5f
         val consistency = calculateMovementConsistency(modalityAnalyses)
@@ -502,7 +505,7 @@ class ContextualAIManager(
     }
 
     // Environment assessment methods
-    private fun assessLocationOptimality(input: MultiModalFusionEngine.MultiModalInput): Float {
+    private fun assessLocationOptimality(input: MultiModalInput): Float {
         val visualQuality = input.visualContext?.confidence ?: 0.5f
         val audioQuality = input.audioSignal?.confidence ?: 0.5f
         val environmentSuitability = input.environmentContext?.confidence ?: 0.5f
@@ -511,7 +514,7 @@ class ContextualAIManager(
     }
 
     private fun assessSafetyLevel(
-        input: MultiModalFusionEngine.MultiModalInput,
+        input: MultiModalInput,
         modalityAnalyses: List<ModalityAnalysis>
     ): Float {
         val visualSafety = input.visualContext?.safetyAssessment?.let { 1.0f - it.stabilityRisk } ?: 0.8f
@@ -522,7 +525,7 @@ class ContextualAIManager(
     }
 
     private fun assessDistractionLevel(
-        input: MultiModalFusionEngine.MultiModalInput,
+        input: MultiModalInput,
         modalityAnalyses: List<ModalityAnalysis>
     ): Float {
         val audioDistractions = input.audioSignal?.environmentalAudio?.ambientNoiseLevel ?: 0.3f
@@ -532,7 +535,7 @@ class ContextualAIManager(
         return (audioDistractions + visualDistractions + (1.0f - focusLevel)) / 3f
     }
 
-    private fun assessEquipmentAvailability(input: MultiModalFusionEngine.MultiModalInput): Float {
+    private fun assessEquipmentAvailability(input: MultiModalInput): Float {
         val detectedEquipment = input.visualContext?.detectedObjects?.count {
             it.relevanceToExercise > 0.5f
         } ?: 0
@@ -729,7 +732,7 @@ class ContextualAIManager(
     private fun extractAudioFatigueIndicators(analyses: List<ModalityAnalysis>): Float = 0.3f
     private fun extractPoseFatigueIndicators(analyses: List<ModalityAnalysis>): Float = 0.2f
     private fun calculateMovementConsistency(analyses: List<ModalityAnalysis>): Float = 0.7f
-    private fun calculateAdaptability(input: MultiModalFusionEngine.MultiModalInput): Float = 0.6f
+    private fun calculateAdaptability(input: MultiModalInput): Float = 0.6f
     private fun calculateVisualDistractions(visualContext: VisualContextData?): Float = 0.3f
     private fun generateTemporalRecommendations(insights: List<TemporalInsight>): List<ActionableRecommendation> = emptyList()
     private fun generateModalityRecommendations(analyses: List<ModalityAnalysis>): List<ActionableRecommendation> = emptyList()

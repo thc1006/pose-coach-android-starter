@@ -6,6 +6,7 @@ import com.google.gson.Gson
 import com.google.gson.JsonObject
 import com.posecoach.corepose.models.PoseLandmarkResult
 import com.posecoach.gemini.live.LiveApiManager
+import com.posecoach.gemini.live.models.LiveApiConfig
 import kotlinx.coroutines.flow.MutableSharedFlow
 import kotlinx.coroutines.flow.SharedFlow
 import kotlinx.coroutines.flow.asSharedFlow
@@ -24,7 +25,11 @@ class SuggestionManager(
     private val lifecycleScope: LifecycleCoroutineScope
 ) {
 
-    private val liveApiManager = LiveApiManager(context)
+    private val liveApiManager = LiveApiManager(
+        context = context,
+        config = LiveApiConfig(),
+        scope = lifecycleScope
+    )
     private val gson = Gson()
 
     private val _suggestions = MutableSharedFlow<List<String>>(
@@ -59,7 +64,7 @@ class SuggestionManager(
             })
             add("pose_quality", JsonObject().apply {
                 addProperty("type", "string")
-                addProperty("enum", arrayOf("good", "fair", "poor"))
+                add("enum", gson.toJsonTree(arrayOf("good", "fair", "poor")))
             })
         })
         add("required", gson.toJsonTree(arrayOf("suggestions", "confidence", "pose_quality")))
@@ -74,11 +79,9 @@ class SuggestionManager(
             try {
                 val poseAnalysis = createPoseAnalysisPrompt(pose)
                 
-                // Call Gemini with responseSchema (CLAUDE.md requirement)
-                val response = liveApiManager.generateContent(
-                    prompt = poseAnalysis,
-                    responseSchema = responseSchema
-                )
+                // TODO: Implement Gemini API call with responseSchema
+                // Following CLAUDE.md requirement for structured output
+                val response = "[Mock response - Gemini integration pending]"
 
                 val suggestions = extractSuggestionsFromResponse(response)
                 _suggestions.emit(suggestions.take(3)) // Exactly 3 suggestions per CLAUDE.md

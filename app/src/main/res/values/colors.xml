@@ -58,6 +58,12 @@
     <color name="tool_completed">#4CAF50</color>
     <color name="tool_failed">#F44336</color>
 
+    <!-- App-specific required colors -->
+    <color name="primary">#2196F3</color>
+    <color name="success">#4CAF50</color>
+    <color name="error">#F44336</color>
+    <color name="warning">#FF9800</color>
+
     <!-- Material Design colors (for theme compatibility) -->
     <color name="purple_200">#FFBB86FC</color>
     <color name="purple_500">#FF6200EE</color>

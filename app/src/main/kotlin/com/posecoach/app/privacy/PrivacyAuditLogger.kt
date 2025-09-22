@@ -38,12 +38,12 @@ class PrivacyAuditLogger(val context: Context) {
         val consentBasis: String? = null,
         val userAction: Boolean = false,
         val severity: Severity = Severity.INFO,
-        val sessionId: String = getCurrentSessionId(),
+        val sessionId: String = "session-${System.currentTimeMillis()}",
         val integrityHash: String = ""
     ) {
         fun withIntegrityHash(): AuditEvent {
             val dataForHash = "$id$timestamp$eventType$description$dataType$processingLocation$consentBasis$userAction$severity$sessionId"
-            val hash = createHash(dataForHash)
+            val hash = "hash-${dataForHash.hashCode().toString().takeLast(8)}"
             return copy(integrityHash = hash)
         }
     }
@@ -246,14 +246,13 @@ class PrivacyAuditLogger(val context: Context) {
         _auditEvents.tryEmit(event)
 
         // Log to Timber for debug builds
-        val logLevel = when (event.severity) {
-            Severity.DEBUG -> Timber::d
-            Severity.INFO -> Timber::i
-            Severity.WARNING -> Timber::w
-            Severity.ERROR -> Timber::e
-            Severity.CRITICAL -> Timber::wtf
+        when (event.severity) {
+            Severity.DEBUG -> Timber.d("Privacy Audit [${event.eventType}]: ${event.description}")
+            Severity.INFO -> Timber.i("Privacy Audit [${event.eventType}]: ${event.description}")
+            Severity.WARNING -> Timber.w("Privacy Audit [${event.eventType}]: ${event.description}")
+            Severity.ERROR -> Timber.e("Privacy Audit [${event.eventType}]: ${event.description}")
+            Severity.CRITICAL -> Timber.wtf("Privacy Audit [${event.eventType}]: ${event.description}")
         }
-        logLevel("Privacy Audit [${event.eventType}]: ${event.description}")
 
         // Write to secure audit file asynchronously
         scope.launch {

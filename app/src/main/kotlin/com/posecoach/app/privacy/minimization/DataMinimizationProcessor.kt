@@ -69,6 +69,7 @@ class DataMinimizationProcessor {
         FACIAL_FEATURES
     }
 
+    @Serializable
     data class DataLocation(
         val fieldName: String,
         val startIndex: Int,

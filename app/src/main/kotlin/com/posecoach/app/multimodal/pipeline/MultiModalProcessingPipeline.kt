@@ -12,6 +12,7 @@ import com.posecoach.corepose.models.PoseLandmarkResult
 import kotlinx.coroutines.*
 import kotlinx.coroutines.channels.*
 import kotlinx.coroutines.flow.*
+import kotlinx.coroutines.selects.*
 import timber.log.Timber
 import java.util.concurrent.ConcurrentHashMap
 import java.util.concurrent.atomic.AtomicLong
@@ -46,8 +47,8 @@ class MultiModalProcessingPipeline(
 
     // Core processing components
     private val fusionEngine = MultiModalFusionEngine(context, lifecycleScope, privacyManager)
-    private val privacyManager = MultiModalPrivacyManager(context, privacyManager)
-    private val geminiClient = EnhancedGeminiMultiModalClient(apiKey, privacyManager, privacyManager)
+    private val multiModalPrivacyManager = MultiModalPrivacyManager(context, privacyManager)
+    private val geminiClient = EnhancedGeminiMultiModalClient(apiKey, privacyManager, multiModalPrivacyManager)
 
     // Processing channels for different stages
     private val inputChannel = Channel<RawMultiModalInput>(INPUT_BUFFER_SIZE)
@@ -371,7 +372,7 @@ class MultiModalProcessingPipeline(
             val multiModalInput = convertToMultiModalInput(input)
 
             // Apply privacy filtering
-            privacyManager.filterMultiModalInput(multiModalInput)
+            multiModalPrivacyManager.filterMultiModalInput(multiModalInput)
 
         } catch (e: Exception) {
             Timber.e(e, "Error applying privacy filtering")
@@ -429,7 +430,7 @@ class MultiModalProcessingPipeline(
             success = true,
             resultType = ResultType.POSE_ANALYSIS,
             data = mapOf("landmarks" to landmarks),
-            confidence = landmarks.confidence
+            confidence = landmarks.landmarks.map { it.visibility }.average().toFloat()
         )
     }
 
@@ -586,8 +587,8 @@ class MultiModalProcessingPipeline(
 
     private fun convertToMultiModalInput(
         input: RawMultiModalInput
-    ): MultiModalFusionEngine.MultiModalInput {
-        return MultiModalFusionEngine.MultiModalInput(
+    ): MultiModalInput {
+        return MultiModalInput(
             timestamp = input.timestamp,
             inputId = input.id,
             poseLandmarks = input.poseLandmarks,

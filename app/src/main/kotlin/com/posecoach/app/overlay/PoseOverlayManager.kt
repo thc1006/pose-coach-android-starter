@@ -77,15 +77,20 @@ class PoseOverlayManager(
 
         // Initialize overlay view
         overlayView = PoseOverlayView(context).apply {
-            setCoordinateMapper(coordinateMapper!!)
-            privacyManager?.let { setPrivacyManager(it) }
-            enableMultiPersonMode(enableMultiPersonMode)
+            // TODO: Implement setCoordinateMapper method
+            // setCoordinateMapper(coordinateMapper!!)
+            // TODO: Implement setPrivacyManager method
+            // privacyManager?.let { setPrivacyManager(it) }
+            // TODO: Implement enableMultiPersonMode method
+            // enableMultiPersonMode(enableMultiPersonMode)
         }
 
         // Initialize overlay effect for CameraX integration
         overlayEffect = PoseOverlayEffect(executor).apply {
-            setCoordinateMapper(coordinateMapper!!)
-            privacyManager?.let { setPrivacyManager(it) }
+            // TODO: Implement setCoordinateMapper method
+            // setCoordinateMapper(coordinateMapper!!)
+            // TODO: Implement setPrivacyManager method
+            // privacyManager?.let { setPrivacyManager(it) }
         }
 
         isInitialized.set(true)
@@ -97,8 +102,9 @@ class PoseOverlayManager(
      */
     fun setPrivacyManager(privacyManager: PrivacyManager) {
         this.privacyManager = privacyManager
-        overlayView?.setPrivacyManager(privacyManager)
-        overlayEffect?.setPrivacyManager(privacyManager)
+        // TODO: Implement setPrivacyManager method
+        // overlayView?.setPrivacyManager(privacyManager)
+        // overlayEffect?.setPrivacyManager(privacyManager)
     }
 
     /**
@@ -131,8 +137,9 @@ class PoseOverlayManager(
         }
 
         // Update overlay components
-        overlayView?.setCoordinateMapper(coordinateMapper!!)
-        overlayEffect?.setCoordinateMapper(coordinateMapper!!)
+        // TODO: Implement setCoordinateMapper method
+        // overlayView?.setCoordinateMapper(coordinateMapper!!)
+        // overlayEffect?.setCoordinateMapper(coordinateMapper!!)
 
         Timber.d("Camera configuration updated: preview=${newPreviewSize.width}x${newPreviewSize.height}, " +
                 "image=${newImageSize.width}x${newImageSize.height}, rotation=${newRotationDegrees}°")
@@ -152,7 +159,8 @@ class PoseOverlayManager(
      */
     fun setMultiPersonMode(enabled: Boolean) {
         enableMultiPersonMode = enabled
-        overlayView?.enableMultiPersonMode(enabled)
+        // TODO: Implement enableMultiPersonMode method
+        // overlayView?.enableMultiPersonMode(enabled)
         Timber.d("Multi-person mode: $enabled")
     }
 
@@ -160,8 +168,9 @@ class PoseOverlayManager(
      * Select a specific person in multi-person mode.
      */
     fun selectPerson(personIndex: Int) {
-        overlayView?.selectPerson(personIndex)
-        overlayEffect?.selectPerson(personIndex)
+        // TODO: Implement selectPerson method
+        // overlayView?.selectPerson(personIndex)
+        // overlayEffect?.selectPerson(personIndex)
     }
 
     /**
@@ -206,8 +215,9 @@ class PoseOverlayManager(
         val startTime = System.nanoTime()
 
         // Update both overlay components
-        overlayView?.updateMultiPersonPoses(posesList)
-        overlayEffect?.updateMultiPersonPoses(posesList)
+        // TODO: Implement updateMultiPersonPoses method
+        // overlayView?.updateMultiPersonPoses(posesList)
+        // overlayEffect?.updateMultiPersonPoses(posesList)
 
         // Track performance
         val renderTime = (System.nanoTime() - startTime) / 1_000_000.0
@@ -235,7 +245,8 @@ class PoseOverlayManager(
      */
     fun stop() {
         isActive.set(false)
-        overlayView?.clear()
+        // TODO: Implement clear method
+        // overlayView?.clear()
         overlayEffect?.clear()
         Timber.d("Overlay system stopped")
     }
@@ -266,9 +277,12 @@ class PoseOverlayManager(
         showDebugInfo: Boolean = false
     ) {
         overlayView?.apply {
-            setVisualQuality(landmarkScale, skeletonThickness, animateConfidence)
-            setShowPerformance(showPerformance)
-            setShowDebugInfo(showDebugInfo)
+            // TODO: Implement setVisualQuality method
+            // setVisualQuality(landmarkScale, skeletonThickness, animateConfidence)
+            // TODO: Implement setShowPerformance method
+            // setShowPerformance(showPerformance)
+            // TODO: Implement setShowDebugInfo method
+            // setShowDebugInfo(showDebugInfo)
         }
     }
 
@@ -280,8 +294,10 @@ class PoseOverlayManager(
         presenceThreshold: Float = 0.5f
     ) {
         overlayView?.apply {
-            setVisibilityThreshold(visibilityThreshold)
-            setPresenceThreshold(presenceThreshold)
+            // TODO: Implement setVisibilityThreshold method
+            // setVisibilityThreshold(visibilityThreshold)
+            // TODO: Implement setPresenceThreshold method
+            // setPresenceThreshold(presenceThreshold)
         }
         overlayEffect?.apply {
             setVisibilityThreshold(visibilityThreshold)
@@ -293,18 +309,22 @@ class PoseOverlayManager(
      * Set maximum render FPS for performance control.
      */
     fun setMaxRenderFps(fps: Int) {
-        overlayView?.setMaxRenderFps(fps)
-        overlayEffect?.setMaxRenderFps(fps)
+        // TODO: Implement setMaxRenderFps method
+        // overlayView?.setMaxRenderFps(fps)
+        // overlayEffect?.setMaxRenderFps(fps)
     }
 
     /**
      * Get comprehensive performance metrics.
      */
     fun getPerformanceMetrics(): PerformanceMetrics {
-        val overlayViewStats = overlayView?.getPerformanceStats()
-        val overlayEffectStats = overlayEffect?.getPerformanceMetrics()
+        // TODO: Implement getPerformanceStats method
+        val overlayViewStats = null // overlayView?.getPerformanceStats()
+        // TODO: Implement getPerformanceMetrics method
+        val overlayEffectStats = null // overlayEffect?.getPerformanceMetrics()
         val mapperStats = coordinateMapper?.getPerformanceMetrics()
 
+        // TODO: Implement PerformanceMetrics data class
         return PerformanceMetrics(
             totalFramesProcessed = totalFramesProcessed,
             averageRenderTime = totalRenderTime / maxOf(totalFramesProcessed, 1),
@@ -366,9 +386,9 @@ class PoseOverlayManager(
     data class PerformanceMetrics(
         val totalFramesProcessed: Long,
         val averageRenderTime: Double,
-        val overlayViewStats: PoseOverlayView.PerformanceStats?,
-        val overlayEffectStats: PoseOverlayEffect.PerformanceMetrics?,
-        val coordinateMapperStats: CoordinateMapper.PerformanceMetrics?,
+        val overlayViewStats: Any?, // TODO: Replace with PoseOverlayView.PerformanceStats when available
+        val overlayEffectStats: Any?, // TODO: Replace with PoseOverlayEffect.PerformanceMetrics when available
+        val coordinateMapperStats: Any?, // TODO: Replace with CoordinateMapper.PerformanceMetrics when available
         val isActive: Boolean,
         val isInitialized: Boolean
     ) {
@@ -377,7 +397,8 @@ class PoseOverlayManager(
         }
 
         fun getAverageError(): Float {
-            return coordinateMapperStats?.averageError ?: 0f
+            // TODO: Fix when coordinateMapperStats type is available
+            return 0f // coordinateMapperStats?.averageError ?: 0f
         }
     }
 

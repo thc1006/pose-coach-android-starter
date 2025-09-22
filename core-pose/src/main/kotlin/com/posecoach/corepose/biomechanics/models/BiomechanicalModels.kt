@@ -1,5 +1,7 @@
 package com.posecoach.corepose.biomechanics.models
 
+import com.posecoach.corepose.models.PoseLandmarkResult
+
 /**
  * Data models for advanced biomechanical analysis
  */
@@ -348,7 +350,7 @@ data class QualityMetric(
 data class MovementWindow(
     val startTime: Long,
     val endTime: Long,
-    val poses: List<com.posecoach.corepose.models.PoseLandmarkResult>,
+    val poses: List<PoseLandmarkResult>,
     val analysisType: AnalysisType
 )
 

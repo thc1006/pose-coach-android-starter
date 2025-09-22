@@ -350,16 +350,18 @@ class ErrorRecoveryManager(
     }
 
     private fun createRetryPolicy(name: String): Retry {
-        val config = RetryConfig.custom<String>()
+        val config = RetryConfig.custom<Any>()
             .maxAttempts(MAX_RETRY_ATTEMPTS)
             .waitDuration(Duration.ofMillis(RETRY_BASE_DELAY_MS))
-            .exponentialBackoffMultiplier(2.0)
             .retryOnException { throwable ->
                 // Retry on network and temporary errors
                 when (throwable) {
                     is LiveApiError.ConnectionError -> true
                     is LiveApiError.AudioError -> true
-                    is LiveApiError.SessionError -> !throwable.message?.contains("rate_limit", ignoreCase = true)!!
+                    is LiveApiError.SessionError -> {
+                        val message = throwable.message
+                        message == null || !message.contains("rate_limit", ignoreCase = true)
+                    }
                     else -> false
                 }
             }

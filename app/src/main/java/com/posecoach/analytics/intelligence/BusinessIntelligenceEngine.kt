@@ -104,7 +104,7 @@ class BusinessIntelligenceEngine @Inject constructor(
         val currentMetrics = getCurrentMetrics()
         val historicalBaseline = getHistoricalBaseline()
 
-        patternDetector.detectAnomalies(currentMetrics, historicalBaseline)
+        patternDetector.detectAnomalies(currentMetrics, historicalBaseline.mapValues { (_, baseline) -> PatternDetector.HistoricalBaseline(baseline.mean, baseline.standardDeviation) })
     }
 
     private suspend fun gatherRawBusinessData(timeRange: TimeRange): RawBusinessMetrics {
@@ -442,7 +442,7 @@ class BusinessIntelligenceEngine @Inject constructor(
     }
 
     // Data classes for internal use
-    private data class RawBusinessMetrics(
+    data class RawBusinessMetrics(
         val activeUsers: Int,
         val totalSessions: Int,
         val averageSessionDuration: Float,
@@ -451,7 +451,7 @@ class BusinessIntelligenceEngine @Inject constructor(
         val timeRange: TimeRange
     )
 
-    private data class BusinessInsights(
+    data class BusinessInsights(
         val activeUsers: Int,
         val sessionCount: Int,
         val averageSessionDuration: Float,
@@ -461,7 +461,7 @@ class BusinessIntelligenceEngine @Inject constructor(
         val demographicInsights: DemographicInsights
     )
 
-    private data class UserBehaviorData(
+    data class UserBehaviorData(
         val userId: String,
         val sessionFrequency: Float,
         val averageSessionDuration: Float,
@@ -473,7 +473,7 @@ class BusinessIntelligenceEngine @Inject constructor(
         val paymentHistory: PaymentHistory
     )
 
-    private data class PaymentHistory(
+    data class PaymentHistory(
         val totalRevenue: Float,
         val transactionCount: Int,
         val averageOrderValue: Float,
@@ -481,7 +481,7 @@ class BusinessIntelligenceEngine @Inject constructor(
         val subscriptionStatus: String
     )
 
-    private data class HistoricalBaseline(
+    data class HistoricalBaseline(
         val mean: Float,
         val standardDeviation: Float
     )
@@ -604,7 +604,7 @@ class PatternDetector {
         }
     }
 
-    private data class HistoricalBaseline(
+    data class HistoricalBaseline(
         val mean: Float,
         val standardDeviation: Float
     )

@@ -362,7 +362,7 @@ class DynamicQualityManager(
             smoothingFactor = min(current.smoothingFactor + 0.1f, 1.0f),
             enableGpuAcceleration = if (decision.urgency == Urgency.HIGH) false else current.enableGpuAcceleration,
             maxDetectedObjects = max(current.maxDetectedObjects - 1, 1),
-            enableSubPixelAccuracy = if (decision.urgency >= Urgency.MEDIUM) false else current.enableSubPixelAccuracy
+            enableSubPixelAccuracy = if (decision.urgency == Urgency.MEDIUM || decision.urgency == Urgency.HIGH) false else current.enableSubPixelAccuracy
         )
     }
 
@@ -631,8 +631,8 @@ class DynamicQualityManager(
             "quality_decreases" to decreases,
             "average_improvement" to avgImprovement,
             "average_confidence" to avgConfidence,
-            "most_common_reason" to adaptations.groupBy { it.reason }
-                .maxByOrNull { it.value.size }?.key ?: "none"
+            "most_common_reason" to (adaptations.groupBy { it.reason }
+                .maxByOrNull { it.value.size }?.key ?: "none")
         )
     }
 

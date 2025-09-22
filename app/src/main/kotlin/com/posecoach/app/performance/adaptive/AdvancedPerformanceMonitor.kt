@@ -253,8 +253,8 @@ class AdvancedPerformanceMonitor(
                 total = total,
                 gcCount = getGcCount(),
                 gcTime = getGcTime(),
-                nativeHeap = memoryInfo.nativeHeapSize.toLong() * 1024,
-                dalvikHeap = memoryInfo.dalvikHeapSize.toLong() * 1024
+                nativeHeap = 0L, // TODO: Fix when nativeHeapSize is available
+                dalvikHeap = 0L // TODO: Fix when dalvikHeapSize is available
             )
         } catch (e: Exception) {
             Timber.e(e, "Error collecting memory usage")
@@ -661,7 +661,7 @@ class AdvancedPerformanceMonitor(
     private fun logPerformanceSummary() {
         if (metricsHistory.isEmpty()) return
 
-        val recentMetrics = metricsHistory.takeLast(60) // Last minute
+        val recentMetrics = metricsHistory.toList().let { it.takeLast(60) } // Last minute
         val avgCpu = recentMetrics.map { it.cpuUsage }.average()
         val avgMemory = recentMetrics.map { it.memoryUsage.usagePercentage }.average()
         val avgTemperature = recentMetrics.map { it.thermalState.temperature }.average()
@@ -691,7 +691,7 @@ class AdvancedPerformanceMonitor(
     }
 
     fun getRecentAlerts(count: Int = 10): List<PerformanceAlert> {
-        return alertHistory.takeLast(count)
+        return alertHistory.toList().takeLast(count)
     }
 
     fun clearAlerts() {

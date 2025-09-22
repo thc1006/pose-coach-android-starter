@@ -2,7 +2,7 @@ package com.posecoach.ui.activities
 
 import android.os.Bundle
 import androidx.appcompat.app.AppCompatActivity
-import com.posecoach.R
+import com.posecoach.app.R
 
 /**
  * Main Live Coaching Activity

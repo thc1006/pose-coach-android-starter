@@ -7,6 +7,7 @@ import kotlinx.coroutines.flow.Flow
  * Core analytics interfaces for the Pose Coach system
  */
 
+
 interface AnalyticsEngine {
     suspend fun trackEvent(event: AnalyticsEvent)
     suspend fun trackUserPerformance(metrics: UserPerformanceMetrics)
@@ -63,6 +64,7 @@ interface DataPipelineManager {
 interface AnalyticsRepository {
     suspend fun storeEvent(event: AnalyticsEvent)
     suspend fun storeMetrics(metrics: Any)
+    suspend fun storeUserMetrics(metrics: UserPerformanceMetrics)
     suspend fun queryMetrics(query: AnalyticsQuery): List<Any>
     suspend fun getTimeSeriesData(metric: String, timeRange: TimeRange): List<TimeSeriesPoint>
     suspend fun deleteUserData(userId: String)
@@ -321,6 +323,14 @@ data class AnalyticsReport(
 enum class ReportType {
     PERFORMANCE, USER_ENGAGEMENT, BUSINESS_METRICS, SYSTEM_HEALTH,
     PRIVACY_COMPLIANCE, COACHING_EFFECTIVENESS, CUSTOM
+}
+
+// Constants for coaching effectiveness metrics
+object CoachingConstants {
+    const val COACHING_EFFECTIVENESS = "coaching_effectiveness"
+    const val MIN_COACHING_EFFECTIVENESS = 0.6f
+    const val OPTIMAL_COACHING_EFFECTIVENESS = 0.85f
+    const val EFFECTIVENESS_WEIGHT = 0.7f
 }
 
 data class ReportParameters(

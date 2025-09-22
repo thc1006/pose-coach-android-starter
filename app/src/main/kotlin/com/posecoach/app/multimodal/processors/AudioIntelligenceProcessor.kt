@@ -34,7 +34,8 @@ class AudioIntelligenceProcessor(private val context: Context) {
         private const val VOICE_ACTIVITY_THRESHOLD = 0.02f
         private const val BREATHING_FREQUENCY_MIN = 0.2f // Hz (12 breaths/min)
         private const val BREATHING_FREQUENCY_MAX = 0.8f // Hz (48 breaths/min)
-        private const val STRESS_FREQUENCY_RANGE = 3000..6000 // Hz
+        private const val STRESS_FREQUENCY_MIN = 3000 // Hz
+        private const val STRESS_FREQUENCY_MAX = 6000 // Hz
         private const val EMOTIONAL_ANALYSIS_WINDOW = 3.0f // seconds
         private const val QUALITY_ANALYSIS_WINDOW = 1.0f // seconds
     }
@@ -327,7 +328,7 @@ class AudioIntelligenceProcessor(private val context: Context) {
         var maxCorr = 0f
         var bestPeriod = 0
 
-        for (period in minPeriod..minPeriod(maxPeriod, autocorr.size - 1)) {
+        for (period in minPeriod..min(maxPeriod, autocorr.size - 1)) {
             if (autocorr[period] > maxCorr) {
                 maxCorr = autocorr[period]
                 bestPeriod = period

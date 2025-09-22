@@ -651,7 +651,7 @@ private class PacingAnalyzer {
             return WorkoutContextAnalyzer.PacingInfo()
         }
 
-        val velocities = recentFrames.map { it.velocity.centerOfMass }
+        val velocities = recentFrames.map { it.velocity.centerOfMass.toDouble() }
         val avgVelocity = velocities.average()
 
         val bpm = estimateBPMFromMovement(velocities)

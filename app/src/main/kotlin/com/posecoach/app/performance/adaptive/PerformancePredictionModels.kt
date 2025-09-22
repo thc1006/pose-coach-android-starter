@@ -83,6 +83,13 @@ class PerformancePredictionModels {
         NETWORK_DEGRADATION
     }
 
+    private data class AnomalyData(
+        val type: AnomalyType,
+        val description: String,
+        val causes: List<String>,
+        val actions: List<String>
+    )
+
     data class OptimizationStrategy(
         val name: String,
         val description: String,
@@ -189,9 +196,9 @@ class PerformancePredictionModels {
                 dayOfWeek / 7f,
                 batteryLevel / 100f,
                 sessionHistory.size.toFloat() / MAX_PATTERNS,
-                sessionHistory.map { it.sessionDuration }.average().toFloat() / 60f,
-                sessionHistory.map { it.averageInteractionRate }.average().toFloat(),
-                sessionHistory.map { it.preferredQualityLevel }.average().toFloat() / 4f,
+                sessionHistory.map { it.sessionDuration.toDouble() }.average().toFloat() / 60f,
+                sessionHistory.map { it.averageInteractionRate.toDouble() }.average().toFloat(),
+                sessionHistory.map { it.preferredQualityLevel.toDouble() }.average().toFloat() / 4f,
                 sessionHistory.last().deviceThermalState / 4f
             )
 
@@ -640,7 +647,7 @@ class PerformancePredictionModels {
     }
 
     private fun getCurrentSystemLoad(): Float {
-        // Simplified system load estimation
+        // TODO: Implement actual system load measurement
         return 0.5f // Placeholder
     }
 
@@ -651,20 +658,37 @@ class PerformancePredictionModels {
     ): PerformanceAnomalyEvent {
         val maxDeviationIndex = deviationScores.withIndex().maxByOrNull { it.value }?.index ?: 0
 
-        val (type, description, causes, actions) = when (maxDeviationIndex) {
-            0 -> AnomalyType.SUDDEN_PERFORMANCE_DROP to "Sudden performance degradation detected" to
-                 listOf("System resource contention", "Background processes", "Thermal throttling") to
-                 listOf("Check system resources", "Close background apps", "Reduce processing load")
-            1 -> AnomalyType.MEMORY_LEAK to "Memory usage anomaly detected" to
-                 listOf("Memory leak", "Large object retention", "Cache overflow") to
-                 listOf("Clear caches", "Force garbage collection", "Restart application")
-            2 -> AnomalyType.THERMAL_THROTTLING to "Thermal throttling detected" to
-                 listOf("Device overheating", "Heavy processing load", "Poor ventilation") to
-                 listOf("Reduce processing intensity", "Enable thermal management", "Wait for cooling")
-            else -> AnomalyType.INFERENCE_TIME_SPIKE to "Processing time anomaly detected" to
-                    listOf("Model complexity spike", "Resource contention", "Hardware limitation") to
-                    listOf("Reduce model complexity", "Optimize processing pipeline", "Enable performance mode")
+        val anomalyData = when (maxDeviationIndex) {
+            0 -> AnomalyData(
+                AnomalyType.SUDDEN_PERFORMANCE_DROP,
+                "Sudden performance degradation detected",
+                listOf("System resource contention", "Background processes", "Thermal throttling"),
+                listOf("Check system resources", "Close background apps", "Reduce processing load")
+            )
+            1 -> AnomalyData(
+                AnomalyType.MEMORY_LEAK,
+                "Memory usage anomaly detected",
+                listOf("Memory leak", "Large object retention", "Cache overflow"),
+                listOf("Clear caches", "Force garbage collection", "Restart application")
+            )
+            2 -> AnomalyData(
+                AnomalyType.THERMAL_THROTTLING,
+                "Thermal throttling detected",
+                listOf("Device overheating", "Heavy processing load", "Poor ventilation"),
+                listOf("Reduce processing intensity", "Enable thermal management", "Wait for cooling")
+            )
+            else -> AnomalyData(
+                AnomalyType.INFERENCE_TIME_SPIKE,
+                "Processing time anomaly detected",
+                listOf("Model complexity spike", "Resource contention", "Hardware limitation"),
+                listOf("Reduce model complexity", "Optimize processing pipeline", "Enable performance mode")
+            )
         }
+
+        val type = anomalyData.type
+        val description = anomalyData.description
+        val causes = anomalyData.causes
+        val actions = anomalyData.actions
 
         return PerformanceAnomalyEvent(
             timestamp = System.currentTimeMillis(),

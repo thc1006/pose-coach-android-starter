@@ -2,7 +2,7 @@
 plugins {
     id("com.android.application") version "8.13.0" apply false
     id("com.android.library") version "8.13.0" apply false
-    id("org.jetbrains.kotlin.android") version "1.9.22" apply false
+    id("org.jetbrains.kotlin.android") version "1.9.25" apply false
     
     // Code quality plugins
     id("org.jlleitschuh.gradle.ktlint") version "11.6.1" apply false

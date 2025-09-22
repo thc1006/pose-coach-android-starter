@@ -3,6 +3,7 @@ package com.posecoach.network
 import com.posecoach.ui.activities.ConnectionStatus
 import com.posecoach.ui.components.*
 import com.posecoach.services.GeminiMessage
+import com.posecoach.services.GeminiMessageType
 import kotlinx.coroutines.delay
 import okhttp3.*
 import okio.ByteString
@@ -158,7 +159,7 @@ class GeminiLiveClient {
                 text.contains("\"serverContent\"") -> {
                     // Handle transcription or assistant response
                     val message = GeminiMessage(
-                        type = com.posecoach.services.GeminiMessageType.TRANSCRIPTION,
+                        type = GeminiMessageType.TRANSCRIPTION,
                         content = extractContent(text)
                     )
                     messageListener?.invoke(message)

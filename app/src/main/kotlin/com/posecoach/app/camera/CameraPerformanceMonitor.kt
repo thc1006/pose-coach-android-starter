@@ -394,7 +394,7 @@ class CameraPerformanceMonitor {
             averageProcessingTimeMs = recentMetrics.map { it.processingTimeMs }.average(),
             averageTransformationTimeMs = recentMetrics.map { it.transformationTimeMs }.average(),
             averageMemoryUsageMB = recentMetrics.map { it.memoryUsageMB }.average(),
-            averageAccuracy = recentMetrics.map { it.transformationAccuracy }.average(),
+            averageAccuracy = recentMetrics.map { it.transformationAccuracy }.average().toFloat(),
             frameCount = frameCount.get(),
             droppedFrames = droppedFrames.get(),
             totalUptime = System.currentTimeMillis() - startTime,

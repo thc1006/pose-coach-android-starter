@@ -1,5 +1,7 @@
 package com.posecoach.app.config
 
+import com.posecoach.app.BuildConfig
+
 /**
  * Feature flags for production deployment control.
  * Allows safe rollout of features and fallback to stable implementations.
@@ -40,7 +42,7 @@ object FeatureFlags {
      * Enable debug overlay with pose landmarks.
      * Should be false in production builds.
      */
-    const val ENABLE_DEBUG_OVERLAY = BuildConfig.DEBUG
+    val ENABLE_DEBUG_OVERLAY = BuildConfig.DEBUG
 
     /**
      * Maximum inference time threshold in milliseconds.

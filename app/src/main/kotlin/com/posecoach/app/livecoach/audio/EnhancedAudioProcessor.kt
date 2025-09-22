@@ -22,11 +22,11 @@ import kotlin.math.*
  */
 class EnhancedAudioProcessor(
     private val context: Context,
-    private val coroutineScope: CoroutineScope
+    private val parentScope: CoroutineScope
 ) : CoroutineScope {
 
     override val coroutineContext: CoroutineContext =
-        coroutineScope.coroutineContext + SupervisorJob()
+        parentScope.coroutineContext + SupervisorJob()
 
     companion object {
         private const val DEFAULT_SAMPLE_RATE = 16000
@@ -51,6 +51,15 @@ class EnhancedAudioProcessor(
         private const val NETWORK_POOR_THRESHOLD = 0.3
         private const val NETWORK_GOOD_THRESHOLD = 0.8
         private const val BATTERY_LOW_THRESHOLD = 20
+
+        // Audio utility functions
+        private fun dbToLinear(db: Double): Float {
+            return 10.0.pow(db / 20.0).toFloat()
+        }
+
+        private fun linearToDb(linear: Double): Double {
+            return 20.0 * log10(maxOf(linear, 1e-10))
+        }
     }
 
     // Quality levels
@@ -444,7 +453,7 @@ class EnhancedAudioProcessor(
     // Audio processing components (simplified implementations)
     private class NoiseGate(private val thresholdDb: Double) {
         fun process(samples: FloatArray): FloatArray {
-            val threshold = dbToLinear(thresholdDb)
+            val threshold = EnhancedAudioProcessor.dbToLinear(thresholdDb)
             return samples.map { sample ->
                 if (abs(sample) > threshold) sample else 0.0f
             }.toFloatArray()
@@ -456,7 +465,7 @@ class EnhancedAudioProcessor(
         private val thresholdDb: Double
     ) {
         fun process(samples: FloatArray): FloatArray {
-            val threshold = dbToLinear(thresholdDb)
+            val threshold = EnhancedAudioProcessor.dbToLinear(thresholdDb)
             return samples.map { sample ->
                 val magnitude = abs(sample)
                 if (magnitude > threshold) {
@@ -475,7 +484,7 @@ class EnhancedAudioProcessor(
 
         fun process(samples: FloatArray): FloatArray {
             val rms = sqrt(samples.map { it * it }.average()).toFloat()
-            val targetLevel = dbToLinear(targetLevelDb)
+            val targetLevel = EnhancedAudioProcessor.dbToLinear(targetLevelDb)
 
             if (rms > 0.001f) { // Avoid division by zero
                 val desiredGain = targetLevel / rms
@@ -489,18 +498,9 @@ class EnhancedAudioProcessor(
     private class VoiceActivityDetector(private val thresholdDb: Double) {
         fun detectVoiceActivity(samples: FloatArray): Boolean {
             val rms = sqrt(samples.map { it * it }.average())
-            val levelDb = linearToDb(rms)
+            val levelDb = EnhancedAudioProcessor.linearToDb(rms)
             return levelDb > thresholdDb
         }
     }
 
-    companion object {
-        private fun dbToLinear(db: Double): Float {
-            return 10.0.pow(db / 20.0).toFloat()
-        }
-
-        private fun linearToDb(linear: Double): Double {
-            return 20.0 * log10(maxOf(linear, 1e-10))
-        }
-    }
 }

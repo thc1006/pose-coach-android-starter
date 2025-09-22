@@ -41,12 +41,12 @@ class AudioProcessor(
 ) {
 
     companion object {
-        private const val FRAME_SIZE_MS = 20
-        private const val VAD_THRESHOLD = 0.02f
-        private const val VAD_HANGOVER_MS = 500
-        private const val NOISE_FLOOR_ESTIMATION_FRAMES = 50
-        private const val AUDIO_QUALITY_CHECK_INTERVAL_MS = 1000L
-        private const val MAX_AUDIO_BUFFER_SIZE = 8192
+        const val FRAME_SIZE_MS = 20
+        const val VAD_THRESHOLD = 0.02f
+        const val VAD_HANGOVER_MS = 500
+        const val NOISE_FLOOR_ESTIMATION_FRAMES = 50
+        const val AUDIO_QUALITY_CHECK_INTERVAL_MS = 1000L
+        const val MAX_AUDIO_BUFFER_SIZE = 8192
     }
 
     private val vadProcessor = VoiceActivityDetector()
@@ -97,10 +97,11 @@ class AudioProcessor(
             initializeAudioRecord()?.let { record ->
                 audioRecord = record
 
-                val result = record.startRecording()
-                if (result != AudioRecord.SUCCESS) {
+                try {
+                    record.startRecording()
+                } catch (e: Exception) {
                     return@withContext Result.failure(
-                        LiveApiError.AudioError("Failed to start recording: $result")
+                        LiveApiError.AudioError("Failed to start recording: ${e.message}")
                     )
                 }
 
@@ -364,11 +365,11 @@ class VoiceActivityDetector {
     var isEnabled: Boolean = true
         private set
 
-    private var threshold = VAD_THRESHOLD
-    private var hangoverMs = VAD_HANGOVER_MS
+    private var threshold = AudioProcessor.VAD_THRESHOLD
+    private var hangoverMs = AudioProcessor.VAD_HANGOVER_MS
     private var voiceActive = false
     private var hangoverFrames = 0
-    private val hangoverFrameCount get() = hangoverMs / FRAME_SIZE_MS
+    private val hangoverFrameCount get() = hangoverMs / AudioProcessor.FRAME_SIZE_MS
 
     private var noiseFloor = 0f
     private var frameCount = 0
@@ -387,12 +388,12 @@ class VoiceActivityDetector {
         energyHistory.add(energy)
 
         // Keep only recent history for noise floor estimation
-        if (energyHistory.size > NOISE_FLOOR_ESTIMATION_FRAMES) {
+        if (energyHistory.size > AudioProcessor.NOISE_FLOOR_ESTIMATION_FRAMES) {
             energyHistory.removeAt(0)
         }
 
         // Update noise floor (use median of recent low-energy frames)
-        if (frameCount < NOISE_FLOOR_ESTIMATION_FRAMES) {
+        if (frameCount < AudioProcessor.NOISE_FLOOR_ESTIMATION_FRAMES) {
             frameCount++
             noiseFloor = energyHistory.sorted()[energyHistory.size / 4] // 25th percentile
         }

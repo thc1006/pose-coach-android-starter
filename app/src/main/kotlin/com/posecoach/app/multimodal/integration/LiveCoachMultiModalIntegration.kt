@@ -9,6 +9,8 @@ import com.posecoach.app.multimodal.MultiModalFusionEngine
 import com.posecoach.app.multimodal.enhanced.EnhancedGeminiMultiModalClient
 import com.posecoach.app.multimodal.pipeline.MultiModalProcessingPipeline
 import com.posecoach.app.multimodal.processors.*
+import com.posecoach.app.multimodal.models.UserContextData
+import com.posecoach.app.multimodal.models.EnvironmentContextData
 import com.posecoach.app.privacy.EnhancedPrivacyManager
 import com.posecoach.corepose.models.PoseLandmarkResult
 import kotlinx.coroutines.*
@@ -522,7 +524,7 @@ class LiveCoachMultiModalIntegration(
         _multiModalMetrics.value = currentMetrics.copy(
             poseUpdatesCount = currentMetrics.poseUpdatesCount + 1,
             lastPoseUpdateTime = timestamp,
-            averagePoseConfidence = (currentMetrics.averagePoseConfidence + landmarks.confidence) / 2f
+            averagePoseConfidence = (currentMetrics.averagePoseConfidence + landmarks.landmarks.map { it.visibility }.average().toFloat()) / 2f
         )
     }
 
@@ -602,8 +604,7 @@ class LiveCoachMultiModalIntegration(
         result: MultiModalProcessingPipeline.ProcessedMultiModalResult
     ): EnhancedGeminiMultiModalClient.MultiModalAnalysisResponse? {
         // Extract analysis result from processed result
-        return result.data?.get("geminiResult") as? EnhancedGeminiMultiModalClient.GeminiMultiModalAnalysisResult
-            ?.analysisResult
+        return (result.data?.get("geminiResult") as? EnhancedGeminiMultiModalClient.GeminiMultiModalAnalysisResult)?.analysisResult
     }
 
     // Data classes

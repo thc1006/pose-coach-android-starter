@@ -1,6 +1,6 @@
 package com.posecoach.app.privacy
 
-import com.posecoach.corepose.PoseLandmarks
+import com.posecoach.corepose.models.PoseLandmarkResult
 import timber.log.Timber
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.flowOf
@@ -44,7 +44,7 @@ class DataMinimizationManager(
         val consentBasis: String
     )
 
-    private val auditLogger = PrivacyAuditLogger(privacyManager.context)
+    private val auditLogger = PrivacyAuditLogger(privacyManager.getContext())
 
     /**
      * Get current processing mode based on privacy settings and consent
@@ -193,7 +193,7 @@ class DataMinimizationManager(
      * Sanitize landmark data before potential upload
      * 清理地標資料以移除可識別資訊
      */
-    fun sanitizeLandmarkData(landmarks: PoseLandmarks): Map<String, Any> {
+    fun sanitizeLandmarkData(landmarks: PoseLandmarkResult): Map<String, Any> {
         val policy = getDataPolicy()
 
         if (!policy.allowLandmarkUpload) {
@@ -334,7 +334,7 @@ class DataMinimizationManager(
         )
     }
 
-    private fun containsImageData(landmarks: PoseLandmarks): Boolean {
+    private fun containsImageData(landmarks: PoseLandmarkResult): Boolean {
         // Implementation to detect if landmark data somehow contains image information
         // This should never happen, but we check as a security measure
         return false // Simplified for example - real implementation would check for image signatures
@@ -358,9 +358,9 @@ class DataMinimizationManager(
         privacyManager.setOfflineModeEnabled(true)
 
         // Withdraw all consents that allow data upload
-        consentManager.grantConsent(ConsentManager.ConsentType.LANDMARK_DATA, false, false)
-        consentManager.grantConsent(ConsentManager.ConsentType.AUDIO_CAPTURE, false, false)
-        consentManager.grantConsent(ConsentManager.ConsentType.ANALYTICS, false, false)
+        consentManager.grantConsent(ConsentManager.ConsentType.LANDMARK_DATA, false)
+        consentManager.grantConsent(ConsentManager.ConsentType.AUDIO_CAPTURE, false)
+        consentManager.grantConsent(ConsentManager.ConsentType.ANALYTICS, false)
 
         Timber.w("Emergency privacy mode activated - app in local-only mode")
     }

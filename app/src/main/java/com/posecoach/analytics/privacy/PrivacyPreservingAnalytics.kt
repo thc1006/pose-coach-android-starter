@@ -1,6 +1,8 @@
 package com.posecoach.analytics.privacy
 
 import com.posecoach.analytics.interfaces.PrivacyEngine
+import com.posecoach.analytics.interfaces.PrivacyAuditReport
+import com.posecoach.analytics.interfaces.PrivacyViolation
 import com.posecoach.analytics.models.*
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
@@ -396,7 +398,9 @@ class ConsentManager {
             version = version,
             expiry = expiry
         )
-        record.lastUpdated = System.currentTimeMillis()
+
+        // Update the record in the map since we modified it
+        consentRecords[userId] = record.copy(lastUpdated = System.currentTimeMillis())
     }
 
     suspend fun getConsentCoverage(): Float {
@@ -422,7 +426,8 @@ class ConsentManager {
             )
         }
 
-        record.lastUpdated = System.currentTimeMillis()
+        // Update the record in the map since we modified it
+        consentRecords[userId] = record.copy(lastUpdated = System.currentTimeMillis())
     }
 }
 
@@ -474,3 +479,5 @@ class DataRetentionManager {
         // Implementation would execute pending deletions
     }
 }
+
+// Note: PrivacyAuditReport and PrivacyViolation are defined in AnalyticsInterfaces.kt

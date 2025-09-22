@@ -11,7 +11,7 @@ import androidx.cardview.widget.CardView
 import androidx.core.content.ContextCompat
 import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
-import com.posecoach.R
+import com.posecoach.app.R
 
 /**
  * Real-time coaching suggestions overlay

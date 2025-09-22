@@ -8,6 +8,7 @@ import com.posecoach.app.multimodal.processors.*
 import com.posecoach.app.privacy.EnhancedPrivacyManager
 import com.posecoach.corepose.models.PoseLandmarkResult
 import kotlinx.coroutines.*
+import kotlinx.coroutines.channels.Channel
 import kotlinx.coroutines.flow.*
 import kotlinx.serialization.Serializable
 import timber.log.Timber
@@ -27,17 +28,7 @@ class MultiModalFusionEngine(
     private val privacyManager: EnhancedPrivacyManager
 ) {
 
-    // Data models for multi-modal inputs
-    @Serializable
-    data class MultiModalInput(
-        val timestamp: Long = System.currentTimeMillis(),
-        val inputId: String,
-        val poseLandmarks: PoseLandmarkResult? = null,
-        val visualContext: VisualContextData? = null,
-        val audioSignal: AudioSignalData? = null,
-        val environmentContext: EnvironmentContextData? = null,
-        val userContext: UserContextData? = null
-    )
+    // MultiModalInput moved to models package
 
     @Serializable
     data class FusedInsight(
@@ -58,19 +49,7 @@ class MultiModalFusionEngine(
         val evidenceSource: String
     )
 
-    @Serializable
-    data class ActionableRecommendation(
-        val priority: Priority,
-        val category: String,
-        val title: String,
-        val description: String,
-        val targetModalities: List<String>,
-        val expectedImpact: String
-    )
-
-    enum class Priority {
-        CRITICAL, HIGH, MEDIUM, LOW
-    }
+    // ActionableRecommendation moved to models package
 
     // Core processors
     private val temporalSyncProcessor = TemporalSynchronizationProcessor()
@@ -251,10 +230,11 @@ class MultiModalFusionEngine(
 
             // Pose analysis
             input.poseLandmarks?.let { landmarks ->
-                analysisJobs.add(async {
+                analysisJobs.add(lifecycleScope.async {
+                    val confidence = calculatePoseConfidence(landmarks)
                     ModalityAnalysis(
                         modality = "pose",
-                        confidence = landmarks.confidence,
+                        confidence = confidence,
                         insights = analyzePoseLandmarks(landmarks),
                         timestamp = input.timestamp
                     )
@@ -263,7 +243,7 @@ class MultiModalFusionEngine(
 
             // Visual analysis
             input.visualContext?.let { visual ->
-                analysisJobs.add(async {
+                analysisJobs.add(lifecycleScope.async {
                     ModalityAnalysis(
                         modality = "vision",
                         confidence = visual.confidence,
@@ -275,7 +255,7 @@ class MultiModalFusionEngine(
 
             // Audio analysis
             input.audioSignal?.let { audio ->
-                analysisJobs.add(async {
+                analysisJobs.add(lifecycleScope.async {
                     ModalityAnalysis(
                         modality = "audio",
                         confidence = audio.confidence,
@@ -287,7 +267,7 @@ class MultiModalFusionEngine(
 
             // Environmental analysis
             input.environmentContext?.let { env ->
-                analysisJobs.add(async {
+                analysisJobs.add(lifecycleScope.async {
                     ModalityAnalysis(
                         modality = "environment",
                         confidence = env.confidence,
@@ -314,8 +294,9 @@ class MultiModalFusionEngine(
             val processingTime = System.currentTimeMillis() - startTime
             val fusedInsight = FusedInsight(
                 timestamp = input.timestamp,
-                confidence = calculateOverallConfidence(validatedAnalyses),
-                insights = weightedInsights.map { analysis ->
+                confidence = calculateOverallConfidence(validatedAnalyses.map { it.originalAnalysis }),
+                insights = weightedInsights.map { weightedAnalysis ->
+                    val analysis = weightedAnalysis.originalAnalysis
                     InsightComponent(
                         modality = analysis.modality,
                         insight = analysis.insights.joinToString("; "),
@@ -329,7 +310,7 @@ class MultiModalFusionEngine(
                 performanceMetrics = FusionPerformanceMetrics(
                     processingTimeMs = processingTime,
                     modalitiesProcessed = modalityAnalyses.size,
-                    confidenceScore = calculateOverallConfidence(validatedAnalyses)
+                    confidenceScore = calculateOverallConfidence(validatedAnalyses.map { it.originalAnalysis })
                 )
             )
 
@@ -399,10 +380,11 @@ class MultiModalFusionEngine(
 
     // Analysis methods for different modalities
     private suspend fun analyzePoseLandmarks(landmarks: PoseLandmarkResult): List<String> {
+        val confidence = calculatePoseConfidence(landmarks)
         return listOf(
-            "Pose stability: ${landmarks.confidence}",
+            "Pose stability: ${confidence}",
             "Landmark count: ${landmarks.landmarks.size}",
-            "Detection quality: ${if (landmarks.confidence > 0.8f) "High" else "Medium"}"
+            "Detection quality: ${if (confidence > 0.8f) "High" else "Medium"}"
         )
     }
 
@@ -443,6 +425,18 @@ class MultiModalFusionEngine(
         return analyses.map { it.confidence }.average().toFloat()
     }
 
+    private fun calculatePoseConfidence(landmarks: PoseLandmarkResult): Float {
+        // Calculate confidence based on landmark visibility and presence
+        if (landmarks.landmarks.isEmpty()) return 0f
+
+        val visibilitySum = landmarks.landmarks.sumOf { it.visibility.toDouble() }
+        val presenceSum = landmarks.landmarks.sumOf { it.presence.toDouble() }
+        val avgVisibility = (visibilitySum / landmarks.landmarks.size).toFloat()
+        val avgPresence = (presenceSum / landmarks.landmarks.size).toFloat()
+
+        return (avgVisibility + avgPresence) / 2f
+    }
+
     private fun extractContextualFactors(input: MultiModalInput): List<ContextualFactor> {
         return buildList {
             input.environmentContext?.let { env ->
@@ -477,6 +471,8 @@ class MultiModalFusionEngine(
                 "coaching_style" to "encouraging",
                 "feedback_frequency" to "moderate"
             ),
+            motivationLevel = 0.8f,
+            fatigueLevel = 0.2f,
             confidence = 0.9f
         )
     }
@@ -530,25 +526,4 @@ class MultiModalFusionEngine(
     }
 }
 
-// Supporting data classes
-@Serializable
-data class ModalityAnalysis(
-    val modality: String,
-    val confidence: Float,
-    val insights: List<String>,
-    val timestamp: Long
-)
-
-@Serializable
-data class ContextualFactor(
-    val type: String,
-    val value: String,
-    val confidence: Float
-)
-
-@Serializable
-data class FusionPerformanceMetrics(
-    val processingTimeMs: Long,
-    val modalitiesProcessed: Int,
-    val confidenceScore: Float
-)
+// Supporting data classes moved to models package

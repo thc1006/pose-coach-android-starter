@@ -3,8 +3,10 @@ package com.posecoach.app.multimodal.processors
 import android.content.Context
 import com.posecoach.app.multimodal.models.*
 import com.posecoach.app.privacy.EnhancedPrivacyManager
+import com.posecoach.corepose.models.PoseLandmarkResult
 import kotlinx.coroutines.flow.*
 import kotlinx.serialization.Serializable
+import kotlinx.serialization.Contextual
 import timber.log.Timber
 import java.security.SecureRandom
 import javax.crypto.Cipher
@@ -69,7 +71,7 @@ class MultiModalPrivacyManager(
     @Serializable
     data class PrivacyFilteredData(
         val originalModality: String,
-        val filteredData: Any?,
+        @Contextual val filteredData: Any?,
         val appliedFilters: List<String>,
         val privacyLevel: Float,
         val retainedDataPercentage: Float
@@ -85,7 +87,7 @@ class MultiModalPrivacyManager(
      * Filter multi-modal input according to privacy policies
      */
     suspend fun filterMultiModalInput(
-        input: MultiModalFusionEngine.MultiModalInput
+        input: MultiModalInput
     ): PrivacyFilteredMultiModalInput {
 
         try {
@@ -622,7 +624,7 @@ class MultiModalPrivacyManager(
     }
 
     private fun createEmptyFilteredInput(
-        input: MultiModalFusionEngine.MultiModalInput,
+        input: MultiModalInput,
         reason: String
     ): PrivacyFilteredMultiModalInput {
         return PrivacyFilteredMultiModalInput(

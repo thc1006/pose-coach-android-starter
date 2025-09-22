@@ -251,7 +251,7 @@ class PoseAnalysisTools {
                     response = mapOf(
                         "feedback_provided" to true,
                         "type" to feedbackType,
-                        "body_part" to bodyPart,
+                        "body_part" to (bodyPart ?: "unknown"),
                         "severity" to severity,
                         "audio_cue" to generateAudioCue(feedbackType, bodyPart, severity),
                         "visual_cue" to generateVisualCue(bodyPart),

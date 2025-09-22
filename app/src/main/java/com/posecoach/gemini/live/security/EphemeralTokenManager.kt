@@ -49,8 +49,8 @@ class EphemeralTokenManager(
         private const val TOKEN_EXPIRY_KEY = "token_expiry"
         private const val TOKEN_ENDPOINT = "https://generativelanguage.googleapis.com/v1beta/cachedContents"
         private const val TOKEN_VALIDITY_MS = 30 * 60 * 1000L // 30 minutes
-        private const val REFRESH_THRESHOLD_MS = 5 * 60 * 1000L // Refresh 5 mins before expiry
-        private const val NEW_SESSION_WINDOW_MS = 60 * 1000L // 1 minute grace period
+        const val REFRESH_THRESHOLD_MS = 5 * 60 * 1000L // Refresh 5 mins before expiry
+        const val NEW_SESSION_WINDOW_MS = 60 * 1000L // 1 minute grace period
         private const val MAX_REFRESH_ATTEMPTS = 3
         private const val REFRESH_RETRY_DELAY_MS = 2000L
     }
@@ -189,7 +189,7 @@ class EphemeralTokenManager(
                 _tokenErrors.emit(
                     LiveApiError.AuthenticationError("Unexpected error: ${e.message}")
                 )
-                break
+                return@withContext null
             }
 
             if (attempt < MAX_REFRESH_ATTEMPTS - 1) {
@@ -278,7 +278,7 @@ class EphemeralTokenManager(
     private fun startTokenRefreshMonitoring() {
         scope.launch {
             while (true) {
-                delay(60_000) // Check every minute
+                delay(60_000L) // Check every minute
 
                 val token = currentToken.get()
                 if (token?.shouldRefresh() == true && refreshJob.get() == null) {
@@ -338,7 +338,7 @@ class EphemeralTokenManager(
 /**
  * Ephemeral token data class
  */
-private data class EphemeralToken(
+data class EphemeralToken(
     @SerializedName("access_token") val accessToken: String,
     @SerializedName("expires_at") val expiresAt: Long,
     @SerializedName("acquired_at") val acquiredAt: Long

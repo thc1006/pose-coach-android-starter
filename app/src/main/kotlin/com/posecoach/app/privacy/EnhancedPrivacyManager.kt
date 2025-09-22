@@ -127,6 +127,13 @@ class EnhancedPrivacyManager(private val context: Context) {
         logPrivacySettings()
     }
 
+    /**
+     * Get the application context for other privacy components
+     */
+    fun getContext(): Context {
+        return context
+    }
+
     private fun loadPrivacySettings(): PrivacySettings {
         val defaultSettings = PRIVACY_LEVEL_SETTINGS[PrivacyLevel.HIGH_PRIVACY]!!
 

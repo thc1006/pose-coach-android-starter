@@ -1,6 +1,7 @@
 package com.posecoach.analytics.integration
 
 import com.posecoach.analytics.interfaces.*
+import com.posecoach.analytics.interfaces.CoachingConstants.COACHING_EFFECTIVENESS
 import com.posecoach.analytics.models.*
 import com.posecoach.analytics.engine.RealTimeAnalyticsEngine
 import kotlinx.coroutines.*
@@ -64,8 +65,10 @@ class AICoachingIntegration @Inject constructor(
 
         // Initialize analytics tracking for this session
         val sessionEvent = AnalyticsEvent(
+            eventId = "coaching_init_${System.currentTimeMillis()}_${sessionId}",
             userId = userId,
             sessionId = sessionId,
+            timestamp = System.currentTimeMillis() / 1000,
             eventType = EventType.COACHING_FEEDBACK,
             category = EventCategory.COACHING,
             properties = mapOf(
@@ -101,6 +104,7 @@ class AICoachingIntegration @Inject constructor(
         val effectivenessMetrics = CoachingEffectivenessMetrics(
             coachingSessionId = sessionId,
             userId = context.userId,
+            timestamp = System.currentTimeMillis(),
             suggestionAccuracy = poseAnalysis.accuracy,
             userCompliance = calculateUserCompliance(context),
             feedbackEffectiveness = feedback.effectivenessScore,
@@ -180,7 +184,7 @@ class AICoachingIntegration @Inject constructor(
         val context = coachingContexts[sessionId] ?: return emptyList()
 
         return analyticsEngine.generateInsights(context.userId).filter { insight ->
-            insight.type == InsightType.COACHING_EFFECTIVENESS ||
+            insight.type == InsightType.RECOMMENDATION ||
             insight.type == InsightType.PERFORMANCE_TREND ||
             insight.type == InsightType.IMPROVEMENT_OPPORTUNITY
         }
@@ -239,8 +243,10 @@ class AICoachingIntegration @Inject constructor(
 
         // Track session completion
         val completionEvent = AnalyticsEvent(
+            eventId = "coaching_complete_${System.currentTimeMillis()}_${sessionId}",
             userId = context.userId,
             sessionId = sessionId,
+            timestamp = System.currentTimeMillis() / 1000,
             eventType = EventType.COACHING_FEEDBACK,
             category = EventCategory.COACHING,
             properties = mapOf(

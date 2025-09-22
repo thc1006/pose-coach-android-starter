@@ -79,6 +79,7 @@ class RealTimeAnalyticsEngine @Inject constructor(
 
     override suspend fun trackUserPerformance(metrics: UserPerformanceMetrics) {
         val event = AnalyticsEvent(
+            eventId = "perf_${System.currentTimeMillis()}",
             userId = metrics.userId,
             sessionId = metrics.sessionId,
             timestamp = metrics.timestamp,
@@ -107,6 +108,7 @@ class RealTimeAnalyticsEngine @Inject constructor(
 
     override suspend fun trackCoachingEffectiveness(metrics: CoachingEffectivenessMetrics) {
         val event = AnalyticsEvent(
+            eventId = "coaching_${System.currentTimeMillis()}",
             userId = metrics.userId,
             sessionId = metrics.coachingSessionId,
             timestamp = metrics.timestamp,
@@ -134,6 +136,7 @@ class RealTimeAnalyticsEngine @Inject constructor(
 
     override suspend fun trackSystemPerformance(metrics: SystemPerformanceMetrics) {
         val event = AnalyticsEvent(
+            eventId = "system_${System.currentTimeMillis()}",
             userId = null, // System metrics are not user-specific
             sessionId = metrics.sessionId,
             timestamp = metrics.timestamp,
@@ -217,6 +220,7 @@ class RealTimeAnalyticsEngine @Inject constructor(
                         type = AlertType.ANOMALY_DETECTED,
                         severity = AlertSeverity.WARNING,
                         message = "Anomaly detected: ${anomaly.description}",
+                        timestamp = System.currentTimeMillis(),
                         actionRequired = true,
                         relatedMetrics = anomaly.affectedMetrics
                     )
@@ -269,6 +273,7 @@ class RealTimeAnalyticsEngine @Inject constructor(
                     recommendation = "Maintain this level by focusing on controlled movements",
                     confidence = 0.95f,
                     impact = ImpactLevel.HIGH,
+                    timestamp = System.currentTimeMillis(),
                     validUntil = System.currentTimeMillis() + 86400000, // 24 hours
                     actionable = true,
                     relatedMetrics = listOf("poseAccuracy", "improvementRate")
@@ -283,6 +288,7 @@ class RealTimeAnalyticsEngine @Inject constructor(
                     recommendation = "Focus on slower movements and proper form alignment",
                     confidence = 0.88f,
                     impact = ImpactLevel.HIGH,
+                    timestamp = System.currentTimeMillis(),
                     validUntil = System.currentTimeMillis() + 86400000,
                     actionable = true,
                     relatedMetrics = listOf("poseAccuracy", "movementPatterns")
@@ -300,6 +306,7 @@ class RealTimeAnalyticsEngine @Inject constructor(
                     recommendation = "Consider hydration and recovery time",
                     confidence = 0.92f,
                     impact = ImpactLevel.MEDIUM,
+                    timestamp = System.currentTimeMillis(),
                     validUntil = System.currentTimeMillis() + 43200000, // 12 hours
                     actionable = true,
                     relatedMetrics = listOf("energyExpenditure", "intensityLevel")
@@ -432,6 +439,7 @@ class RealTimeAnalyticsEngine @Inject constructor(
     private suspend fun emitRealtimeUpdate(insight: AnalyticsInsight) {
         val updateData = RealtimeAnalyticsData(
             streamId = "insight-${insight.insightId}",
+            timestamp = System.currentTimeMillis(),
             metrics = mapOf("insightConfidence" to insight.confidence),
             events = emptyList(),
             alerts = if (insight.impact == ImpactLevel.CRITICAL) {
@@ -441,6 +449,7 @@ class RealTimeAnalyticsEngine @Inject constructor(
                         type = AlertType.THRESHOLD_EXCEEDED,
                         severity = AlertSeverity.WARNING,
                         message = insight.title,
+                        timestamp = System.currentTimeMillis(),
                         actionRequired = insight.actionable,
                         relatedMetrics = insight.relatedMetrics
                     )
@@ -455,6 +464,7 @@ class RealTimeAnalyticsEngine @Inject constructor(
     private suspend fun emitAlert(alert: AnalyticsAlert) {
         val alertData = RealtimeAnalyticsData(
             streamId = "alert-${alert.alertId}",
+            timestamp = System.currentTimeMillis(),
             metrics = mapOf("alertSeverity" to alert.severity.ordinal.toFloat()),
             events = emptyList(),
             alerts = listOf(alert),
@@ -472,6 +482,7 @@ class RealTimeAnalyticsEngine @Inject constructor(
                 type = AlertType.ERROR_RATE_HIGH,
                 severity = AlertSeverity.ERROR,
                 message = "$message: ${exception.message}",
+                timestamp = System.currentTimeMillis(),
                 actionRequired = true,
                 relatedMetrics = listOf("errorRate", "systemHealth")
             )
@@ -503,6 +514,7 @@ class RealTimeAnalyticsEngine @Inject constructor(
                         type = AlertType.PERFORMANCE_DEGRADATION,
                         severity = AlertSeverity.WARNING,
                         message = "High app latency detected: ${metrics.appLatency}ms",
+                        timestamp = System.currentTimeMillis(),
                         actionRequired = true,
                         relatedMetrics = listOf("appLatency")
                     )
@@ -516,6 +528,7 @@ class RealTimeAnalyticsEngine @Inject constructor(
                         type = AlertType.SYSTEM_OVERLOAD,
                         severity = AlertSeverity.ERROR,
                         message = "High CPU usage: ${metrics.cpuUsage}%",
+                        timestamp = System.currentTimeMillis(),
                         actionRequired = true,
                         relatedMetrics = listOf("cpuUsage")
                     )
@@ -581,6 +594,7 @@ class RealTimeAnalyticsEngine @Inject constructor(
                         recommendation = "Consider breaking into shorter, focused sessions",
                         confidence = 0.85f,
                         impact = ImpactLevel.MEDIUM,
+                        timestamp = System.currentTimeMillis(),
                         validUntil = System.currentTimeMillis() + 86400000,
                         actionable = true,
                         relatedMetrics = listOf("sessionDuration")
@@ -604,6 +618,7 @@ class RealTimeAnalyticsEngine @Inject constructor(
                         recommendation = "Keep up the great work!",
                         confidence = 0.95f,
                         impact = ImpactLevel.HIGH,
+                        timestamp = System.currentTimeMillis(),
                         validUntil = System.currentTimeMillis() + 86400000,
                         actionable = false,
                         relatedMetrics = listOf("sessionFrequency")

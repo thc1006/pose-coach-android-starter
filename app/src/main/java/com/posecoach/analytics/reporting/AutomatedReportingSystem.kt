@@ -584,7 +584,10 @@ class AutomatedReportingSystem @Inject constructor(
     private fun collectDataProcessingActivities(timeRange: TimeRange): List<DataProcessingActivity> = emptyList()
     private fun collectConsentMetrics(timeRange: TimeRange): ConsentMetrics = ConsentMetrics()
     private fun analyzeDataRetention(timeRange: TimeRange): DataRetentionStatus = DataRetentionStatus()
-    private fun collectCoachingMetrics(timeRange: TimeRange): CoachingMetrics = CoachingMetrics()
+    private fun collectCoachingMetrics(timeRange: TimeRange): CoachingMetrics = CoachingMetrics(
+        effectiveness = CoachingEffectivenessAggregates(),
+        feedback = UserFeedbackAnalysis()
+    )
     private fun calculateCoachingTrends(metrics: CoachingMetrics): List<TrendAnalysis> = emptyList()
     private fun compareCoachingModalities(metrics: CoachingMetrics): ModalityComparison = ModalityComparison()
     private fun analyzePersonalization(metrics: CoachingMetrics): PersonalizationMetrics = PersonalizationMetrics()

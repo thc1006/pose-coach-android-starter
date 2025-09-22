@@ -103,7 +103,7 @@ class AnalyticsPerformanceBenchmark @Inject constructor(
         return BenchmarkResult(
             testName = "event_tracking_latency",
             passed = passed,
-            score = calculateLatencyScore(avgLatency, p95Latency, p99Latency),
+            score = calculateLatencyScore(avgLatency, p95Latency.toDouble(), p99Latency.toDouble()),
             metrics = mapOf(
                 "average_latency_ms" to avgLatency,
                 "p50_latency_ms" to p50Latency.toDouble(),
@@ -128,7 +128,7 @@ class AnalyticsPerformanceBenchmark @Inject constructor(
 
         // Generate events concurrently
         val jobs = (1..10).map {
-            GlobalScope.launch {
+            CoroutineScope(Dispatchers.Default).launch {
                 while (System.currentTimeMillis() - startTime < testDuration) {
                     analyticsEngine.trackEvent(createTestEvent())
                     eventCount.incrementAndGet()
@@ -166,7 +166,7 @@ class AnalyticsPerformanceBenchmark @Inject constructor(
         val streamData = mutableListOf<RealtimeAnalyticsData>()
         val startTime = System.currentTimeMillis()
 
-        val job = launch {
+        val job = CoroutineScope(Dispatchers.Default).launch {
             analyticsEngine.getRealtimeStream()
                 .take(100)
                 .collect { data ->
@@ -253,7 +253,7 @@ class AnalyticsPerformanceBenchmark @Inject constructor(
         val startTime = System.currentTimeMillis()
 
         val jobs = (1..5).map {
-            GlobalScope.launch {
+            CoroutineScope(Dispatchers.Default).launch {
                 while (System.currentTimeMillis() - startTime < testDuration) {
                     pipelineManager.ingestData(createTestEvent())
                     ingestedCount.incrementAndGet()
@@ -291,7 +291,7 @@ class AnalyticsPerformanceBenchmark @Inject constructor(
         val processedData = mutableListOf<ProcessedData>()
         val startTime = System.currentTimeMillis()
 
-        val job = launch {
+        val job = CoroutineScope(Dispatchers.Default).launch {
             pipelineManager.startRealtimeProcessing()
                 .take(50)
                 .collect { data ->
@@ -588,7 +588,7 @@ class AnalyticsPerformanceBenchmark @Inject constructor(
             val startTime = System.currentTimeMillis()
 
             val jobs = (1..userCount).map { userId ->
-                GlobalScope.launch {
+                CoroutineScope(Dispatchers.Default).launch {
                     repeat(eventsPerUser) {
                         analyticsEngine.trackEvent(createTestEvent("user_$userId"))
                     }
@@ -680,7 +680,7 @@ class AnalyticsPerformanceBenchmark @Inject constructor(
         val successCount = AtomicInteger(0)
         val startTime = System.currentTimeMillis()
 
-        val job = GlobalScope.launch {
+        val job = CoroutineScope(Dispatchers.Default).launch {
             while (System.currentTimeMillis() - startTime < testDuration) {
                 try {
                     analyticsEngine.trackEvent(createTestEvent())
@@ -803,6 +803,7 @@ class AnalyticsPerformanceBenchmark @Inject constructor(
     // Test data creation helpers
     private fun createTestEvent(userId: String = "test_user_${Random.nextInt()}"): AnalyticsEvent {
         return AnalyticsEvent(
+            eventId = "event_${Random.nextInt()}",
             userId = userId,
             sessionId = "session_${Random.nextInt()}",
             timestamp = System.currentTimeMillis() / 1000,
