@@ -63,6 +63,9 @@ jobs:
           fetch-depth: 0
           token: ${{ secrets.GITHUB_TOKEN }}
 
+      - name: Configure Git
+        run: git config --global --add safe.directory "$GITHUB_WORKSPACE"
+
       - name: 🔍 Detect Changes
         id: changes
         uses: dorny/paths-filter@v2
@@ -174,11 +177,17 @@ jobs:
       - name: 📥 Checkout
         uses: actions/checkout@v4
 
+      - name: Configure Git
+        run: git config --global --add safe.directory "$GITHUB_WORKSPACE"
+
       - name: ☕ Setup JDK
         uses: actions/setup-java@v4
         with:
           java-version: ${{ env.JAVA_VERSION }}
           distribution: 'temurin'
+
+      - name: Grant execute permission for gradlew
+        run: chmod +x gradlew
 
       - name: 🤖 Setup Android SDK
         uses: android-actions/setup-android@v3
@@ -187,7 +196,7 @@ jobs:
           build-tools: ${{ env.ANDROID_BUILD_TOOLS }}
 
       - name: 📦 Cache Dependencies
-        uses: actions/cache@v3
+        uses: actions/cache@v4
         with:
           path: |
             ~/.gradle/caches
@@ -234,7 +243,7 @@ jobs:
 
       - name: 📤 Upload Build Artifacts
         if: matrix.upload-artifacts
-        uses: actions/upload-artifact@v3
+        uses: actions/upload-artifact@v4
         with:
           name: apk-${{ matrix.build-type }}-${{ matrix.arch }}
           path: |
@@ -261,14 +270,20 @@ jobs:
       - name: 📥 Checkout
         uses: actions/checkout@v4
 
+      - name: Configure Git
+        run: git config --global --add safe.directory "$GITHUB_WORKSPACE"
+
       - name: ☕ Setup JDK
         uses: actions/setup-java@v4
         with:
           java-version: ${{ env.JAVA_VERSION }}
           distribution: 'temurin'
 
+      - name: Grant execute permission for gradlew
+        run: chmod +x gradlew
+
       - name: 📦 Cache Dependencies
-        uses: actions/cache@v3
+        uses: actions/cache@v4
         with:
           path: |
             ~/.gradle/caches
@@ -326,17 +341,23 @@ jobs:
       - name: 📥 Checkout
         uses: actions/checkout@v4
 
+      - name: Configure Git
+        run: git config --global --add safe.directory "$GITHUB_WORKSPACE"
+
       - name: ☕ Setup JDK
         uses: actions/setup-java@v4
         with:
           java-version: ${{ env.JAVA_VERSION }}
           distribution: 'temurin'
 
+      - name: Grant execute permission for gradlew
+        run: chmod +x gradlew
+
       - name: 🤖 Setup Android SDK
         uses: android-actions/setup-android@v3
 
       - name: 📦 Cache Dependencies
-        uses: actions/cache@v3
+        uses: actions/cache@v4
         with:
           path: |
             ~/.gradle/caches
@@ -351,7 +372,7 @@ jobs:
           sudo udevadm trigger --name-match=kvm
 
       - name: 📱 AVD Cache
-        uses: actions/cache@v3
+        uses: actions/cache@v4
         id: avd-cache
         with:
           path: |
@@ -418,7 +439,7 @@ jobs:
           distribution: 'temurin'
 
       - name: 📥 Download Build Artifacts
-        uses: actions/download-artifact@v3
+        uses: actions/download-artifact@v4
         with:
           name: apk-debug-arm64-v8a
           path: artifacts/
@@ -585,7 +606,7 @@ jobs:
         uses: actions/checkout@v4
 
       - name: 📥 Download Artifacts
-        uses: actions/download-artifact@v3
+        uses: actions/download-artifact@v4
         with:
           name: apk-release-arm64-v8a
           path: artifacts/
@@ -636,7 +657,7 @@ jobs:
         uses: actions/checkout@v4
 
       - name: 📥 Download Artifacts
-        uses: actions/download-artifact@v3
+        uses: actions/download-artifact@v4
         with:
           name: apk-release-arm64-v8a
           path: artifacts/
