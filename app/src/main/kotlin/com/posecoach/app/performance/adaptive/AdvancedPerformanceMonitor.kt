@@ -253,8 +253,16 @@ class AdvancedPerformanceMonitor(
                 total = total,
                 gcCount = getGcCount(),
                 gcTime = getGcTime(),
-                nativeHeap = 0L, // TODO: Fix when nativeHeapSize is available
-                dalvikHeap = 0L // TODO: Fix when dalvikHeapSize is available
+                nativeHeap = try {
+                    android.os.Debug.getNativeHeapSize()
+                } catch (e: Exception) {
+                    0L // Not available on all Android versions
+                },
+                dalvikHeap = try {
+                    android.os.Debug.getGlobalAllocSize()
+                } catch (e: Exception) {
+                    0L // Fallback if not available
+                }
             )
         } catch (e: Exception) {
             Timber.e(e, "Error collecting memory usage")

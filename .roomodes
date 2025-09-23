@@ -1,0 +1,68 @@
+# SPARC Configuration for Pose Coach Android
+# This file enables SPARC (Specification, Pseudocode, Architecture, Refinement, Completion) methodology
+
+mode: tdd
+project_type: android
+framework: kotlin
+
+# TDD Configuration
+tdd:
+  test_framework: junit5
+  mock_framework: mockk
+  coverage_threshold: 80
+  performance_testing: true
+
+# SPARC Phases Configuration
+sparc:
+  specification:
+    enabled: true
+    requirements_file: ".claude/specs/voice-coach-integration.md"
+
+  pseudocode:
+    enabled: true
+    algorithm_design: true
+
+  architecture:
+    enabled: true
+    clean_architecture: true
+    modular_design: true
+    max_file_lines: 500
+
+  refinement:
+    enabled: true
+    code_review: true
+    performance_optimization: true
+
+  completion:
+    enabled: true
+    integration_testing: true
+    documentation: true
+
+# Android Specific Settings
+android:
+  min_sdk: 26
+  target_sdk: 35
+  agp_version: "8.13"
+  gradle_version: "8.13"
+  kotlin_version: "1.9.25"
+
+# Project Structure
+structure:
+  app_module: "app"
+  core_modules: ["core-pose", "core-geom", "suggestions-api"]
+  test_directories: ["src/test/kotlin", "src/androidTest/kotlin"]
+
+# Quality Gates
+quality:
+  lint_enabled: true
+  ktlint_enabled: true
+  detekt_enabled: true
+  coverage_report: true
+  performance_benchmarks: true
+
+# CI/CD Integration
+ci:
+  enabled: true
+  test_on_commit: true
+  coverage_reports: true
+  performance_regression_tests: true

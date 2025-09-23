@@ -1,19 +1,23 @@
 package com.posecoach.app.livecoach.websocket
 
-import com.google.gson.Gson
-import com.google.gson.GsonBuilder
 import com.posecoach.app.livecoach.models.*
 import com.posecoach.app.livecoach.state.LiveCoachStateManager
 import kotlinx.coroutines.*
-import kotlinx.coroutines.flow.MutableSharedFlow
 import kotlinx.coroutines.flow.SharedFlow
-import kotlinx.coroutines.flow.asSharedFlow
 import okhttp3.*
 import okio.ByteString
 import timber.log.Timber
 import java.util.concurrent.TimeUnit
+import java.util.concurrent.atomic.AtomicLong
 import kotlin.coroutines.CoroutineContext
 
+/**
+ * Core WebSocket client for Live API communication
+ *
+ * Orchestrates connection management, message processing, and health monitoring
+ * by delegating to specialized components. This maintains the public API while
+ * improving internal organization and testability.
+ */
 class LiveApiWebSocketClient(
     private val apiKey: String,
     private val stateManager: LiveCoachStateManager,
@@ -23,9 +27,9 @@ class LiveApiWebSocketClient(
     override val coroutineContext: CoroutineContext =
         coroutineScope.coroutineContext + SupervisorJob()
 
-    private val gson: Gson = GsonBuilder()
-        .setPrettyPrinting()
-        .create()
+    // Specialized components for modular functionality
+    private val connectionManager = LiveApiConnectionManager(stateManager, this)
+    private val messageProcessor = LiveApiMessageProcessor(this)
 
     private val client = OkHttpClient.Builder()
         .connectTimeout(15, TimeUnit.SECONDS)
@@ -36,52 +40,27 @@ class LiveApiWebSocketClient(
         .build()
 
     private var webSocket: WebSocket? = null
-    private var reconnectJob: Job? = null
-    private var connectionTimeoutJob: Job? = null
+    private var pingJob: Job? = null
+    private var healthCheckJob: Job? = null
+    private var messagesSent = AtomicLong(0)
+    private var messagesReceived = AtomicLong(0)
+    private var lastMessageTimestamp = AtomicLong(0)
     private var sessionStartTime: Long = 0
-    private var messagesSent: Int = 0
-    private var messagesReceived: Int = 0
-    private var lastMessageTimestamp: Long = 0
 
-    private val _responses = MutableSharedFlow<LiveApiResponse>(
-        replay = 0,
-        extraBufferCapacity = 100
-    )
-    val responses: SharedFlow<LiveApiResponse> = _responses.asSharedFlow()
-
-    private val _errors = MutableSharedFlow<String>(
-        replay = 0,
-        extraBufferCapacity = 10
-    )
-    val errors: SharedFlow<String> = _errors.asSharedFlow()
-
-    companion object {
-        private const val WEBSOCKET_URL = "wss://generativelanguage.googleapis.com/ws/google.ai.generativelanguage.v1beta.GenerativeService.BidiGenerateContent"
-        private const val PING_INTERVAL_MS = 20000L
-        private const val CONNECTION_TIMEOUT_MS = 30000L
-        private const val MAX_RECONNECT_ATTEMPTS = 5
-        private const val BASE_RETRY_DELAY_MS = 1000L
-        private const val MAX_RETRY_DELAY_MS = 30000L
-        private const val HEALTH_CHECK_INTERVAL_MS = 60000L
-        private const val MAX_IDLE_TIME_MS = 300000L // 5 minutes
-        private const val MESSAGE_RATE_LIMIT = 50 // messages per second
-    }
+    // Expose flows from message processor
+    val responses: SharedFlow<LiveApiResponse> = messageProcessor.responses
+    val errors: SharedFlow<String> = messageProcessor.errors
 
     fun connect(config: LiveApiConfig = LiveApiConfig()) {
-        if (stateManager.isConnecting() || stateManager.isConnected()) {
-            Timber.w("Already connecting or connected")
-            return
-        }
+        // Delegate connection initialization to connection manager
+        connectionManager.initializeConnection()
 
         sessionStartTime = System.currentTimeMillis()
-        messagesSent = 0
-        messagesReceived = 0
-        lastMessageTimestamp = sessionStartTime
+        messagesSent.set(0)
+        messagesReceived.set(0)
+        lastMessageTimestamp.set(sessionStartTime)
 
-        stateManager.updateConnectionState(ConnectionState.CONNECTING)
-        stateManager.setError(null)
-
-        val url = "$WEBSOCKET_URL?key=$apiKey"
+        val url = "${ConnectionConfig.WEBSOCKET_URL}?key=$apiKey"
         val request = Request.Builder()
             .url(url)
             .addHeader("User-Agent", "PoseCoach-Android/1.0")
@@ -89,8 +68,8 @@ class LiveApiWebSocketClient(
             .addHeader("Upgrade", "websocket")
             .build()
 
-        // Start connection timeout
-        startConnectionTimeout()
+        // Start connection timeout through connection manager
+        connectionManager.startConnectionTimeout()
 
         webSocket = client.newWebSocket(request, createWebSocketListener(config))
 
@@ -99,37 +78,25 @@ class LiveApiWebSocketClient(
 
     private fun createWebSocketListener(config: LiveApiConfig) = object : WebSocketListener() {
         override fun onOpen(webSocket: WebSocket, response: Response) {
-            Timber.d("WebSocket connected successfully")
+            // Delegate to connection manager
+            connectionManager.onConnectionEstablished()
 
-            // Cancel connection timeout
-            connectionTimeoutJob?.cancel()
-
-            stateManager.updateConnectionState(ConnectionState.CONNECTED)
-            stateManager.resetRetryCount()
-            stateManager.setSessionId(generateSessionId())
-
-            // Send initial setup
+            // Send initial setup using message processor
             sendSetupMessage(config)
 
             // Start monitoring jobs
             startPingJob()
             startHealthCheck()
-
-            Timber.i("Live API session established: ${stateManager.getCurrentState().sessionId}")
         }
 
         override fun onMessage(webSocket: WebSocket, text: String) {
-            messagesReceived++
-            lastMessageTimestamp = System.currentTimeMillis()
+            messagesReceived.incrementAndGet()
+            lastMessageTimestamp.set(System.currentTimeMillis())
 
-            try {
-                Timber.v("Received message (#$messagesReceived): ${text.take(200)}...")
-                handleIncomingMessage(text)
-            } catch (e: Exception) {
-                Timber.e(e, "Error handling message: $text")
-                stateManager.setError("Message parsing error: ${e.message}")
-                launch { _errors.emit("Failed to process server message: ${e.message}") }
-            }
+            Timber.v("Received message (#${messagesReceived.get()}): ${text.take(200)}...")
+
+            // Delegate message processing to message processor
+            messageProcessor.processIncomingMessage(text)
         }
 
         override fun onMessage(webSocket: WebSocket, bytes: ByteString) {
@@ -142,14 +109,8 @@ class LiveApiWebSocketClient(
         }
 
         override fun onClosed(webSocket: WebSocket, code: Int, reason: String) {
-            Timber.d("WebSocket closed: $code - $reason")
-            stateManager.updateConnectionState(ConnectionState.DISCONNECTED)
             cancelPingJob()
-
-            // Attempt reconnection if not manually closed
-            if (code != 1000) { // Not normal closure
-                scheduleReconnect()
-            }
+            connectionManager.onConnectionClosed(code, reason)
         }
 
         override fun onFailure(webSocket: WebSocket, t: Throwable, response: Response?) {
@@ -159,37 +120,19 @@ class LiveApiWebSocketClient(
             Timber.e(t, "WebSocket connection failed (HTTP: $httpCode)")
 
             // Cancel ongoing jobs
-            connectionTimeoutJob?.cancel()
             cancelPingJob()
             cancelHealthCheck()
 
-            stateManager.updateConnectionState(ConnectionState.ERROR)
-            stateManager.setError(errorMessage)
+            // Delegate to connection manager
+            connectionManager.onConnectionFailed(errorMessage, httpCode)
 
-            launch {
-                val detailedError = if (httpCode != null) {
-                    "$errorMessage (HTTP $httpCode)"
-                } else {
-                    errorMessage
-                }
-                _errors.emit(detailedError)
-            }
-
-            scheduleReconnect()
+            // Schedule reconnect
+            connectionManager.scheduleReconnect()
         }
     }
 
     private fun sendSetupMessage(config: LiveApiConfig) {
-        val setupMessage = mapOf(
-            "setup" to mapOf(
-                "model" to config.model,
-                "generationConfig" to config.generationConfig,
-                "systemInstruction" to config.systemInstruction,
-                "realtimeInputConfig" to config.realtimeInputConfig
-            )
-        )
-
-        val json = gson.toJson(setupMessage)
+        val json = messageProcessor.createSetupMessage(config)
         Timber.d("Sending setup: $json")
         webSocket?.send(json)
     }
@@ -206,23 +149,21 @@ class LiveApiWebSocketClient(
             return
         }
 
-        val message = mapOf("realtimeInput" to input)
-        val json = gson.toJson(message)
+        val json = messageProcessor.createRealtimeInputMessage(input)
 
         launch {
             try {
                 val success = webSocket?.send(json) ?: false
                 if (success) {
-                    messagesSent++
-                    lastMessageTimestamp = System.currentTimeMillis()
-                    Timber.v("Sent realtime input (#$messagesSent)")
+                    messagesSent.incrementAndGet()
+                    lastMessageTimestamp.set(System.currentTimeMillis())
+                    Timber.v("Sent realtime input (#${messagesSent.get()})")
                 } else {
                     throw IllegalStateException("WebSocket send returned false")
                 }
             } catch (e: Exception) {
                 Timber.e(e, "Failed to send realtime input")
                 stateManager.setError("Send failed: ${e.message}")
-                launch { _errors.emit("Failed to send data: ${e.message}") }
             }
         }
     }
@@ -233,8 +174,7 @@ class LiveApiWebSocketClient(
             return
         }
 
-        val message = mapOf("toolResponse" to response)
-        val json = gson.toJson(message)
+        val json = messageProcessor.createToolResponseMessage(response)
 
         launch {
             try {
@@ -247,114 +187,13 @@ class LiveApiWebSocketClient(
         }
     }
 
-    private fun handleIncomingMessage(text: String) {
-        Timber.v("Received: $text")
-
-        try {
-            @Suppress("UNCHECKED_CAST")
-            val jsonObject = gson.fromJson(text, Map::class.java) as Map<String, Any>
-
-            when {
-                jsonObject.containsKey("setupComplete") -> {
-                    val setupComplete = jsonObject["setupComplete"] as Boolean
-                    launch { _responses.emit(LiveApiResponse.SetupComplete(setupComplete)) }
-                    Timber.d("Setup complete: $setupComplete")
-                }
-
-                jsonObject.containsKey("serverContent") -> {
-                    @Suppress("UNCHECKED_CAST")
-                    val serverContent = parseServerContent(jsonObject["serverContent"] as Map<String, Any>)
-                    launch { _responses.emit(serverContent) }
-                }
-
-                jsonObject.containsKey("toolCall") -> {
-                    @Suppress("UNCHECKED_CAST")
-                    val toolCall = parseToolCall(jsonObject["toolCall"] as Map<String, Any>)
-                    launch { _responses.emit(toolCall) }
-                }
-
-                jsonObject.containsKey("toolCallCancellation") -> {
-                    @Suppress("UNCHECKED_CAST")
-                    val cancellation = parseToolCallCancellation(jsonObject["toolCallCancellation"] as Map<String, Any>)
-                    launch { _responses.emit(cancellation) }
-                }
-
-                else -> {
-                    Timber.w("Unknown message type: ${jsonObject.keys}")
-                }
-            }
-        } catch (e: Exception) {
-            Timber.e(e, "Failed to parse message: $text")
-            stateManager.setError("Message parsing failed: ${e.message}")
-        }
-    }
-
-    private fun parseServerContent(data: Map<String, Any>): LiveApiResponse.ServerContent {
-        val modelTurn = (data["modelTurn"] as? Map<String, Any>)?.let { parseContent(it) }
-        val turnComplete = data["turnComplete"] as? Boolean ?: false
-        val interrupted = data["interrupted"] as? Boolean ?: false
-        val inputTranscription = (data["inputTranscription"] as? Map<String, Any>)?.let {
-            Transcription(it["transcribedText"] as String)
-        }
-        val outputTranscription = (data["outputTranscription"] as? Map<String, Any>)?.let {
-            Transcription(it["transcribedText"] as String)
-        }
-
-        return LiveApiResponse.ServerContent(
-            modelTurn = modelTurn,
-            turnComplete = turnComplete,
-            interrupted = interrupted,
-            inputTranscription = inputTranscription,
-            outputTranscription = outputTranscription
-        )
-    }
-
-    private fun parseContent(data: Map<String, Any>): Content {
-        val parts = (data["parts"] as? List<Map<String, Any>>)?.map { part ->
-            when {
-                part.containsKey("text") -> Part.TextPart(part["text"] as String)
-                part.containsKey("inlineData") -> {
-                    @Suppress("UNCHECKED_CAST")
-                    val inlineData = part["inlineData"] as Map<String, Any>
-                    Part.InlineDataPart(
-                        mimeType = inlineData["mimeType"] as String,
-                        data = inlineData["data"] as String
-                    )
-                }
-                else -> throw IllegalArgumentException("Unknown part type: $part")
-            }
-        } ?: emptyList()
-
-        return Content(parts)
-    }
-
-    private fun parseToolCall(data: Map<String, Any>): LiveApiResponse.ToolCall {
-        val functionCalls = (data["functionCalls"] as? List<Map<String, Any>>)?.map { call ->
-            FunctionCall(
-                name = call["name"] as String,
-                args = call["args"].let {
-                    @Suppress("UNCHECKED_CAST")
-                    it as Map<String, Any>
-                },
-                id = call["id"] as String
-            )
-        } ?: emptyList()
-
-        return LiveApiResponse.ToolCall(functionCalls)
-    }
-
-    private fun parseToolCallCancellation(data: Map<String, Any>): LiveApiResponse.ToolCallCancellation {
-        val ids = (data["ids"] as? List<String>) ?: emptyList()
-        return LiveApiResponse.ToolCallCancellation(ids)
-    }
-
-    private var pingJob: Job? = null
+    // Message parsing is now handled by messageProcessor
 
     private fun startPingJob() {
         pingJob?.cancel()
         pingJob = launch {
             while (isActive && stateManager.isConnected()) {
-                delay(PING_INTERVAL_MS)
+                delay(ConnectionConfig.PING_INTERVAL_MS)
                 try {
                     webSocket?.send("ping")
                 } catch (e: Exception) {
@@ -370,40 +209,12 @@ class LiveApiWebSocketClient(
         pingJob = null
     }
 
-    private fun scheduleReconnect() {
-        if (!stateManager.canRetry()) {
-            val errorMsg = "Max reconnection attempts (${MAX_RECONNECT_ATTEMPTS}) reached"
-            Timber.e(errorMsg)
-            stateManager.updateConnectionState(ConnectionState.ERROR)
-            launch { _errors.emit(errorMsg) }
-            return
-        }
-
-        reconnectJob?.cancel()
-        reconnectJob = launch {
-            if (stateManager.incrementRetryCount()) {
-                val retryCount = stateManager.getCurrentState().retryCount
-                val delay = calculateExponentialBackoff(retryCount)
-
-                Timber.d("Scheduling reconnect attempt $retryCount/$MAX_RECONNECT_ATTEMPTS in ${delay}ms")
-                stateManager.updateConnectionState(ConnectionState.RECONNECTING)
-
-                delay(delay)
-
-                if (isActive && !stateManager.isConnected()) {
-                    Timber.i("Attempting reconnection $retryCount/$MAX_RECONNECT_ATTEMPTS")
-                    connect()
-                }
-            }
-        }
-    }
+    // Reconnection logic is now handled by connectionManager
 
     fun disconnect() {
         Timber.d("Disconnecting WebSocket")
 
         // Cancel all monitoring jobs
-        connectionTimeoutJob?.cancel()
-        reconnectJob?.cancel()
         cancelPingJob()
         cancelHealthCheck()
 
@@ -411,7 +222,8 @@ class LiveApiWebSocketClient(
         webSocket?.close(1000, "Manual disconnect")
         webSocket = null
 
-        stateManager.updateConnectionState(ConnectionState.DISCONNECTED)
+        // Delegate to connection manager
+        connectionManager.disconnect()
 
         Timber.i("WebSocket disconnected. Final metrics: ${getSessionMetrics()}")
     }
@@ -419,55 +231,34 @@ class LiveApiWebSocketClient(
     fun forceReconnect() {
         Timber.d("Force reconnecting")
         disconnect()
-        stateManager.resetRetryCount()
-        connect()
+        connectionManager.forceReconnect()
     }
 
-    private fun generateSessionId(): String {
-        return "session_${System.currentTimeMillis()}_${(1000..9999).random()}"
-    }
+    // Session ID generation is now handled by connectionManager
 
-    private fun startConnectionTimeout() {
-        connectionTimeoutJob?.cancel()
-        connectionTimeoutJob = launch {
-            delay(CONNECTION_TIMEOUT_MS)
-            if (!stateManager.isConnected()) {
-                Timber.w("Connection timeout after ${CONNECTION_TIMEOUT_MS}ms")
-                webSocket?.close(1001, "Connection timeout")
-                stateManager.updateConnectionState(ConnectionState.ERROR)
-                stateManager.setError("Connection timeout")
-                launch { _errors.emit("Connection timeout - please check your internet connection") }
-            }
-        }
-    }
+    // Connection timeout is now handled by connectionManager
 
-    private fun calculateExponentialBackoff(retryCount: Int): Long {
-        val baseDelay = BASE_RETRY_DELAY_MS * (1L shl (retryCount - 1))
-        val jitter = (0..1000).random() // Add jitter to avoid thundering herd
-        return (baseDelay + jitter).coerceAtMost(MAX_RETRY_DELAY_MS)
-    }
+    // Exponential backoff calculation is now handled by connectionManager
 
     private fun checkRateLimit(): Boolean {
         val now = System.currentTimeMillis()
         val timeSinceStart = now - sessionStartTime
         if (timeSinceStart == 0L) return true
 
-        val messagesPerSecond = (messagesSent * 1000L) / timeSinceStart
-        return messagesPerSecond < MESSAGE_RATE_LIMIT
+        val messagesPerSecond = (messagesSent.get() * 1000L) / timeSinceStart
+        return messagesPerSecond < ConnectionConfig.MESSAGE_RATE_LIMIT
     }
-
-    private var healthCheckJob: Job? = null
 
     private fun startHealthCheck() {
         healthCheckJob?.cancel()
         healthCheckJob = launch {
             while (isActive && stateManager.isConnected()) {
-                delay(HEALTH_CHECK_INTERVAL_MS)
+                delay(ConnectionConfig.HEALTH_CHECK_INTERVAL_MS)
 
                 val now = System.currentTimeMillis()
-                val timeSinceLastMessage = now - lastMessageTimestamp
+                val timeSinceLastMessage = now - lastMessageTimestamp.get()
 
-                if (timeSinceLastMessage > MAX_IDLE_TIME_MS) {
+                if (timeSinceLastMessage > ConnectionConfig.MAX_IDLE_TIME_MS) {
                     Timber.w("Connection idle for ${timeSinceLastMessage}ms, checking health")
                     if (!checkConnectionHealth()) {
                         Timber.e("Health check failed, reconnecting")
@@ -491,7 +282,10 @@ class LiveApiWebSocketClient(
                     "timestamp" to System.currentTimeMillis()
                 )
             )
-            val success = webSocket?.send(gson.toJson(healthMessage)) ?: false
+            val json = messageProcessor.createRealtimeInputMessage(
+                LiveApiMessage.RealtimeInput(text = "health_check")
+            )
+            val success = webSocket?.send(json) ?: false
             if (success) {
                 Timber.d("Health check ping sent")
             }
@@ -505,36 +299,39 @@ class LiveApiWebSocketClient(
     fun getSessionMetrics(): Map<String, Any> {
         val now = System.currentTimeMillis()
         val sessionDuration = now - sessionStartTime
+        val messagesSentValue = messagesSent.get()
+        val messagesReceivedValue = messagesReceived.get()
 
         return mapOf(
             "sessionId" to (stateManager.getCurrentState().sessionId ?: "none"),
             "connectionState" to stateManager.getCurrentState().connectionState.name,
             "sessionDurationMs" to sessionDuration,
-            "messagesSent" to messagesSent,
-            "messagesReceived" to messagesReceived,
-            "avgMessagesPerSecond" to if (sessionDuration > 0) (messagesSent * 1000L / sessionDuration) else 0,
-            "lastMessageAgoMs" to (now - lastMessageTimestamp),
+            "messagesSent" to messagesSentValue,
+            "messagesReceived" to messagesReceivedValue,
+            "avgMessagesPerSecond" to if (sessionDuration > 0) (messagesSentValue * 1000L / sessionDuration) else 0,
+            "lastMessageAgoMs" to (now - lastMessageTimestamp.get()),
             "retryCount" to stateManager.getCurrentState().retryCount
         )
     }
 
     fun isHealthy(): Boolean {
-        val now = System.currentTimeMillis()
-        val timeSinceLastMessage = now - lastMessageTimestamp
-        return stateManager.isConnected() &&
-               timeSinceLastMessage < MAX_IDLE_TIME_MS &&
-               stateManager.getCurrentState().retryCount < MAX_RECONNECT_ATTEMPTS
+        return connectionManager.isHealthy() &&
+               (System.currentTimeMillis() - lastMessageTimestamp.get()) < ConnectionConfig.MAX_IDLE_TIME_MS
     }
 
     fun destroy() {
         Timber.d("Destroying WebSocket client")
 
-        // Cancel all jobs
-        connectionTimeoutJob?.cancel()
+        // Cancel monitoring jobs
         cancelHealthCheck()
-        reconnectJob?.cancel()
+        cancelPingJob()
 
         disconnect()
+
+        // Destroy components
+        connectionManager.destroy()
+        messageProcessor.destroy()
+
         cancel() // Cancel coroutine scope
 
         Timber.i("WebSocket client destroyed. Session metrics: ${getSessionMetrics()}")

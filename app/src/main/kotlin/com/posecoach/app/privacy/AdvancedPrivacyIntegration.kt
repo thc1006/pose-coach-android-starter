@@ -181,10 +181,10 @@ class AdvancedPrivacyIntegration(private val context: Context) {
                     privacyTechniques = processingDecision.privacyTechniques.map { it.name }
                 )
 
-                // 5. Process with privacy preservation (TODO: Implement this method)
-                val processedData = PrivateProcessingResultStub(
-                    data = minimizedData,
-                    processingTime = 100L
+                // 5. Process with privacy preservation
+                val processedData = processDataWithPrivacyPreservation(
+                    minimizedData,
+                    processingDecision
                 )
 
                 PrivacyProcessingResult.Success(processedData, processingDecision)
@@ -447,7 +447,7 @@ class AdvancedPrivacyIntegration(private val context: Context) {
         enhancedSettings: EnhancedPrivacyManager.PrivacySettings,
         advancedPolicy: AdvancedPrivacyEngine.PrivacyPolicy
     ): PrivacyLevel {
-        val score = 75 // TODO: Implement getPrivacyScore() method
+        val score = calculatePrivacyScore(enhancedSettings, advancedPolicy)
         return when {
             score >= 90 -> PrivacyLevel.MAXIMUM
             score >= 75 -> PrivacyLevel.HIGH
@@ -570,9 +570,12 @@ class AdvancedPrivacyIntegration(private val context: Context) {
         return when (decision.processingLocation) {
             ProcessingLocationStub.ON_DEVICE -> floatData
             else -> {
-                // TODO: Implement proper data minimization
-                // Simplified version for now
-                floatData
+                // Apply appropriate data minimization for cloud processing
+                dataMinimizationProcessor.minimizeData(
+                    floatData,
+                    mapDataType(dataType),
+                    getCurrentPrivacyRequirement()
+                )
             }
         }
     }
@@ -664,4 +667,78 @@ class AdvancedPrivacyIntegration(private val context: Context) {
         val data: FloatArray,
         val processingTime: Long
     )
+
+    /**
+     * Process data with privacy preservation techniques
+     */
+    private suspend fun processDataWithPrivacyPreservation(
+        data: FloatArray,
+        decision: ProcessingDecisionStub
+    ): PrivateProcessingResultStub {
+        val startTime = System.currentTimeMillis()
+
+        val processedData = when (decision.processingLocation) {
+            ProcessingLocationStub.ON_DEVICE -> {
+                // Local processing - no additional privacy measures needed
+                data
+            }
+            ProcessingLocationStub.FEDERATED_NETWORK -> {
+                // Apply federated learning privacy techniques
+                privacyPreservingAI.applyFederatedPrivacy(data, getCurrentPrivacyRequirement())
+            }
+            ProcessingLocationStub.ENCRYPTED_CLOUD -> {
+                // Apply homomorphic encryption or secure multiparty computation
+                privacyPreservingAI.applyCloudPrivacy(data, getCurrentPrivacyRequirement())
+            }
+            else -> {
+                // Default to differential privacy for other scenarios
+                privacyPreservingAI.applyDifferentialPrivacy(data, getCurrentPrivacyRequirement())
+            }
+        }
+
+        val processingTime = System.currentTimeMillis() - startTime
+
+        return PrivateProcessingResultStub(
+            data = processedData,
+            processingTime = processingTime
+        )
+    }
+
+    /**
+     * Calculate privacy score based on current settings
+     */
+    private fun calculatePrivacyScore(
+        enhancedSettings: EnhancedPrivacyManager.PrivacySettings,
+        advancedPolicy: AdvancedPrivacyEngine.PrivacyPolicy
+    ): Int {
+        var score = 100 // Start with perfect score
+
+        // Deduct points based on enabled features that reduce privacy
+        if (enhancedSettings.allowImageUpload) score -= 20
+        if (enhancedSettings.allowAudioUpload) score -= 15
+        if (enhancedSettings.allowLandmarkUpload) score -= 10
+
+        // Add points for privacy-enhancing features
+        if (enhancedSettings.useLocalProcessing) score += 5
+        if (enhancedSettings.enableDataMinimization) score += 5
+
+        // Consider advanced policy settings
+        when (advancedPolicy.modalityControls.visualDataPermission) {
+            AdvancedPrivacyEngine.DataPermission.BLOCKED -> score += 10
+            AdvancedPrivacyEngine.DataPermission.LOCAL_ONLY -> score += 5
+            AdvancedPrivacyEngine.DataPermission.ANONYMIZED -> score -= 5
+            AdvancedPrivacyEngine.DataPermission.CLOUD_ALLOWED -> score -= 15
+        }
+
+        // Data retention impact
+        val retentionDays = enhancedSettings.dataRetentionDays
+        when {
+            retentionDays <= 1 -> score += 10
+            retentionDays <= 7 -> score += 5
+            retentionDays <= 30 -> score -= 0
+            else -> score -= 10
+        }
+
+        return score.coerceIn(0, 100)
+    }
 }

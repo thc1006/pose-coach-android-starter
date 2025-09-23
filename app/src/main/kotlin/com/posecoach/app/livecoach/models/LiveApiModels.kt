@@ -2,6 +2,9 @@ package com.posecoach.app.livecoach.models
 
 import com.google.gson.annotations.SerializedName
 import com.posecoach.corepose.models.PoseLandmarkResult
+// Compatibility re-exports for moved models
+import com.posecoach.app.livecoach.websocket.ConnectionState
+import com.posecoach.app.livecoach.websocket.LiveApiConfig as WebSocketLiveApiConfig
 
 data class LiveApiConfig(
     val model: String = "models/gemini-2.0-flash-exp",
@@ -156,3 +159,39 @@ data class SessionState(
     val lastRetryAttempt: Long? = null,
     val batteryOptimized: Boolean = false
 )
+// Additional models for performance testing
+data class VoiceResponse(
+    val text: String,
+    val confidence: Float,
+    val duration: Float,
+    val timestamp: Long = System.currentTimeMillis()
+)
+
+data class AudioFrame(
+    val data: ByteArray,
+    val sampleRate: Int,
+    val channels: Int,
+    val timestamp: Long = System.currentTimeMillis()
+) {
+    override fun equals(other: Any?): Boolean {
+        if (this === other) return true
+        if (javaClass != other?.javaClass) return false
+
+        other as AudioFrame
+
+        if (!data.contentEquals(other.data)) return false
+        if (sampleRate != other.sampleRate) return false
+        if (channels != other.channels) return false
+        if (timestamp != other.timestamp) return false
+
+        return true
+    }
+
+    override fun hashCode(): Int {
+        var result = data.contentHashCode()
+        result = 31 * result + sampleRate
+        result = 31 * result + channels
+        result = 31 * result + timestamp.hashCode()
+        return result
+    }
+}
