@@ -2,31 +2,26 @@ package com.posecoach.app.livecoach.audio
 
 import android.content.Context
 import android.content.pm.PackageManager
-import androidx.test.ext.junit.runners.AndroidJUnit4
+import org.junit.Test
 import com.posecoach.app.livecoach.models.AudioPermissionStatus
 import io.mockk.every
 import io.mockk.mockk
 import io.mockk.verify
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.test.runTest
-import org.junit.jupiter.api.BeforeEach
-import org.junit.jupiter.api.Test
-import org.junit.runner.RunWith
-import kotlin.test.assertEquals
-import kotlin.test.assertFalse
-import kotlin.test.assertTrue
+import org.junit.Before
+import org.junit.Assert.*
 
 /**
  * Test suite for AudioPermissionManager following TDD principles.
  * Tests permission handling functionality (<150 lines target).
  */
-@RunWith(AndroidJUnit4::class)
 class AudioPermissionManagerTest {
 
     private lateinit var audioPermissionManager: AudioPermissionManager
     private val mockContext = mockk<Context>()
 
-    @BeforeEach
+    @Before
     fun setUp() {
         // This test will fail until AudioPermissionManager is implemented
         audioPermissionManager = AudioPermissionManager(mockContext)

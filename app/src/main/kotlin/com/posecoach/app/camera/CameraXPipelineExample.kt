@@ -278,7 +278,7 @@ class CameraXPipelineExample : AppCompatActivity() {
             PerformanceDegradationStrategy.Level.HIGH_QUALITY -> FitMode.CENTER_CROP
             PerformanceDegradationStrategy.Level.BALANCED -> FitMode.CENTER_CROP
             PerformanceDegradationStrategy.Level.PERFORMANCE -> FitMode.CENTER_INSIDE
-            PerformanceDegradationStrategy.Level.LOW_POWER -> FitMode.FILL
+            PerformanceDegradationStrategy.Level.LOW_POWER -> FitMode.FIT_XY
         }
 
         cameraPoseIntegration.updateFitMode(fitMode)

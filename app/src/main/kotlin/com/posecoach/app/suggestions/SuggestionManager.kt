@@ -84,10 +84,9 @@ class SuggestionManager(
                 // using responseSchema for structured output as per CLAUDE.md requirements
                 val mockSuggestions = generateMockSuggestions(pose)
                 _suggestions.emit(mockSuggestions.take(3))
-                return // Early return until actual API is implemented
-
-
-                Timber.d("Generated ${suggestions.size} pose coaching suggestions")
+                // Early return until actual API is implemented
+                Timber.d("Generated ${mockSuggestions.size} pose coaching suggestions")
+                return@launch
 
             } catch (e: Exception) {
                 Timber.e(e, "Error analyzing pose with Gemini")

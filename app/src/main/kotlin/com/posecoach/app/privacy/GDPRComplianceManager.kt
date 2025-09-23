@@ -690,7 +690,7 @@ class GDPRComplianceManager(
             // Verify each consent record has required fields and valid signatures
             allConsentRecords.values.all { record ->
                 record.timestamp > 0 &&
-                record.version.isNotEmpty() &&
+                record.version > 0 &&
                 record.granted != null
             }
         } catch (e: Exception) {
@@ -726,8 +726,8 @@ class GDPRComplianceManager(
         return try {
             // 1. Check that no personal data remains in secure storage
             val storageAudit = secureStorage.performSecurityAudit()
-            val hasPersonalDataInStorage = storageAudit.findings.any { finding ->
-                finding.contains("personal_data") || finding.contains("biometric")
+            val hasPersonalDataInStorage = storageAudit.issues.any { issue ->
+                issue.contains("personal_data") || issue.contains("biometric")
             }
 
             // 2. Check application preferences for personal data

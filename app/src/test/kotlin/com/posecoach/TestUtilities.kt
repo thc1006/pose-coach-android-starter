@@ -8,7 +8,7 @@ import com.google.mlkit.vision.pose.PoseLandmark
 import com.posecoach.app.livecoach.models.*
 import com.posecoach.corepose.models.PoseLandmarkResult
 import io.mockk.*
-import kotlinx.coroutines.delay
+import kotlinx.coroutines.*
 import java.nio.ByteBuffer
 import kotlin.random.Random
 
@@ -97,7 +97,7 @@ object TestUtilities {
         ): List<PoseLandmark> {
             return (0 until landmarkCount).map { index ->
                 mockk<PoseLandmark> {
-                    every { landmarkType } returns PoseLandmark.values()[index % PoseLandmark.values().size]
+                    every { landmarkType } returns index // Use index as landmark type
                     every { position } returns PointF(
                         0.1f + (index % 8) * 0.1f, // X varies from 0.1 to 0.8
                         0.1f + (index / 8) * 0.1f  // Y varies based on row
@@ -301,8 +301,16 @@ object TestUtilities {
             fun build(): LiveApiConfig {
                 return LiveApiConfig(
                     model = model,
-                    generationConfig = generationConfig,
-                    systemInstruction = systemInstruction
+                    generationConfig = GenerationConfig(
+                        temperature = 0.7f,
+                        topP = 0.9f,
+                        topK = 20
+                    ),
+                    systemInstruction = systemInstruction?.get("parts")?.let {
+                        (it as? List<*>)?.firstOrNull()?.let { part ->
+                            (part as? Map<*, *>)?.get("text") as? String
+                        }
+                    } ?: "You are a helpful pose coaching assistant."
                 )
             }
         }
@@ -402,9 +410,9 @@ object TestUtilities {
             val allLatencies = mutableListOf<Long>()
             val startTime = System.currentTimeMillis()
 
-            kotlinx.coroutines.coroutineScope {
+            coroutineScope {
                 val jobs = (1..concurrency).map {
-                    kotlinx.coroutines.launch {
+                    launch {
                         repeat(iterationsPerWorker) {
                             val operationStart = System.nanoTime()
                             operation()

@@ -13,8 +13,8 @@ import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.test.TestScope
 import kotlinx.coroutines.test.runTest
-import org.junit.jupiter.api.BeforeEach
-import org.junit.jupiter.api.Test
+import org.junit.Before
+import org.junit.Test
 import org.junit.runner.RunWith
 import kotlin.test.assertEquals
 import kotlin.test.assertFalse
@@ -35,7 +35,7 @@ class AudioStreamManagerCoreTest {
     private val mockPermissionManager = mockk<AudioPermissionManager>()
     private val mockQualityMonitor = mockk<AudioQualityMonitor>()
 
-    @BeforeEach
+    @Before
     fun setUp() {
         // Setup mocks
         every { mockPermissionManager.hasAudioPermission() } returns true

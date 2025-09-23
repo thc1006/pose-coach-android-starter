@@ -17,7 +17,7 @@ import org.junit.runner.RunWith
 import org.robolectric.RobolectricTestRunner
 import org.robolectric.annotation.Config
 import timber.log.Timber
-import kotlin.test.*
+import org.junit.Assert.*
 import kotlin.time.Duration.Companion.milliseconds
 
 /**
@@ -80,8 +80,10 @@ class MLKitPoseDetectorTest {
 
         // ACT & ASSERT
         // Should not throw exception even if ML Kit fails to initialize
-        assertDoesNotThrow {
+        try {
             invalidDetector.initialize()
+        } catch (e: Exception) {
+            fail("Should not throw exception: ${e.message}")
         }
 
         invalidDetector.close()
@@ -271,8 +273,12 @@ class MLKitPoseDetectorTest {
         }
 
         // ACT & ASSERT
-        assertDoesNotThrow {
-            detector.processImageProxy(mockImageProxy).toList()
+        runBlocking {
+            try {
+                detector.processImageProxy(mockImageProxy).toList()
+            } catch (e: Exception) {
+                fail("Should not throw exception: ${e.message}")
+            }
         }
     }
 
@@ -304,8 +310,10 @@ class MLKitPoseDetectorTest {
 
         // ASSERT
         // Should not throw exceptions when closed
-        assertDoesNotThrow {
+        try {
             detector.close() // Should handle multiple close calls
+        } catch (e: Exception) {
+            fail("Should not throw exception: ${e.message}")
         }
     }
 
@@ -374,8 +382,8 @@ class MLKitPoseDetectorTest {
             val standardDeviation = calculateStandardDeviation(processingTimes, averageTime)
 
             // Performance should be consistent (low standard deviation)
-            assertTrue(standardDeviation < averageTime * 0.5,
-                "Performance should be consistent. StdDev: $standardDeviation, Avg: $averageTime")
+            assertTrue("Performance should be consistent. StdDev: $standardDeviation, Avg: $averageTime",
+                standardDeviation < averageTime * 0.5)
         }
     }
 

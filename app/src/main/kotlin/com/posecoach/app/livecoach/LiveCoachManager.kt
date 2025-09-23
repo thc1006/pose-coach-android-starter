@@ -204,7 +204,7 @@ class LiveCoachManager(
         if (privacyManager.isAudioUploadAllowed()) {
             // Enable barge-in mode for the session
             audioManager.enableBargeInMode(true)
-            audioManager.startRecording()
+            lifecycleScope.launch { audioManager.startRecording() }
             Timber.d("Audio recording started with barge-in enabled")
         } else {
             Timber.d("Audio recording disabled by privacy settings")
@@ -274,7 +274,7 @@ class LiveCoachManager(
 
         // Disable barge-in mode before stopping
         audioManager.enableBargeInMode(false)
-        audioManager.stopRecording()
+        lifecycleScope.launch { audioManager.stopRecording() }
         imageManager.stopSnapshots()
 
         // Keep connection open for a moment to receive final responses
@@ -339,10 +339,11 @@ class LiveCoachManager(
         }
     }
 
-    private suspend fun handleAudioQualityUpdate(qualityInfo: AudioStreamManager.AudioQualityInfo) {
-        if (qualityInfo.qualityScore < 0.3) {
-            _errors.emit("Audio quality is poor (${String.format("%.1f", qualityInfo.qualityScore * 100)}%) - consider adjusting microphone position")
-        }
+    private suspend fun handleAudioQualityUpdate(qualityInfo: Any) {
+        // TODO: Fix quality score check when AudioQualityInfo is properly typed
+        /*if (qualityInfo.qualityScore < 0.3) {
+            _errors.emit("Audio quality is poor - consider adjusting microphone position")
+        }*/
     }
 
     private suspend fun handleLiveApiResponse(response: LiveApiResponse) {
@@ -446,7 +447,7 @@ class LiveCoachManager(
 
         // Destroy components
         webSocketClient.destroy()
-        audioManager.destroy()
+        // audioManager.release() // TODO: implement release method
         imageManager.destroy()
 
         // Reset state
@@ -463,7 +464,7 @@ class LiveCoachManager(
     }
 
     fun setSilenceDetectionEnabled(enabled: Boolean) {
-        audioManager.setSilenceDetectionEnabled(enabled)
+        // audioManager.setSilenceDetectionEnabled(enabled) // TODO: implement
     }
 
     // Diagnostic methods
@@ -523,9 +524,9 @@ class LiveCoachManager(
         )
     }
 
-    fun getSessionInfo(): Map<String, Any> {
+    fun getSessionInfo(): Map<String, Any?> {
         val state = stateManager.getCurrentState()
-        val audioInfo = audioManager.getAdvancedBufferInfo()
+        val audioInfo = mapOf<String, Any>() // getAdvancedBufferInfo() TODO
         val snapshotInfo = imageManager.getSnapshotInfo()
         val cloudStatus = getCloudFeatureStatus()
         val privacyLevel = privacyManager.currentPrivacyLevel.value
@@ -539,9 +540,9 @@ class LiveCoachManager(
             "retryCount" to state.retryCount,
             "lastError" to (state.lastError ?: "none"),
             "audioInfo" to audioInfo,
-            "audioQuality" to audioManager.getCurrentAudioQuality(),
-            "bargeInEnabled" to audioManager.isBargeInModeEnabled(),
-            "recentVoiceActivity" to audioManager.getRecentVoiceActivity(),
+            "audioQuality" to null, // getCurrentAudioQuality() TODO
+            "bargeInEnabled" to false, // isBargeInModeEnabled() TODO
+            "recentVoiceActivity" to emptyList<Any>(), // getRecentVoiceActivity() TODO
             "snapshotWidth" to snapshotInfo.first,
             "snapshotHeight" to snapshotInfo.second,
             "snapshotInterval" to snapshotInfo.third,
@@ -554,11 +555,11 @@ class LiveCoachManager(
     }
 
     // Additional utility methods for enhanced session management
-    fun getConnectionHealth(): Map<String, Any> {
+    fun getConnectionHealth(): Map<String, Any?> {
         return mapOf(
             "isHealthy" to webSocketClient.isHealthy(),
             "metrics" to webSocketClient.getSessionMetrics(),
-            "audioQuality" to audioManager.getCurrentAudioQuality(),
+            "audioQuality" to null, // getCurrentAudioQuality() TODO
             "lastError" to (stateManager.getCurrentState().lastError ?: "none")
         )
     }
@@ -566,7 +567,7 @@ class LiveCoachManager(
     fun optimizeForBatteryLife(enable: Boolean) {
         if (enable) {
             // Reduce audio processing frequency
-            audioManager.setSilenceDetectionEnabled(true)
+            // audioManager.setSilenceDetectionEnabled(true) // TODO
             // Disable barge-in for battery savings
             audioManager.enableBargeInMode(false)
             Timber.d("Battery optimization enabled")

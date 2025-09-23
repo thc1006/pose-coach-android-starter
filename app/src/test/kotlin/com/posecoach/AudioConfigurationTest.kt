@@ -2,12 +2,9 @@ package com.posecoach.app.livecoach.audio
 
 import android.media.AudioFormat
 import com.posecoach.app.livecoach.models.AudioProfile
-import org.junit.jupiter.api.BeforeEach
-import org.junit.jupiter.api.Test
-import org.junit.jupiter.api.assertThrows
-import kotlin.test.assertEquals
-import kotlin.test.assertFalse
-import kotlin.test.assertTrue
+import org.junit.Before
+import org.junit.Test
+import org.junit.Assert.*
 
 /**
  * Test suite for AudioConfiguration following TDD principles.
@@ -17,7 +14,7 @@ class AudioConfigurationTest {
 
     private lateinit var audioConfiguration: AudioConfiguration
 
-    @BeforeEach
+    @Before
     fun setUp() {
         // This test will fail until AudioConfiguration is implemented
         audioConfiguration = AudioConfiguration()
@@ -91,8 +88,11 @@ class AudioConfigurationTest {
         val invalidSampleRate = 0
 
         // When & Then
-        assertThrows<IllegalArgumentException> {
+        try {
             audioConfiguration.setInputSampleRate(invalidSampleRate)
+            fail("Expected IllegalArgumentException")
+        } catch (e: IllegalArgumentException) {
+            // Expected exception
         }
     }
 

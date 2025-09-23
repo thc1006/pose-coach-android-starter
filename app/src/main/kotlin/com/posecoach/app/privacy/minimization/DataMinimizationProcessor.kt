@@ -620,4 +620,14 @@ class DataMinimizationProcessor {
         val reductionRatio: Float,
         val qualityScore: Float
     )
+
+    fun minimizeData(data: FloatArray, dataType: String, requirement: String): FloatArray {
+        return when (dataType) {
+            "pose_landmarks" -> {
+                val minimized = minimizePoseLandmarks(data, PoseMetadata())
+                minimized.landmarks
+            }
+            else -> data
+        }
+    }
 }

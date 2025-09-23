@@ -76,12 +76,12 @@ class SnapshotScheduler(
         // Validate and clamp parameters
         val validatedConfig = newConfig.copy(
             snapshotIntervalMs = newConfig.snapshotIntervalMs.coerceIn(
-                SnapshotConfig.MIN_SNAPSHOT_INTERVAL_MS,
-                SnapshotConfig.MAX_SNAPSHOT_INTERVAL_MS
+                SnapshotConstants.MIN_SNAPSHOT_INTERVAL_MS,
+                SnapshotConstants.MAX_SNAPSHOT_INTERVAL_MS
             ),
             jpegQuality = newConfig.jpegQuality.coerceIn(
-                SnapshotConfig.LOW_QUALITY_JPEG,
-                SnapshotConfig.HIGH_QUALITY_JPEG
+                SnapshotConstants.LOW_QUALITY_JPEG,
+                SnapshotConstants.HIGH_QUALITY_JPEG
             ),
             maxConcurrentProcessing = newConfig.maxConcurrentProcessing.coerceAtLeast(1)
         )
@@ -223,7 +223,7 @@ class SnapshotScheduler(
         memoryCleanupJob?.cancel()
         memoryCleanupJob = launch {
             while (isActive && isEnabled) {
-                delay(SnapshotConfig.MEMORY_CLEANUP_INTERVAL_MS)
+                delay(SnapshotConstants.MEMORY_CLEANUP_INTERVAL_MS)
                 performMemoryCleanup()
             }
         }

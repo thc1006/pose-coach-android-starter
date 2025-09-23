@@ -23,6 +23,11 @@ class MLKitPoseDetector(private val context: Context) {
     private var poseDetector: PoseDetector? = null
     private var isProcessing = false
 
+    // Store the image dimensions for proper coordinate normalization
+    private var lastImageWidth = 0
+    private var lastImageHeight = 0
+    private var lastRotationDegrees = 0
+
     fun initialize(): Boolean {
         return try {
             Timber.i("Initializing ML Kit Pose Detector...")
@@ -60,6 +65,11 @@ class MLKitPoseDetector(private val context: Context) {
             @androidx.camera.core.ExperimentalGetImage
             val mediaImage = imageProxy.image
             if (mediaImage != null) {
+                // Store image dimensions and rotation for coordinate normalization
+                lastImageWidth = imageProxy.width
+                lastImageHeight = imageProxy.height
+                lastRotationDegrees = imageProxy.imageInfo.rotationDegrees
+
                 val inputImage = InputImage.fromMediaImage(
                     mediaImage,
                     imageProxy.imageInfo.rotationDegrees
@@ -105,6 +115,12 @@ class MLKitPoseDetector(private val context: Context) {
         val landmarks = mutableListOf<PoseLandmarkResult.Landmark>()
         val worldLandmarks = mutableListOf<PoseLandmarkResult.Landmark>()
 
+        // Calculate the actual dimensions considering rotation
+        val (actualWidth, actualHeight) = when (lastRotationDegrees) {
+            90, 270 -> Pair(lastImageHeight.toFloat(), lastImageWidth.toFloat())
+            else -> Pair(lastImageWidth.toFloat(), lastImageHeight.toFloat())
+        }
+
         // ML Kit provides 33 pose landmarks (same as MediaPipe)
         val mlKitLandmarkTypes = listOf(
             PoseLandmark.NOSE,
@@ -131,11 +147,17 @@ class MLKitPoseDetector(private val context: Context) {
 
             if (mlKitLandmark != null) {
                 // Convert screen coordinates (normalized to 0-1)
+                // ML Kit returns pixel coordinates in the input image coordinate system
                 val position = mlKitLandmark.position
+
+                // Normalize coordinates to 0-1 range using actual image dimensions
+                val normalizedX = if (actualWidth > 0) position.x / actualWidth else 0f
+                val normalizedY = if (actualHeight > 0) position.y / actualHeight else 0f
+
                 landmarks.add(
                     PoseLandmarkResult.Landmark(
-                        x = position.x / 1000f,  // ML Kit uses pixel coordinates, normalize them
-                        y = position.y / 1000f,
+                        x = normalizedX.coerceIn(0f, 1f),
+                        y = normalizedY.coerceIn(0f, 1f),
                         z = 0f,  // ML Kit doesn't provide Z in 2D mode
                         visibility = mlKitLandmark.inFrameLikelihood,
                         presence = mlKitLandmark.inFrameLikelihood

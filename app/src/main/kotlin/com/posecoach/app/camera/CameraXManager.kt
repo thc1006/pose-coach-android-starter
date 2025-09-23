@@ -497,7 +497,7 @@ class CameraXManager(
         val targetAspect = targetSize.width.toFloat() / targetSize.height.toFloat()
 
         return when (fitMode) {
-            FitMode.FILL -> {
+            FitMode.FIT_XY -> {
                 android.graphics.Rect(0, 0, sourceSize.width, sourceSize.height)
             }
             FitMode.CENTER_CROP -> {

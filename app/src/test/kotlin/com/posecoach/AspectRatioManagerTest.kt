@@ -2,8 +2,8 @@ package com.posecoach.app.overlay
 
 import android.graphics.RectF
 import android.util.Size
-import org.junit.jupiter.api.BeforeEach
-import org.junit.jupiter.api.Test
+import org.junit.Before
+import org.junit.Test
 import kotlin.test.assertEquals
 import kotlin.test.assertTrue
 
@@ -15,7 +15,7 @@ class AspectRatioManagerTest {
 
     private lateinit var aspectRatioManager: AspectRatioManager
 
-    @BeforeEach
+    @Before
     fun setUp() {
         // This test will fail until AspectRatioManager is implemented
         aspectRatioManager = AspectRatioManager()

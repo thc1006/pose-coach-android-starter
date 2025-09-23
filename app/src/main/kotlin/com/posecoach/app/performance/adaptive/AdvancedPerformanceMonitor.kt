@@ -259,7 +259,7 @@ class AdvancedPerformanceMonitor(
                     0L // Not available on all Android versions
                 },
                 dalvikHeap = try {
-                    android.os.Debug.getGlobalAllocSize()
+                    android.os.Debug.getGlobalAllocSize().toLong()
                 } catch (e: Exception) {
                     0L // Fallback if not available
                 }

@@ -1,6 +1,6 @@
 package com.posecoach.app.livecoach.state
 
-import com.posecoach.app.livecoach.websocket.ConnectionState
+import com.posecoach.app.livecoach.models.ConnectionState
 import com.posecoach.app.livecoach.models.SessionState
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow

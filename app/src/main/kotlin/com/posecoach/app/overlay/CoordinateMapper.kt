@@ -9,12 +9,6 @@ import kotlin.math.min
 import kotlin.math.max
 import kotlin.math.abs
 
-enum class FitMode {
-    FILL,
-    CENTER_CROP,
-    CENTER_INSIDE
-}
-
 /**
  * Enhanced coordinate mapper with sub-pixel accuracy and comprehensive rotation support.
  * Provides precise normalized (0.0-1.0) to pixel coordinate conversion with <2px error tolerance.
@@ -46,7 +40,7 @@ class CoordinateMapper(
     }
 
     init {
-        updateAspectRatio(FitMode.FILL)
+        updateAspectRatio(FitMode.FIT_XY)
         Timber.d("Initialized CoordinateMapper: view=${viewWidth}x${viewHeight}, image=${imageWidth}x${imageHeight}, rotation=${rotation}°")
     }
 
@@ -55,7 +49,7 @@ class CoordinateMapper(
         val imageAspect = imageWidth.toFloat() / imageHeight
 
         when (fitMode) {
-            FitMode.FILL -> {
+            FitMode.FIT_XY -> {
                 // Fill entire view, may distort aspect ratio
                 scaleX = viewWidth.toFloat()
                 scaleY = viewHeight.toFloat()

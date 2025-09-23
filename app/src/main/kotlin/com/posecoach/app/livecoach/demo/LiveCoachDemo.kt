@@ -137,7 +137,7 @@ class LiveCoachDemo(
         }
     }
 
-    fun getSessionInfo(): Map<String, Any> {
+    fun getSessionInfo(): Map<String, Any?> {
         return liveCoachManager.getSessionInfo()
     }
 

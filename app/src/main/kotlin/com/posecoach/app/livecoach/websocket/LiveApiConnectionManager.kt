@@ -38,7 +38,7 @@ class LiveApiConnectionManager(
         }
 
         sessionStartTime = System.currentTimeMillis()
-        stateManager.updateConnectionState(ConnectionState.CONNECTING)
+        stateManager.updateConnectionState(com.posecoach.app.livecoach.models.ConnectionState.CONNECTING)
         stateManager.setError(null)
 
         Timber.d("Connection initialization started")
@@ -54,7 +54,7 @@ class LiveApiConnectionManager(
         // Cancel connection timeout
         connectionTimeoutJob?.cancel()
 
-        stateManager.updateConnectionState(ConnectionState.CONNECTED)
+        stateManager.updateConnectionState(com.posecoach.app.livecoach.models.ConnectionState.CONNECTED)
         stateManager.resetRetryCount()
         stateManager.setSessionId(generateSessionId())
 
@@ -71,7 +71,7 @@ class LiveApiConnectionManager(
         // Cancel ongoing jobs
         connectionTimeoutJob?.cancel()
 
-        stateManager.updateConnectionState(ConnectionState.ERROR)
+        stateManager.updateConnectionState(com.posecoach.app.livecoach.models.ConnectionState.ERROR)
 
         val detailedError = if (httpCode != null) {
             "$errorMessage (HTTP $httpCode)"
@@ -87,7 +87,7 @@ class LiveApiConnectionManager(
      */
     fun onConnectionClosed(code: Int, reason: String) {
         Timber.d("WebSocket closed: $code - $reason")
-        stateManager.updateConnectionState(ConnectionState.DISCONNECTED)
+        stateManager.updateConnectionState(com.posecoach.app.livecoach.models.ConnectionState.DISCONNECTED)
 
         // Check if this was a normal closure or if we should reconnect
         if (code != 1000) { // Not normal closure
@@ -105,7 +105,7 @@ class LiveApiConnectionManager(
         if (!stateManager.canRetry()) {
             val errorMsg = "Max reconnection attempts (${ConnectionConfig.MAX_RECONNECT_ATTEMPTS}) reached"
             Timber.e(errorMsg)
-            stateManager.updateConnectionState(ConnectionState.ERROR)
+            stateManager.updateConnectionState(com.posecoach.app.livecoach.models.ConnectionState.ERROR)
             return false
         }
 
@@ -116,7 +116,7 @@ class LiveApiConnectionManager(
                 val delay = calculateExponentialBackoff(retryCount)
 
                 Timber.d("Scheduling reconnect attempt $retryCount/${ConnectionConfig.MAX_RECONNECT_ATTEMPTS} in ${delay}ms")
-                stateManager.updateConnectionState(ConnectionState.RECONNECTING)
+                stateManager.updateConnectionState(com.posecoach.app.livecoach.models.ConnectionState.RECONNECTING)
 
                 delay(delay)
 
@@ -150,7 +150,7 @@ class LiveApiConnectionManager(
         connectionTimeoutJob?.cancel()
         reconnectJob?.cancel()
 
-        stateManager.updateConnectionState(ConnectionState.DISCONNECTED)
+        stateManager.updateConnectionState(com.posecoach.app.livecoach.models.ConnectionState.DISCONNECTED)
 
         val finalMetrics = getConnectionMetrics()
         Timber.i("WebSocket disconnected. Final metrics: $finalMetrics")
@@ -166,7 +166,7 @@ class LiveApiConnectionManager(
             delay(ConnectionConfig.CONNECTION_TIMEOUT_MS)
             if (!stateManager.isConnected()) {
                 Timber.w("Connection timeout after ${ConnectionConfig.CONNECTION_TIMEOUT_MS}ms")
-                stateManager.updateConnectionState(ConnectionState.ERROR)
+                stateManager.updateConnectionState(com.posecoach.app.livecoach.models.ConnectionState.ERROR)
                 stateManager.setError("Connection timeout")
             }
         }
@@ -206,7 +206,7 @@ class LiveApiConnectionManager(
 
         return SessionMetrics(
             sessionId = currentState.sessionId ?: "none",
-            connectionState = currentState.connectionState,
+            connectionState = ConnectionState.valueOf(currentState.connectionState.name),
             sessionDurationMs = sessionDuration,
             messagesSent = 0, // Will be provided by client
             messagesReceived = 0, // Will be provided by client

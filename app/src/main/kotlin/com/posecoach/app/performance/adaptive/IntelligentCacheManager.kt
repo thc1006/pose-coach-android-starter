@@ -58,7 +58,8 @@ class IntelligentCacheManager(
         val patterns: MutableMap<String, List<AccessPattern>> = mutableMapOf(),
         val transitions: MutableMap<String, MutableMap<String, Float>> = mutableMapOf(),
         val contextWeights: MutableMap<String, Float> = mutableMapOf(),
-        val accuracy: Float = 0f
+        val accuracy: Float = 0f,
+        val lastTrainingTime: Long = 0L
     )
 
     companion object {
@@ -69,12 +70,16 @@ class IntelligentCacheManager(
         private const val ACCESS_PATTERN_WINDOW = 100
         private const val MIN_FREQUENCY_THRESHOLD = 0.1f
         private const val PRELOAD_CONFIDENCE_THRESHOLD = 0.7f
+        private const val PREDICTION_WINDOW_MS = 5 * 60 * 1000L // 5 minutes
+        private const val MAX_MEMORY_USAGE_PERCENT = 0.8f
+        private const val DEFAULT_TTL_MS = 60 * 60 * 1000L // 1 hour
+        private const val MAX_TRACKED_PATTERNS = 1000
     }
 
     // Cache storage
     private val cache = ConcurrentHashMap<String, CacheEntry<Any>>()
     private val accessPatterns = mutableListOf<AccessPattern>()
-    private val predictionModel = PredictionModel()
+    private var predictionModel = PredictionModel()
 
     // Configuration
     private var maxCacheSize = DEFAULT_MAX_SIZE
@@ -395,7 +400,7 @@ class IntelligentCacheManager(
                     !cache.containsKey(prediction.key)) {
 
                     // Only preload if we have available memory
-                    val memoryUsage = getMemoryUsagePercent()
+                    val memoryUsage = getMemoryUsage()
                     if (memoryUsage < MAX_MEMORY_USAGE_PERCENT) {
                         preloadData(prediction.key, prediction.estimatedSize)
                     }
@@ -489,18 +494,22 @@ class IntelligentCacheManager(
     private suspend fun preloadData(key: String, estimatedSize: Long) {
         // This would normally trigger the actual data loading
         // For now, we'll create a placeholder entry
-        val placeholder = CacheEntry(
-            key = key,
-            value = "preloaded_placeholder", // Would be actual data
-            size = estimatedSize,
-            priority = CachePriority.LOW, // Preloaded data has lower priority
-            creationTime = SystemClock.elapsedRealtime(),
-            lastAccessTime = SystemClock.elapsedRealtime(),
-            ttl = DEFAULT_TTL_MS
-        )
+        val placeholderData = "preloaded_placeholder" // Would be actual data
 
-        put(key, placeholder.value as T, estimatedSize, CachePriority.LOW)
+        // Create the cache entry through put method
+        put(key, placeholderData, CachePriority.LOW)
         Timber.v("Preloaded data for key: $key (estimated size: ${estimatedSize / 1024}KB)")
+    }
+
+
+    /**
+     * Get current memory usage percentage
+     */
+    private fun getMemoryUsage(): Float {
+        val runtime = Runtime.getRuntime()
+        val usedMemory = runtime.totalMemory() - runtime.freeMemory()
+        val maxMemory = runtime.maxMemory()
+        return (usedMemory.toFloat() / maxMemory.toFloat()) * 100
     }
 
     // Data classes for predictions
@@ -511,11 +520,6 @@ class IntelligentCacheManager(
         val predictedAccessTime: Long
     )
 
-    companion object {
-        private const val PREDICTION_WINDOW_MS = 5 * 60 * 1000L // 5 minutes
-        private const val PRELOAD_CONFIDENCE_THRESHOLD = 0.6f
-        private const val MAX_MEMORY_USAGE_PERCENT = 0.8f
-    }
 
     private fun recordAccess(key: String, accessTime: Long) {
         val pattern = AccessPattern(

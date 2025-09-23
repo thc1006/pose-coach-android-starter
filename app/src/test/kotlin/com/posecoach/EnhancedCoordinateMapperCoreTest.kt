@@ -3,9 +3,9 @@ package com.posecoach.app.overlay
 import android.graphics.PointF
 import android.graphics.RectF
 import android.util.Size
-import org.junit.jupiter.api.BeforeEach
-import org.junit.jupiter.api.Test
-import kotlin.test.*
+import org.junit.Before
+import org.junit.Test
+import org.junit.Assert.*
 
 /**
  * Test suite for refactored EnhancedCoordinateMapper core functionality.
@@ -17,7 +17,7 @@ class EnhancedCoordinateMapperCoreTest {
     private val mockRotationHandler = mockk<RotationHandler>()
     private val mockAspectRatioManager = mockk<AspectRatioManager>()
 
-    @BeforeEach
+    @Before
     fun setUp() {
         // This test will fail until EnhancedCoordinateMapper is refactored
         coordinateMapper = EnhancedCoordinateMapper(

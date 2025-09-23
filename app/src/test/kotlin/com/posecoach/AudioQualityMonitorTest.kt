@@ -4,12 +4,9 @@ import com.posecoach.app.livecoach.models.AudioQualityInfo
 import com.posecoach.app.livecoach.models.AudioQualityMetrics
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.test.runTest
-import org.junit.jupiter.api.BeforeEach
-import org.junit.jupiter.api.Test
-import org.junit.jupiter.api.assertThrows
-import kotlin.test.assertEquals
-import kotlin.test.assertFalse
-import kotlin.test.assertTrue
+import org.junit.Before
+import org.junit.Test
+import org.junit.Assert.*
 
 /**
  * Test suite for AudioQualityMonitor following TDD principles.
@@ -21,7 +18,7 @@ class AudioQualityMonitorTest {
     private val testSampleRate = 16000
     private val testChannelConfig = 1 // Mono
 
-    @BeforeEach
+    @Before
     fun setUp() {
         // This test will fail until AudioQualityMonitor is implemented
         audioQualityMonitor = AudioQualityMonitor(testSampleRate, testChannelConfig)

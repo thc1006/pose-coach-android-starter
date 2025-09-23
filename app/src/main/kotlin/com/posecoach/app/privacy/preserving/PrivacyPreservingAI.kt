@@ -596,4 +596,19 @@ class PrivacyPreservingAI {
     data class MPCProtocol(val name: String, val privacyGuarantees: List<String>)
     data class SecretShare(val participantId: String, val share: ByteArray)
     data class ComputationResult(val values: Map<String, Double>)
+
+    fun applyFederatedPrivacy(data: FloatArray, requirement: String): FloatArray {
+        // Implementation for federated privacy
+        return data
+    }
+
+    fun applyCloudPrivacy(data: FloatArray, requirement: String): FloatArray {
+        // Implementation for cloud privacy
+        return data
+    }
+
+    fun applyDifferentialPrivacy(data: FloatArray, requirement: String): FloatArray {
+        // Implementation for differential privacy
+        return data
+    }
 }

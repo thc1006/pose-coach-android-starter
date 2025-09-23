@@ -3,8 +3,16 @@ package com.posecoach.app.livecoach.models
 import com.google.gson.annotations.SerializedName
 import com.posecoach.corepose.models.PoseLandmarkResult
 // Compatibility re-exports for moved models
-import com.posecoach.app.livecoach.websocket.ConnectionState
+import com.posecoach.app.livecoach.websocket.ConnectionState as WebSocketConnectionState
 import com.posecoach.app.livecoach.websocket.LiveApiConfig as WebSocketLiveApiConfig
+
+enum class ConnectionState {
+    DISCONNECTED,
+    CONNECTING,
+    CONNECTED,
+    RECONNECTING,
+    ERROR
+}
 
 data class LiveApiConfig(
     val model: String = "models/gemini-2.0-flash-exp",
@@ -138,14 +146,6 @@ data class AudioChunk(
         result = 31 * result + sampleRate
         return result
     }
-}
-
-enum class ConnectionState {
-    DISCONNECTED,
-    CONNECTING,
-    CONNECTED,
-    RECONNECTING,
-    ERROR
 }
 
 data class SessionState(

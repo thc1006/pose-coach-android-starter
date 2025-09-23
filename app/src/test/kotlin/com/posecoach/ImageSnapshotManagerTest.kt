@@ -17,7 +17,7 @@ import org.robolectric.RobolectricTestRunner
 import org.robolectric.annotation.Config
 import timber.log.Timber
 import java.nio.ByteBuffer
-import kotlin.test.*
+import org.junit.Assert.*
 
 /**
  * TDD test suite for ImageSnapshotManager

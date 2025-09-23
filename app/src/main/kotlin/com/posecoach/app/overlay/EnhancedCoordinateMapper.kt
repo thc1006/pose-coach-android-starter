@@ -460,7 +460,7 @@ class EnhancedCoordinateMapper(
         val imageAspect = imageWidth.toFloat() / imageHeight.toFloat()
 
         when (fitMode) {
-            FitMode.FILL -> {
+            FitMode.FIT_XY -> {
                 // Simple scaling to fill entire view
                 scaleX = viewWidth.toFloat()
                 scaleY = viewHeight.toFloat()

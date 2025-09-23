@@ -15,6 +15,7 @@ import com.posecoach.app.livecoach.models.PoseSnapshot
 import com.posecoach.corepose.models.PoseLandmarkResult
 import kotlinx.coroutines.*
 import kotlinx.coroutines.flow.*
+import kotlinx.coroutines.channels.BufferOverflow
 import timber.log.Timber
 import java.io.ByteArrayOutputStream
 import java.lang.ref.WeakReference
@@ -24,6 +25,11 @@ import kotlin.coroutines.CoroutineContext
 class ImageSnapshotManager(
     private val coroutineScope: CoroutineScope
 ) : CoroutineScope {
+
+    // Dependencies
+    private val scheduler = SnapshotScheduler(this)
+    private val compressionHandler = ImageCompressionHandler(this)
+    private var config = SnapshotConfig()
 
     override val coroutineContext: CoroutineContext =
         coroutineScope.coroutineContext + SupervisorJob()
@@ -47,6 +53,10 @@ class ImageSnapshotManager(
         private const val HIGH_QUALITY_JPEG = 85
         private const val MEDIUM_QUALITY_JPEG = 70
         private const val LOW_QUALITY_JPEG = 50
+
+        // Memory management constants
+        private const val MAX_BITMAP_REFERENCES = 10
+        private const val MEMORY_CLEANUP_INTERVAL_MS = 30000L
     }
 
     // Configuration
@@ -278,7 +288,7 @@ class ImageSnapshotManager(
         synchronized(weakImageReferences) {
             weakImageReferences.add(WeakReference(bitmap))
             // Clean up null references periodically
-            if (weakImageReferences.size > SnapshotConfig.MAX_BITMAP_REFERENCES) {
+            if (weakImageReferences.size > SnapshotConstants.MAX_BITMAP_REFERENCES) {
                 weakImageReferences.removeAll { it.get() == null }
             }
         }

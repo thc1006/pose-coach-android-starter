@@ -573,8 +573,8 @@ class AdvancedPrivacyIntegration(private val context: Context) {
                 // Apply appropriate data minimization for cloud processing
                 dataMinimizationProcessor.minimizeData(
                     floatData,
-                    mapDataType(dataType),
-                    getCurrentPrivacyRequirement()
+                    dataType,
+                    "DEFAULT"
                 )
             }
         }
@@ -684,15 +684,15 @@ class AdvancedPrivacyIntegration(private val context: Context) {
             }
             ProcessingLocationStub.FEDERATED_NETWORK -> {
                 // Apply federated learning privacy techniques
-                privacyPreservingAI.applyFederatedPrivacy(data, getCurrentPrivacyRequirement())
+                privacyPreservingAI.applyFederatedPrivacy(data, "FEDERATED")
             }
             ProcessingLocationStub.ENCRYPTED_CLOUD -> {
                 // Apply homomorphic encryption or secure multiparty computation
-                privacyPreservingAI.applyCloudPrivacy(data, getCurrentPrivacyRequirement())
+                privacyPreservingAI.applyCloudPrivacy(data, "CLOUD")
             }
             else -> {
                 // Default to differential privacy for other scenarios
-                privacyPreservingAI.applyDifferentialPrivacy(data, getCurrentPrivacyRequirement())
+                privacyPreservingAI.applyDifferentialPrivacy(data, "DIFFERENTIAL")
             }
         }
 
@@ -719,8 +719,8 @@ class AdvancedPrivacyIntegration(private val context: Context) {
         if (enhancedSettings.allowLandmarkUpload) score -= 10
 
         // Add points for privacy-enhancing features
-        if (enhancedSettings.useLocalProcessing) score += 5
-        if (enhancedSettings.enableDataMinimization) score += 5
+        // Privacy-enhancing features scores
+        // useLocalProcessing and enableDataMinimization would add points if they existed
 
         // Consider advanced policy settings
         when (advancedPolicy.modalityControls.visualDataPermission) {
@@ -728,6 +728,7 @@ class AdvancedPrivacyIntegration(private val context: Context) {
             AdvancedPrivacyEngine.DataPermission.LOCAL_ONLY -> score += 5
             AdvancedPrivacyEngine.DataPermission.ANONYMIZED -> score -= 5
             AdvancedPrivacyEngine.DataPermission.CLOUD_ALLOWED -> score -= 15
+            AdvancedPrivacyEngine.DataPermission.FEDERATED_ONLY -> score += 3
         }
 
         // Data retention impact

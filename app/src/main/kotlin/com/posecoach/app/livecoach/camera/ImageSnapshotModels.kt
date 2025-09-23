@@ -11,12 +11,12 @@ package com.posecoach.app.livecoach.camera
  * Configuration for image snapshot capture and processing
  */
 data class SnapshotConfig(
-    val maxWidth: Int = 320,
-    val maxHeight: Int = 240,
-    val jpegQuality: Int = 70,
-    val snapshotIntervalMs: Long = 1000L,
-    val maxConcurrentProcessing: Int = 2,
-    val processingTimeoutMs: Long = 5000L
+    val maxWidth: Int = SnapshotConstants.DEFAULT_MAX_WIDTH,
+    val maxHeight: Int = SnapshotConstants.DEFAULT_MAX_HEIGHT,
+    val jpegQuality: Int = SnapshotConstants.DEFAULT_JPEG_QUALITY,
+    val snapshotIntervalMs: Long = SnapshotConstants.DEFAULT_SNAPSHOT_INTERVAL_MS,
+    val maxConcurrentProcessing: Int = SnapshotConstants.MAX_CONCURRENT_PROCESSING,
+    val processingTimeoutMs: Long = SnapshotConstants.PROCESSING_TIMEOUT_MS
 )
 
 /**
@@ -74,7 +74,7 @@ data class RateLimitingState(
 /**
  * Configuration constants for snapshot processing
  */
-object SnapshotConfig {
+object SnapshotConstants {
     // Resolution constraints for bandwidth optimization
     const val DEFAULT_MAX_WIDTH = 320
     const val DEFAULT_MAX_HEIGHT = 240

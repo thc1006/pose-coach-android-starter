@@ -143,7 +143,7 @@ class AudioQualityMonitor(
     private fun calculateNoisePower(buffer: ShortArray): Double {
         // Estimate noise power from silent regions
         val threshold = SILENCE_THRESHOLD
-        val silentSamples = buffer.filter { abs(it) < threshold }
+        val silentSamples = buffer.filter { abs(it.toInt()) < threshold }
 
         return if (silentSamples.isNotEmpty()) {
             silentSamples.map { it.toDouble() * it.toDouble() }.average()
@@ -154,12 +154,12 @@ class AudioQualityMonitor(
 
     private fun detectClipping(buffer: ShortArray): Boolean {
         val clippingThreshold = (Short.MAX_VALUE * CLIPPING_THRESHOLD_RATIO).toInt()
-        return buffer.any { abs(it) >= clippingThreshold }
+        return buffer.any { abs(it.toInt()) >= clippingThreshold }
     }
 
     private fun calculateClippingPercentage(buffer: ShortArray): Double {
         val clippingThreshold = (Short.MAX_VALUE * CLIPPING_THRESHOLD_RATIO).toInt()
-        val clippedSamples = buffer.count { abs(it) >= clippingThreshold }
+        val clippedSamples = buffer.count { abs(it.toInt()) >= clippingThreshold }
         return clippedSamples.toDouble() / buffer.size
     }
 

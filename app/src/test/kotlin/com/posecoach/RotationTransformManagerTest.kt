@@ -250,7 +250,7 @@ class RotationTransformManagerTest {
             sensorOrientation = 90,
             displayRotation = Surface.ROTATION_0,
             isFrontFacing = false,
-            fitMode = FitMode.FILL
+            fitMode = FitMode.FIT_XY
         )
 
         // ACT: Calculate transformation

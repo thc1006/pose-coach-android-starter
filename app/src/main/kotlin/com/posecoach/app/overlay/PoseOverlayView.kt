@@ -110,8 +110,17 @@ class PoseOverlayView @JvmOverloads constructor(
     override fun onDraw(canvas: Canvas) {
         super.onDraw(canvas)
 
+        // Ensure view is ready
+        if (width <= 0 || height <= 0) {
+            Timber.w("View not ready for drawing: ${width}x${height}")
+            return
+        }
+
         // Draw debug info
         canvas.drawText("Overlay Active", 50f, 50f, debugPaint)
+        canvas.drawText("View: ${width}x${height}", 50f, 150f, debugPaint)
+        canvas.drawText("Camera: ${cameraImageWidth}x${cameraImageHeight}", 50f, 200f, debugPaint)
+        canvas.drawText("Rotation: ${deviceRotation}°", 50f, 250f, debugPaint)
 
         currentPose?.let { pose ->
             Timber.i("Drawing pose skeleton with ${pose.landmarks.size} landmarks")
@@ -203,6 +212,12 @@ class PoseOverlayView @JvmOverloads constructor(
      * Following CLAUDE.md requirement: coordinate transformation from landmarks to screen
      */
     private fun transformLandmarkToScreen(landmark: PoseLandmarkResult.Landmark): PointF {
+        // Ensure we have valid view dimensions
+        if (width <= 0 || height <= 0) {
+            Timber.w("View dimensions not ready: ${width}x${height}")
+            return PointF(0f, 0f)
+        }
+
         val mapper = coordinateMapper
         return if (mapper != null) {
             // Use the enhanced coordinate mapper for proper transformation including rotation
@@ -210,8 +225,10 @@ class PoseOverlayView @JvmOverloads constructor(
             PointF(screenX, screenY)
         } else {
             // Fallback to simple transformation if mapper not initialized
+            // Direct projection: px = x * viewWidth, py = y * viewHeight
             val screenX = landmark.x * width
             val screenY = landmark.y * height
+            Timber.v("Simple transform: (${landmark.x}, ${landmark.y}) -> ($screenX, $screenY)")
             PointF(screenX, screenY)
         }
     }
@@ -220,6 +237,12 @@ class PoseOverlayView @JvmOverloads constructor(
      * Batch transform landmarks for better performance
      */
     private fun batchTransformLandmarksToScreen(landmarks: List<PoseLandmarkResult.Landmark>): List<PointF> {
+        // Ensure we have valid view dimensions
+        if (width <= 0 || height <= 0) {
+            Timber.w("View dimensions not ready for batch transform: ${width}x${height}")
+            return landmarks.map { PointF(0f, 0f) }
+        }
+
         val mapper = coordinateMapper
         return if (mapper != null) {
             // Use batch transformation for optimal performance
@@ -227,8 +250,12 @@ class PoseOverlayView @JvmOverloads constructor(
             val pixelPairs = mapper.batchNormalizedToPixel(normalizedPairs)
             pixelPairs.map { (x, y) -> PointF(x, y) }
         } else {
-            // Fallback to individual transformations
-            landmarks.map { transformLandmarkToScreen(it) }
+            // Fallback to individual transformations with simple projection
+            landmarks.map { landmark ->
+                val screenX = landmark.x * width
+                val screenY = landmark.y * height
+                PointF(screenX, screenY)
+            }
         }
     }
 

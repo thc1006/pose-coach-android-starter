@@ -173,7 +173,7 @@ class RotationTransformManager {
         val targetAspect = targetSize.width.toFloat() / targetSize.height.toFloat()
 
         val (scaleX, scaleY) = when (fitMode) {
-            FitMode.FILL -> {
+            FitMode.FIT_XY -> {
                 // Stretch to fill, may distort aspect ratio
                 Pair(
                     targetSize.width.toFloat() / sourceSize.width.toFloat(),
