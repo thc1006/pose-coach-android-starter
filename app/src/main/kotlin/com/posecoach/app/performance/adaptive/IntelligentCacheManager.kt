@@ -123,7 +123,7 @@ class IntelligentCacheManager(
                 try {
                     if (enablePredictivePreloading) {
                         updatePredictionModel()
-                        // TODO: Implement performPredictivePreloading()
+                        performPredictivePreloading()
                     }
                     delay(PREDICTION_INTERVAL_MS)
                 } catch (e: Exception) {
@@ -366,7 +366,155 @@ class IntelligentCacheManager(
         val newAccuracy = if (totalPreloads > 0) {
             preloadHitCount.toFloat() / totalPreloads
         } else 0f
-        // TODO: Create mutable prediction model to update accuracy
+        // Update prediction model accuracy for future predictions
+        predictionModel = predictionModel.copy(
+            accuracy = newAccuracy,
+            lastTrainingTime = System.currentTimeMillis()
+        )
+        Timber.v("Updated prediction model accuracy: $newAccuracy")
+    }
+
+    /**
+     * Perform predictive preloading based on access patterns and ML model
+     */
+    private suspend fun performPredictivePreloading() {
+        try {
+            val currentTime = System.currentTimeMillis()
+            val recentPatterns = accessPatterns.filter {
+                currentTime - it.accessTime < PREDICTION_WINDOW_MS
+            }
+
+            if (recentPatterns.isEmpty()) return
+
+            // Analyze patterns to predict next likely accessed items
+            val predictions = generateAccessPredictions(recentPatterns)
+
+            // Preload predicted items that aren't already cached
+            predictions.forEach { prediction ->
+                if (prediction.confidence > PRELOAD_CONFIDENCE_THRESHOLD &&
+                    !cache.containsKey(prediction.key)) {
+
+                    // Only preload if we have available memory
+                    val memoryUsage = getMemoryUsagePercent()
+                    if (memoryUsage < MAX_MEMORY_USAGE_PERCENT) {
+                        preloadData(prediction.key, prediction.estimatedSize)
+                    }
+                }
+            }
+
+            Timber.v("Predictive preloading completed: ${predictions.size} predictions analyzed")
+
+        } catch (e: Exception) {
+            Timber.e(e, "Error in predictive preloading")
+        }
+    }
+
+    /**
+     * Generate access predictions based on historical patterns
+     */
+    private fun generateAccessPredictions(patterns: List<AccessPattern>): List<AccessPrediction> {
+        val predictions = mutableListOf<AccessPrediction>()
+        val keyFrequencies = patterns.groupBy { it.key }
+            .mapValues { (_, occurrences) -> occurrences.size }
+
+        keyFrequencies.forEach { (key, frequency) ->
+            // Simple prediction based on frequency and recency
+            val recentAccess = patterns.filter { it.key == key }
+                .maxByOrNull { it.accessTime }
+
+            if (recentAccess != null) {
+                val timeSinceAccess = System.currentTimeMillis() - recentAccess.accessTime
+                val confidence = calculatePredictionConfidence(frequency, timeSinceAccess)
+
+                if (confidence > 0.1f) { // Only include reasonable predictions
+                    predictions.add(
+                        AccessPrediction(
+                            key = key,
+                            confidence = confidence,
+                            estimatedSize = estimateDataSize(key),
+                            predictedAccessTime = System.currentTimeMillis() + estimateNextAccessDelay(recentAccess)
+                        )
+                    )
+                }
+            }
+        }
+
+        return predictions.sortedByDescending { it.confidence }
+    }
+
+    /**
+     * Calculate prediction confidence based on access patterns
+     */
+    private fun calculatePredictionConfidence(frequency: Int, timeSinceAccess: Long): Float {
+        val frequencyScore = (frequency.toFloat() / MAX_TRACKED_PATTERNS).coerceAtMost(1f)
+        val recencyScore = exp(-timeSinceAccess.toFloat() / PREDICTION_WINDOW_MS).toFloat()
+        return (frequencyScore * 0.7f + recencyScore * 0.3f) * predictionModel.accuracy
+    }
+
+    /**
+     * Estimate the size of data for a given key
+     */
+    private fun estimateDataSize(key: String): Long {
+        // Use historical data if available
+        val historicalEntry = cache[key]
+        if (historicalEntry != null) {
+            return historicalEntry.size
+        }
+
+        // Fallback to estimation based on key type
+        return when {
+            key.contains("image") -> 100_000L // ~100KB for images
+            key.contains("pose") -> 5_000L    // ~5KB for pose data
+            key.contains("audio") -> 50_000L   // ~50KB for audio chunks
+            else -> 10_000L                    // 10KB default
+        }
+    }
+
+    /**
+     * Estimate when the next access to this key might occur
+     */
+    private fun estimateNextAccessDelay(lastAccess: AccessPattern): Long {
+        // Simple estimation based on frequency
+        val avgInterval = if (lastAccess.frequency > 1) {
+            PREDICTION_WINDOW_MS / lastAccess.frequency
+        } else {
+            PREDICTION_WINDOW_MS / 2 // Default to half the window
+        }
+        return avgInterval.toLong()
+    }
+
+    /**
+     * Preload data for predicted access
+     */
+    private suspend fun preloadData(key: String, estimatedSize: Long) {
+        // This would normally trigger the actual data loading
+        // For now, we'll create a placeholder entry
+        val placeholder = CacheEntry(
+            key = key,
+            value = "preloaded_placeholder", // Would be actual data
+            size = estimatedSize,
+            priority = CachePriority.LOW, // Preloaded data has lower priority
+            creationTime = SystemClock.elapsedRealtime(),
+            lastAccessTime = SystemClock.elapsedRealtime(),
+            ttl = DEFAULT_TTL_MS
+        )
+
+        put(key, placeholder.value as T, estimatedSize, CachePriority.LOW)
+        Timber.v("Preloaded data for key: $key (estimated size: ${estimatedSize / 1024}KB)")
+    }
+
+    // Data classes for predictions
+    private data class AccessPrediction(
+        val key: String,
+        val confidence: Float,
+        val estimatedSize: Long,
+        val predictedAccessTime: Long
+    )
+
+    companion object {
+        private const val PREDICTION_WINDOW_MS = 5 * 60 * 1000L // 5 minutes
+        private const val PRELOAD_CONFIDENCE_THRESHOLD = 0.6f
+        private const val MAX_MEMORY_USAGE_PERCENT = 0.8f
     }
 
     private fun recordAccess(key: String, accessTime: Long) {

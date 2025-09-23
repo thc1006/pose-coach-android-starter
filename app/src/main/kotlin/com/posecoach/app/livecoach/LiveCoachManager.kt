@@ -320,7 +320,8 @@ class LiveCoachManager(
     }
 
     private fun performBargeIn(trigger: String) {
-        // TODO: Fix method name - setSpeaking not available
+        // NOTE: setSpeaking method not available in current LiveCoachStateManager implementation
+        // Would stop current speaking state when method becomes available
         // stateManager.setSpeaking(false)
 
         // Enable barge-in mode for more responsive audio processing

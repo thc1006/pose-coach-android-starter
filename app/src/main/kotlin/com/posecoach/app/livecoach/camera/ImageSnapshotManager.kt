@@ -96,13 +96,7 @@ class ImageSnapshotManager(
     private val _performanceMetrics = MutableStateFlow(PerformanceMetrics())
     val performanceMetrics: StateFlow<PerformanceMetrics> = _performanceMetrics.asStateFlow()
 
-    data class PerformanceMetrics(
-        val totalSnapshots: Long = 0,
-        val averageProcessingTimeMs: Long = 0,
-        val droppedFrames: Long = 0,
-        val averageFileSizeBytes: Long = 0,
-        val memoryUsageKB: Long = 0
-    )
+    // Performance metrics moved to ImageSnapshotModels.kt
 
     /**
      * Start capturing periodic snapshots with configurable frame rate
@@ -110,34 +104,38 @@ class ImageSnapshotManager(
      * @param quality JPEG quality setting (optional)
      */
     fun startSnapshots(intervalMs: Long? = null, quality: Int? = null) {
-        if (isEnabled) {
+        if (scheduler.isEnabled()) {
             Timber.w("Snapshots already enabled")
             return
         }
 
         // Apply custom settings if provided
-        intervalMs?.let { setSnapshotInterval(it) }
-        quality?.let { setJpegQuality(it) }
+        intervalMs?.let {
+            config = config.copy(snapshotIntervalMs = it)
+        }
+        quality?.let {
+            config = config.copy(jpegQuality = it)
+        }
 
-        isEnabled = true
-        lastSnapshotTime.set(0L) // Force first snapshot
+        // Update scheduler with new config
+        scheduler.updateConfig(config)
+        scheduler.startScheduling()
+        scheduler.startMemoryCleanup()
 
         // Reset performance metrics
         _performanceMetrics.value = PerformanceMetrics()
 
-        // Start memory cleanup coroutine
-        startMemoryCleanup()
-
-        Timber.d("Image snapshots started - interval: ${snapshotIntervalMs}ms, quality: $jpegQuality")
+        Timber.d("Image snapshots started - interval: ${config.snapshotIntervalMs}ms, quality: ${config.jpegQuality}")
     }
 
     fun stopSnapshots() {
-        if (!isEnabled) {
+        if (!scheduler.isEnabled()) {
             Timber.w("Snapshots not enabled")
             return
         }
 
-        isEnabled = false
+        // Stop scheduling
+        scheduler.stopScheduling()
 
         // Cancel all processing jobs
         snapshotJobs.forEach { it.cancel() }
@@ -161,36 +159,23 @@ class ImageSnapshotManager(
         imageProxy: ImageProxy,
         landmarks: PoseLandmarkResult?
     ) {
-        if (!isEnabled || landmarks == null || !privacyEnabled) {
+        if (!scheduler.isEnabled() || landmarks == null || !privacyEnabled) {
             return
         }
 
-        val currentTime = System.currentTimeMillis()
-        val lastTime = lastSnapshotTime.get()
-
-        // Frame rate limiting
-        if (currentTime - lastTime < snapshotIntervalMs) {
-            updateMetrics { it.copy(droppedFrames = it.droppedFrames + 1) }
-            return // Skip this frame
-        }
-
-        // Prevent too many concurrent processing operations
-        if (processingCount.get() >= MAX_CONCURRENT_PROCESSING) {
-            updateMetrics { it.copy(droppedFrames = it.droppedFrames + 1) }
-            Timber.w("Skipping snapshot - too many concurrent operations")
+        // Check if snapshot should be captured (handles rate limiting and concurrency)
+        if (!scheduler.shouldCaptureSnapshot()) {
             return
         }
 
-        if (!lastSnapshotTime.compareAndSet(lastTime, currentTime)) {
-            return // Another thread updated the timestamp
-        }
+        // Mark processing as started
+        scheduler.onProcessingStarted()
 
         // Process in background to avoid blocking camera thread
         val job = launch {
-            processingCount.incrementAndGet()
             try {
-                withTimeout(PROCESSING_TIMEOUT_MS) {
-                    processSnapshot(imageProxy, landmarks, currentTime)
+                withTimeout(config.processingTimeoutMs) {
+                    processSnapshot(imageProxy, landmarks, System.currentTimeMillis())
                 }
             } catch (e: TimeoutCancellationException) {
                 Timber.w("Snapshot processing timed out")
@@ -199,7 +184,7 @@ class ImageSnapshotManager(
                 Timber.e(e, "Error processing snapshot")
                 _errors.emit("Snapshot processing error: ${e.message}")
             } finally {
-                processingCount.decrementAndGet()
+                scheduler.onProcessingCompleted()
             }
         }
 
@@ -219,18 +204,19 @@ class ImageSnapshotManager(
         val startTime = System.currentTimeMillis()
 
         try {
-            // Convert ImageProxy to Bitmap with memory management
-            val bitmap = imageProxyToBitmap(imageProxy)
-            trackBitmap(bitmap)
+            // Use compression handler for image processing
+            val result = compressionHandler.processImageProxy(imageProxy, config)
 
-            // Resize to low resolution for bandwidth optimization
-            val resizedBitmap = resizeBitmap(bitmap, MAX_WIDTH, MAX_HEIGHT)
-            if (resizedBitmap != bitmap) {
-                trackBitmap(resizedBitmap)
+            if (!result.success) {
+                _errors.emit("Image processing failed: ${result.error}")
+                return@withContext
             }
 
-            // Convert to JPEG bytes with configured quality
-            val jpegBytes = bitmapToJpegBytes(resizedBitmap)
+            // Get JPEG bytes from compression handler
+            val jpegBytes = compressionHandler.compressBitmap(
+                compressionHandler.imageProxyToBitmap(imageProxy),
+                config.jpegQuality
+            )
 
             // Encode to Base64 for Live API
             val base64Image = Base64.encodeToString(jpegBytes, Base64.NO_WRAP)
@@ -246,9 +232,7 @@ class ImageSnapshotManager(
             _snapshots.emit(enhancedSnapshot)
 
             // Create optimized Live API message with pose context
-            val landmarksJson = landmarks.let {
-                "pose_landmarks:${landmarks.landmarks.size}_points"
-            }
+            val landmarksJson = "pose_landmarks:${landmarks.landmarks.size}_points"
 
             val mediaChunk = MediaChunk(
                 mimeType = "image/jpeg",
@@ -279,108 +263,22 @@ class ImageSnapshotManager(
 
             Timber.v("Processed snapshot: ${jpegBytes.size} bytes -> ${base64Image.length} chars in ${processingTime}ms")
 
-            // Clean up bitmaps immediately to prevent memory leaks
-            bitmap.recycle()
-            if (resizedBitmap != bitmap) {
-                resizedBitmap.recycle()
-            }
-
         } catch (e: Exception) {
             Timber.e(e, "Failed to process snapshot")
             _errors.emit("Snapshot conversion failed: ${e.message}")
         }
     }
 
-    private fun imageProxyToBitmap(imageProxy: ImageProxy): Bitmap {
-        return when (imageProxy.format) {
-            ImageFormat.YUV_420_888 -> yuvToBitmap(imageProxy)
-            ImageFormat.JPEG -> {
-                val buffer = imageProxy.planes[0].buffer
-                val bytes = ByteArray(buffer.remaining())
-                buffer.get(bytes)
-                BitmapFactory.decodeByteArray(bytes, 0, bytes.size)
-            }
-            else -> throw IllegalArgumentException("Unsupported image format: ${imageProxy.format}")
-        }
-    }
-
-    private fun yuvToBitmap(imageProxy: ImageProxy): Bitmap {
-        val yBuffer = imageProxy.planes[0].buffer
-        val uBuffer = imageProxy.planes[1].buffer
-        val vBuffer = imageProxy.planes[2].buffer
-
-        val ySize = yBuffer.remaining()
-        val uSize = uBuffer.remaining()
-        val vSize = vBuffer.remaining()
-
-        val nv21 = ByteArray(ySize + uSize + vSize)
-
-        // Copy Y plane
-        yBuffer.get(nv21, 0, ySize)
-
-        // Interleave U and V planes for NV21 format
-        val uvPixelStride = imageProxy.planes[1].pixelStride
-        if (uvPixelStride == 1) {
-            uBuffer.get(nv21, ySize, uSize)
-            vBuffer.get(nv21, ySize + uSize, vSize)
-        } else {
-            // Handle pixel stride > 1 (interleaved UV)
-            val uvBytes = ByteArray(uSize + vSize)
-            uBuffer.get(uvBytes, 0, uSize)
-            vBuffer.get(uvBytes, uSize, vSize)
-
-            var uvIndex = 0
-            for (i in ySize until nv21.size step 2) {
-                nv21[i] = uvBytes[uvIndex + 1] // V
-                nv21[i + 1] = uvBytes[uvIndex] // U
-                uvIndex += 2
-            }
-        }
-
-        val yuvImage = YuvImage(nv21, ImageFormat.NV21, imageProxy.width, imageProxy.height, null)
-        val out = ByteArrayOutputStream()
-        yuvImage.compressToJpeg(Rect(0, 0, imageProxy.width, imageProxy.height), 100, out)
-        val imageBytes = out.toByteArray()
-
-        return BitmapFactory.decodeByteArray(imageBytes, 0, imageBytes.size)
-    }
-
-    private fun resizeBitmap(original: Bitmap, maxWidth: Int, maxHeight: Int): Bitmap {
-        val originalWidth = original.width
-        val originalHeight = original.height
-
-        // Calculate scale factor to maintain aspect ratio
-        val scaleX = maxWidth.toFloat() / originalWidth
-        val scaleY = maxHeight.toFloat() / originalHeight
-        val scale = minOf(scaleX, scaleY)
-
-        val newWidth = (originalWidth * scale).toInt()
-        val newHeight = (originalHeight * scale).toInt()
-
-        if (newWidth == originalWidth && newHeight == originalHeight) {
-            return original
-        }
-
-        val matrix = Matrix()
-        matrix.postScale(scale, scale)
-
-        return Bitmap.createBitmap(original, 0, 0, originalWidth, originalHeight, matrix, true)
-    }
-
-    private fun bitmapToJpegBytes(bitmap: Bitmap): ByteArray {
-        val outputStream = ByteArrayOutputStream()
-        bitmap.compress(Bitmap.CompressFormat.JPEG, jpegQuality, outputStream)
-        return outputStream.toByteArray()
-    }
+    // Image processing methods are now handled by ImageCompressionHandler
 
     /**
      * Track bitmap for memory management
      */
-    private fun trackBitmap(bitmap: Bitmap) {
+    private fun trackBitmap(bitmap: android.graphics.Bitmap) {
         synchronized(weakImageReferences) {
             weakImageReferences.add(WeakReference(bitmap))
             // Clean up null references periodically
-            if (weakImageReferences.size > 10) {
+            if (weakImageReferences.size > SnapshotConfig.MAX_BITMAP_REFERENCES) {
                 weakImageReferences.removeAll { it.get() == null }
             }
         }
@@ -403,18 +301,7 @@ class ImageSnapshotManager(
         _performanceMetrics.value = update(_performanceMetrics.value)
     }
 
-    /**
-     * Start memory cleanup coroutine
-     */
-    private fun startMemoryCleanup() {
-        val cleanupJob = launch {
-            while (isEnabled) {
-                delay(10000) // Clean up every 10 seconds
-                cleanupMemory()
-            }
-        }
-        snapshotJobs.add(cleanupJob)
-    }
+    // Memory cleanup is now handled by SnapshotScheduler
 
     /**
      * Force cleanup of unused bitmaps
@@ -442,9 +329,9 @@ class ImageSnapshotManager(
      * @param intervalMs Time between snapshots (500ms to 3000ms)
      */
     fun setSnapshotInterval(intervalMs: Long) {
-        val clampedInterval = intervalMs.coerceIn(MIN_SNAPSHOT_INTERVAL_MS, MAX_SNAPSHOT_INTERVAL_MS)
-        snapshotIntervalMs = clampedInterval
-        Timber.d("Snapshot interval updated: ${clampedInterval}ms (${1000f / clampedInterval} fps)")
+        config = config.copy(snapshotIntervalMs = intervalMs)
+        scheduler.updateConfig(config)
+        Timber.d("Snapshot interval updated: ${config.snapshotIntervalMs}ms (${scheduler.calculateFrameRate()} fps)")
     }
 
     /**
@@ -452,8 +339,9 @@ class ImageSnapshotManager(
      * @param quality JPEG quality (50-100)
      */
     fun setJpegQuality(quality: Int) {
-        jpegQuality = quality.coerceIn(LOW_QUALITY_JPEG, HIGH_QUALITY_JPEG)
-        Timber.d("JPEG quality updated: $jpegQuality")
+        config = config.copy(jpegQuality = quality)
+        scheduler.updateConfig(config)
+        Timber.d("JPEG quality updated: ${config.jpegQuality}")
     }
 
     /**
@@ -465,21 +353,21 @@ class ImageSnapshotManager(
         Timber.d("Privacy mode: ${if (enabled) "enabled" else "disabled"}")
     }
 
-    fun isSnapshotsEnabled(): Boolean = isEnabled
+    fun isSnapshotsEnabled(): Boolean = scheduler.isEnabled()
 
     /**
      * Get current snapshot configuration
      * @return Triple of (width, height, intervalMs)
      */
     fun getSnapshotInfo(): Triple<Int, Int, Long> {
-        return Triple(MAX_WIDTH, MAX_HEIGHT, snapshotIntervalMs)
+        return Triple(config.maxWidth, config.maxHeight, config.snapshotIntervalMs)
     }
 
     /**
      * Get current frame rate in FPS
      */
     fun getCurrentFrameRate(): Float {
-        return 1000f / snapshotIntervalMs
+        return scheduler.calculateFrameRate()
     }
 
     /**
@@ -493,22 +381,10 @@ class ImageSnapshotManager(
      * Get real-time processing status
      */
     fun getProcessingStatus(): ProcessingStatus {
-        return ProcessingStatus(
-            isEnabled = isEnabled,
-            currentProcessingCount = processingCount.get().toInt(),
-            maxConcurrentProcessing = MAX_CONCURRENT_PROCESSING,
-            frameRate = getCurrentFrameRate(),
+        return scheduler.getSchedulingStatus().copy(
             privacyEnabled = privacyEnabled
         )
     }
-
-    data class ProcessingStatus(
-        val isEnabled: Boolean,
-        val currentProcessingCount: Int,
-        val maxConcurrentProcessing: Int,
-        val frameRate: Float,
-        val privacyEnabled: Boolean
-    )
 
     fun destroy() {
         Timber.d("Destroying ImageSnapshotManager")
@@ -524,9 +400,9 @@ class ImageSnapshotManager(
         }
         snapshotJobs.clear()
 
-        // Reset atomic counters
-        lastSnapshotTime.set(0L)
-        processingCount.set(0L)
+        // Destroy components
+        scheduler.destroy()
+        compressionHandler.destroy()
 
         // Cancel coroutine scope
         cancel()

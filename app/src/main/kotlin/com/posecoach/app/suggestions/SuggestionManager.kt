@@ -79,12 +79,13 @@ class SuggestionManager(
             try {
                 val poseAnalysis = createPoseAnalysisPrompt(pose)
                 
-                // TODO: Implement Gemini API call with responseSchema
-                // Following CLAUDE.md requirement for structured output
-                val response = "[Mock response - Gemini integration pending]"
+                // FIXME: Critical - Gemini API integration missing
+                // This is a mock implementation that needs to be replaced with actual Gemini API calls
+                // using responseSchema for structured output as per CLAUDE.md requirements
+                val mockSuggestions = generateMockSuggestions(pose)
+                _suggestions.emit(mockSuggestions.take(3))
+                return // Early return until actual API is implemented
 
-                val suggestions = extractSuggestionsFromResponse(response)
-                _suggestions.emit(suggestions.take(3)) // Exactly 3 suggestions per CLAUDE.md
 
                 Timber.d("Generated ${suggestions.size} pose coaching suggestions")
 
@@ -183,8 +184,52 @@ class SuggestionManager(
     private fun getFallbackSuggestions(): List<String> {
         return listOf(
             "Keep your spine straight and shoulders relaxed",
-            "Engage your core muscles for better stability", 
+            "Engage your core muscles for better stability",
             "Focus on deep, steady breathing"
         )
+    }
+
+    /**
+     * Generate mock suggestions for testing until Gemini API is implemented
+     */
+    private fun generateMockSuggestions(pose: PoseLandmarkResult): List<String> {
+        val suggestions = mutableListOf<String>()
+
+        // Analyze pose and generate contextual mock suggestions
+        val landmarkCount = pose.landmarks.size
+        val avgConfidence = pose.landmarks.map { it.visibility }.average()
+
+        if (landmarkCount < 33) {
+            suggestions.add("Move closer to camera for better pose detection")
+        }
+
+        if (avgConfidence < 0.7) {
+            suggestions.add("Ensure good lighting for accurate pose analysis")
+        }
+
+        // Add pose-specific suggestions based on landmark analysis
+        val leftShoulder = pose.landmarks.getOrNull(11)
+        val rightShoulder = pose.landmarks.getOrNull(12)
+
+        if (leftShoulder != null && rightShoulder != null) {
+            val shoulderDiff = kotlin.math.abs(leftShoulder.y - rightShoulder.y)
+            if (shoulderDiff > 0.05f) {
+                suggestions.add("Level your shoulders for better alignment")
+            } else {
+                suggestions.add("Great shoulder alignment! Keep it up")
+            }
+        }
+
+        // Always include at least one generic suggestion
+        if (suggestions.isEmpty()) {
+            suggestions.addAll(getFallbackSuggestions())
+        }
+
+        // Ensure exactly 3 suggestions
+        while (suggestions.size < 3) {
+            suggestions.add("Maintain steady breathing and focus")
+        }
+
+        return suggestions.take(3)
     }
 }

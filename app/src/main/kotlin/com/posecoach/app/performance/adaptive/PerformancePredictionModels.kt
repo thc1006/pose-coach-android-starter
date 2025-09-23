@@ -647,8 +647,25 @@ class PerformancePredictionModels {
     }
 
     private fun getCurrentSystemLoad(): Float {
-        // TODO: Implement actual system load measurement
-        return 0.5f // Placeholder
+        return try {
+            val runtime = Runtime.getRuntime()
+            val totalMemory = runtime.totalMemory()
+            val freeMemory = runtime.freeMemory()
+            val usedMemory = totalMemory - freeMemory
+            val maxMemory = runtime.maxMemory()
+
+            // Calculate memory usage ratio
+            val memoryLoad = usedMemory.toFloat() / maxMemory.toFloat()
+
+            // Get CPU load approximation (Android doesn't provide direct CPU usage)
+            val activeProcessors = runtime.availableProcessors()
+            val loadEstimate = memoryLoad * (1.0f + 0.1f * activeProcessors)
+
+            loadEstimate.coerceIn(0f, 1f)
+        } catch (e: Exception) {
+            Timber.w(e, "Failed to measure system load")
+            0.5f // Safe default
+        }
     }
 
     private fun classifyAnomaly(

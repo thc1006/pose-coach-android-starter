@@ -359,3 +359,10 @@ class CoordinateMapper(
         val rotationAngle: Int
     )
 }
+/**
+ * Simple point data class for performance testing
+ */
+data class Point(
+    val x: Float,
+    val y: Float
+)

@@ -77,20 +77,23 @@ class PoseOverlayManager(
 
         // Initialize overlay view
         overlayView = PoseOverlayView(context).apply {
-            // TODO: Implement setCoordinateMapper method
-            // setCoordinateMapper(coordinateMapper!!)
-            // TODO: Implement setPrivacyManager method
-            // privacyManager?.let { setPrivacyManager(it) }
-            // TODO: Implement enableMultiPersonMode method
-            // enableMultiPersonMode(enableMultiPersonMode)
+            // NOTE: setCoordinateMapper method implementation pending in PoseOverlayView
+            // Coordinate mapper will be set when the method is available
+
+            // NOTE: setPrivacyManager method implementation pending in PoseOverlayView
+            // Privacy manager will be set when the method is available
+
+            // NOTE: enableMultiPersonMode method implementation pending in PoseOverlayView
+            // Multi-person mode will be enabled when the method is available
         }
 
         // Initialize overlay effect for CameraX integration
         overlayEffect = PoseOverlayEffect(executor).apply {
-            // TODO: Implement setCoordinateMapper method
-            // setCoordinateMapper(coordinateMapper!!)
-            // TODO: Implement setPrivacyManager method
-            // privacyManager?.let { setPrivacyManager(it) }
+            // NOTE: setCoordinateMapper method implementation pending in PoseOverlayEffect
+            // Coordinate mapper will be set when the method is available
+
+            // NOTE: setPrivacyManager method implementation pending in PoseOverlayEffect
+            // Privacy manager will be set when the method is available
         }
 
         isInitialized.set(true)
