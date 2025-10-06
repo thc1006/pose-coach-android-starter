@@ -35,10 +35,20 @@ android {
             "\"${localProperties.getProperty("gemini.live.api.key", "")}\"")
     }
 
+    signingConfigs {
+        create("release") {
+            storeFile = file("../pose-coach-release.keystore")
+            storePassword = "posecoach2024"
+            keyAlias = "pose-coach-key"
+            keyPassword = "posecoach2024"
+        }
+    }
+
     buildTypes {
         release {
             isMinifyEnabled = false
             isShrinkResources = false
+            signingConfig = signingConfigs.getByName("release")
             proguardFiles(
                 getDefaultProguardFile("proguard-android-optimize.txt"),
                 "proguard-rules.pro"
