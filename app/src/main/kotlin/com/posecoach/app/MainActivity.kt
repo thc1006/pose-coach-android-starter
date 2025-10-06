@@ -46,6 +46,7 @@ class MainActivity : AppCompatActivity() {
     private lateinit var statusText: TextView
     private var liveCoachButton: FloatingActionButton? = null
     private var liveCoachStatus: TextView? = null
+    private var cameraSwitchButton: FloatingActionButton? = null
 
     // LIVE API state
     private var isLiveCoachActive = false
@@ -59,7 +60,9 @@ class MainActivity : AppCompatActivity() {
     // Camera components
     private var imageAnalysis: ImageAnalysis? = null
     private var camera: Camera? = null
-    private var cameraSelector = CameraSelector.DEFAULT_BACK_CAMERA
+    private var preview: Preview? = null
+    private var cameraProvider: ProcessCameraProvider? = null
+    private var lensFacing = CameraSelector.LENS_FACING_BACK
 
     // Permission launcher
     private val permissionLauncher = registerForActivityResult(
@@ -122,6 +125,9 @@ class MainActivity : AppCompatActivity() {
 
         // Setup LIVE API UI controls
         setupLiveCoachUI()
+
+        // Setup camera switch button
+        setupCameraSwitchButton()
 
         // Request camera permissions
         requestCameraPermissions()
@@ -192,58 +198,79 @@ class MainActivity : AppCompatActivity() {
         val cameraProviderFuture = ProcessCameraProvider.getInstance(this)
 
         cameraProviderFuture.addListener({
-            val cameraProvider: ProcessCameraProvider = cameraProviderFuture.get()
+            cameraProvider = cameraProviderFuture.get()
+            bindCamera()
+        }, ContextCompat.getMainExecutor(this))
+    }
 
-            // Preview use case
-            val preview = Preview.Builder().build().also {
-                it.setSurfaceProvider(previewView.surfaceProvider)
-            }
+    /**
+     * Bind camera use cases to lifecycle
+     * This is called during initialization and when switching cameras
+     */
+    private fun bindCamera() {
+        val provider = cameraProvider ?: run {
+            Timber.e("Camera provider not initialized")
+            return
+        }
 
-            // Image analysis for pose detection
-            imageAnalysis = ImageAnalysis.Builder()
-                .setBackpressureStrategy(ImageAnalysis.STRATEGY_KEEP_ONLY_LATEST)
-                .setOutputImageFormat(ImageAnalysis.OUTPUT_IMAGE_FORMAT_YUV_420_888)
-                .build()
-                .also { analyzer ->
-                    analyzer.setAnalyzer(cameraExecutor) { imageProxy ->
-                        // Configure overlay with camera parameters for proper rotation
-                        overlayView.configureCameraDisplay(
-                            cameraWidth = imageProxy.width,
-                            cameraHeight = imageProxy.height,
-                            rotation = imageProxy.imageInfo.rotationDegrees,
-                            frontFacing = this@MainActivity.cameraSelector == CameraSelector.DEFAULT_FRONT_CAMERA,
-                            aspectFitMode = FitMode.CENTER_CROP
-                        )
+        // Build camera selector based on current lens facing
+        val cameraSelector = CameraSelector.Builder()
+            .requireLensFacing(lensFacing)
+            .build()
 
-                        // Process frame with MediaPipe pose detection
-                        try {
-                            poseDetectionManager.processFrame(imageProxy)
-                        } catch (e: Exception) {
-                            Timber.e(e, "Error processing frame")
-                            imageProxy.close()
-                        }
+        // Preview use case
+        preview = Preview.Builder().build().also {
+            it.setSurfaceProvider(previewView.surfaceProvider)
+        }
+
+        // Image analysis for pose detection
+        imageAnalysis = ImageAnalysis.Builder()
+            .setBackpressureStrategy(ImageAnalysis.STRATEGY_KEEP_ONLY_LATEST)
+            .setOutputImageFormat(ImageAnalysis.OUTPUT_IMAGE_FORMAT_YUV_420_888)
+            .build()
+            .also { analyzer ->
+                analyzer.setAnalyzer(cameraExecutor) { imageProxy ->
+                    // Determine if front facing based on lens facing
+                    val isFrontFacing = lensFacing == CameraSelector.LENS_FACING_FRONT
+
+                    // Configure overlay with camera parameters for proper rotation
+                    overlayView.configureCameraDisplay(
+                        cameraWidth = imageProxy.width,
+                        cameraHeight = imageProxy.height,
+                        rotation = imageProxy.imageInfo.rotationDegrees,
+                        frontFacing = isFrontFacing,
+                        aspectFitMode = FitMode.CENTER_CROP
+                    )
+
+                    // Process frame with MediaPipe pose detection
+                    try {
+                        poseDetectionManager.processFrame(imageProxy)
+                    } catch (e: Exception) {
+                        Timber.e(e, "Error processing frame")
+                        imageProxy.close()
                     }
                 }
-
-            // Use class property for camera selector
-            cameraSelector = CameraSelector.DEFAULT_BACK_CAMERA
-
-            try {
-                // Unbind use cases before rebinding
-                cameraProvider.unbindAll()
-
-                // Bind use cases to camera lifecycle
-                camera = cameraProvider.bindToLifecycle(
-                    this, cameraSelector, preview, imageAnalysis
-                )
-
-                statusText.text = getString(R.string.pose_detection_active)
-
-            } catch (exc: Exception) {
-                showError(getString(R.string.failed_to_start_camera, exc.message))
             }
 
-        }, ContextCompat.getMainExecutor(this))
+        try {
+            // Unbind all use cases before rebinding
+            provider.unbindAll()
+
+            // Bind use cases to camera lifecycle
+            camera = provider.bindToLifecycle(
+                this, cameraSelector, preview, imageAnalysis
+            )
+
+            // Update status
+            val cameraType = if (lensFacing == CameraSelector.LENS_FACING_FRONT) "Front" else "Back"
+            statusText.text = "$cameraType Camera - ${getString(R.string.pose_detection_active)}"
+
+            Timber.i("Camera bound successfully: $cameraType camera")
+
+        } catch (exc: Exception) {
+            Timber.e(exc, "Failed to bind camera")
+            showError(getString(R.string.failed_to_start_camera, exc.message))
+        }
     }
 
     private fun displaySuggestions(suggestions: List<String>) {
@@ -296,6 +323,23 @@ class MainActivity : AppCompatActivity() {
         }
     }
 
+    private fun setupCameraSwitchButton() {
+        // Find the camera switch button
+        cameraSwitchButton = try {
+            findViewById(R.id.camera_switch_button)
+        } catch (e: Exception) {
+            Timber.w("Camera switch button not found in layout")
+            null
+        }
+
+        // Setup click listener for camera switching
+        cameraSwitchButton?.setOnClickListener {
+            switchCamera()
+        }
+
+        Timber.d("Camera switch button setup complete")
+    }
+
     private fun setupLiveCoachUI() {
         // Try to find the FAB in layout, or add programmatically if needed
         liveCoachButton = try {
@@ -317,6 +361,38 @@ class MainActivity : AppCompatActivity() {
 
         // Initially hide the status
         liveCoachStatus?.visibility = View.GONE
+    }
+
+    /**
+     * Switch between front and back cameras
+     * Implements camera switching with proper overlay mirroring
+     */
+    private fun switchCamera() {
+        // Toggle lens facing
+        lensFacing = if (lensFacing == CameraSelector.LENS_FACING_BACK) {
+            CameraSelector.LENS_FACING_FRONT
+        } else {
+            CameraSelector.LENS_FACING_BACK
+        }
+
+        val cameraType = if (lensFacing == CameraSelector.LENS_FACING_FRONT) "front" else "back"
+        Timber.i("Switching to $cameraType camera")
+
+        // Rebind camera with new lens facing
+        bindCamera()
+
+        // Update overlay view for proper mirroring
+        val isFrontFacing = lensFacing == CameraSelector.LENS_FACING_FRONT
+        overlayView.updateCameraFacing(isFrontFacing)
+
+        // Provide user feedback
+        Toast.makeText(
+            this,
+            "Switched to $cameraType camera",
+            Toast.LENGTH_SHORT
+        ).show()
+
+        Timber.i("Camera switch completed: $cameraType camera active")
     }
 
     private fun setupLiveCoachCallbacks() {

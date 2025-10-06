@@ -323,9 +323,12 @@ class AudioStreamManager(
         _audioChunks.emit(chunk)
 
         // Create realtime input for Live API
+        // IMPORTANT: MIME type MUST include sample rate as per official spec:
+        // https://ai.google.dev/gemini-api/docs/live-guide#audio-format
+        // Format: "audio/pcm;rate=16000"
         val mediaChunk = MediaChunk(
             data = Base64.encodeToString(audioData, Base64.NO_WRAP),
-            mimeType = "audio/pcm"
+            mimeType = "audio/pcm;rate=${configuration.getInputConfiguration().sampleRate}"
         )
 
         val realtimeInput = LiveApiMessage.RealtimeInput(

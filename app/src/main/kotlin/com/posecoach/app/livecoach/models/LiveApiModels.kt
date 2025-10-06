@@ -14,17 +14,37 @@ enum class ConnectionState {
     ERROR
 }
 
+/**
+ * Configuration for Gemini Live API connection
+ *
+ * IMPORTANT: All values must comply with official Live API specification.
+ * Reference: https://ai.google.dev/gemini-api/docs/live-guide
+ */
 data class LiveApiConfig(
+    /**
+     * Model name - MUST be "models/gemini-2.0-flash-exp" for Live API
+     * This is the only model supporting bidirectional streaming with audio.
+     */
     val model: String = "models/gemini-2.0-flash-exp",
     val generationConfig: GenerationConfig = GenerationConfig(),
     val systemInstruction: String = "You are a fitness coach providing real-time pose feedback.",
     val realtimeInputConfig: RealtimeInputConfig = RealtimeInputConfig()
 )
 
+/**
+ * Generation configuration for Live API responses
+ *
+ * Response modalities: Live API supports TEXT and AUDIO outputs
+ * Reference: https://ai.google.dev/gemini-api/docs/live-guide#response-modalities
+ */
 data class GenerationConfig(
     val maxOutputTokens: Int = 8192,
     val temperature: Float = 0.7f,
     val topP: Float = 0.9f,
+    /**
+     * Response modalities - Can be "TEXT", "AUDIO", or both
+     * Live API supports multimodal responses.
+     */
     val responseModalities: List<String> = listOf("TEXT", "AUDIO"),
     val speechConfig: SpeechConfig = SpeechConfig()
 )

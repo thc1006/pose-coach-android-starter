@@ -8,6 +8,7 @@ import com.google.mediapipe.tasks.core.Delegate
 import com.google.mediapipe.tasks.vision.core.RunningMode
 import com.google.mediapipe.tasks.vision.poselandmarker.PoseLandmarker
 import com.google.mediapipe.tasks.vision.poselandmarker.PoseLandmarkerResult
+import com.google.mediapipe.tasks.vision.core.ImageProcessingOptions
 import com.google.mediapipe.tasks.components.containers.NormalizedLandmark
 import com.google.mediapipe.tasks.components.containers.Landmark
 import com.posecoach.corepose.models.PoseDetectionError
@@ -82,6 +83,10 @@ class MediaPipePoseRepository : PoseRepository {
     }
 
     override suspend fun detectAsync(bitmap: Bitmap, timestampMs: Long) {
+        detectAsync(bitmap, timestampMs, 0) // Default to 0° rotation for backward compatibility
+    }
+
+    override suspend fun detectAsync(bitmap: Bitmap, timestampMs: Long, rotationDegrees: Int) {
         if (!isRunning || poseLandmarker == null) {
             Timber.w("Repository not running or PoseLandmarker not initialized")
             return
@@ -90,7 +95,16 @@ class MediaPipePoseRepository : PoseRepository {
         try {
             val inferenceTimeMs = measureTimeMillis {
                 val mpImage = BitmapImageBuilder(bitmap).build()
-                poseLandmarker?.detectAsync(mpImage, timestampMs)
+
+                // IMPORTANT: MediaPipe Tasks Vision API's setRotationDegrees() automatically handles rotation
+                // The returned landmarks will already be in the correct orientation (normalized 0.0-1.0)
+                // Therefore, downstream coordinate mappers should NOT apply rotation transformations again
+                // to avoid double rotation issues (e.g., upright person appearing sideways)
+                val imageProcessingOptions = ImageProcessingOptions.builder()
+                    .setRotationDegrees(rotationDegrees)
+                    .build()
+
+                poseLandmarker?.detectAsync(mpImage, imageProcessingOptions, timestampMs)
             }
 
             Timber.v("Frame sent to MediaPipe, initial processing: ${inferenceTimeMs}ms")

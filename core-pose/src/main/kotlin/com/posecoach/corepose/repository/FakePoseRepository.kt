@@ -32,6 +32,10 @@ class FakePoseRepository : PoseRepository {
     }
 
     override suspend fun detectAsync(bitmap: Bitmap, timestampMs: Long) {
+        detectAsync(bitmap, timestampMs, 0) // Default to 0° rotation
+    }
+
+    override suspend fun detectAsync(bitmap: Bitmap, timestampMs: Long, rotationDegrees: Int) {
         if (!isRunning || listener == null) {
             Timber.w("Repository not running or no listener set")
             return
@@ -57,7 +61,7 @@ class FakePoseRepository : PoseRepository {
                 inferenceTimeMs = 20
             )
 
-            Timber.d("Fake pose detected, inference time: ${result.inferenceTimeMs}ms")
+            Timber.d("Fake pose detected with rotation $rotationDegrees°, inference time: ${result.inferenceTimeMs}ms")
             listener?.onPoseDetected(result)
         }
     }

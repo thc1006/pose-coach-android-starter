@@ -22,8 +22,19 @@ enum class ConnectionState {
 
 /**
  * Configuration for Live API connection parameters
+ *
+ * IMPORTANT: These values must comply with Gemini Live API specification.
+ * Reference: https://ai.google.dev/gemini-api/docs/live-guide
  */
 data class LiveApiConfig(
+    /**
+     * Model name for Live API
+     *
+     * MUST use "models/gemini-2.0-flash-exp" for Live API functionality.
+     * This is the only model that supports bidirectional streaming with audio.
+     *
+     * Reference: https://ai.google.dev/gemini-api/docs/live-guide#model
+     */
     val model: String = "models/gemini-2.0-flash-exp",
     val generationConfig: Map<String, Any> = mapOf(
         "temperature" to 0.7,
@@ -67,9 +78,20 @@ data class SessionMetrics(
 
 /**
  * Connection configuration constants
+ *
+ * IMPORTANT: These values are defined by the official Gemini Live API specification.
+ * Reference: https://ai.google.dev/gemini-api/docs/live-guide
  */
 object ConnectionConfig {
-    const val WEBSOCKET_URL = "wss://generativelanguage.googleapis.com/ws/google.ai.generativelanguage.v1beta.GenerativeService.BidiGenerateContent"
+    /**
+     * WebSocket endpoint for Gemini Live API
+     *
+     * MUST use v1alpha (not v1beta) as per official documentation:
+     * https://ai.google.dev/gemini-api/docs/live-guide#websocket
+     *
+     * Format: wss://generativelanguage.googleapis.com/ws/google.ai.generativelanguage.v1alpha.GenerativeService.BidiGenerateContent
+     */
+    const val WEBSOCKET_URL = "wss://generativelanguage.googleapis.com/ws/google.ai.generativelanguage.v1alpha.GenerativeService.BidiGenerateContent"
     const val PING_INTERVAL_MS = 20000L
     const val CONNECTION_TIMEOUT_MS = 30000L
     const val MAX_RECONNECT_ATTEMPTS = 5

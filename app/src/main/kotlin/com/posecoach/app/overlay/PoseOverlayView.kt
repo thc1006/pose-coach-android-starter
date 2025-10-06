@@ -70,11 +70,25 @@ class PoseOverlayView @JvmOverloads constructor(
         fitMode = aspectFitMode
 
         Timber.d("Camera display configured: ${cameraWidth}x${cameraHeight}, rotation: $rotation, frontFacing: $frontFacing")
-        updateCoordinateMapper()
+
+        // ✅ Pass rotation=0 to avoid double rotation
+        // MediaPipe already handles rotation in ImageProcessingOptions.setRotationDegrees()
+        // So we don't need EnhancedCoordinateMapper to apply rotation again
+        coordinateMapper = EnhancedCoordinateMapper(
+            viewWidth = width,
+            viewHeight = height,
+            imageWidth = cameraWidth,
+            imageHeight = cameraHeight,
+            isFrontFacing = frontFacing,
+            rotation = 0  // ← Force to 0 to prevent double rotation
+        ).apply {
+            updateAspectRatio(fitMode)
+        }
     }
 
     /**
      * Update the coordinate mapper when view dimensions or camera parameters change
+     * Note: rotation is set to 0 because MediaPipe already handles rotation
      */
     private fun updateCoordinateMapper() {
         if (width > 0 && height > 0 && cameraImageWidth > 0 && cameraImageHeight > 0) {
@@ -84,7 +98,7 @@ class PoseOverlayView @JvmOverloads constructor(
                 imageWidth = cameraImageWidth,
                 imageHeight = cameraImageHeight,
                 isFrontFacing = isFrontFacing,
-                rotation = deviceRotation
+                rotation = 0  // ← Force to 0 to prevent double rotation
             ).apply {
                 updateAspectRatio(fitMode)
             }
@@ -120,10 +134,17 @@ class PoseOverlayView @JvmOverloads constructor(
         canvas.drawText("Overlay Active", 50f, 50f, debugPaint)
         canvas.drawText("View: ${width}x${height}", 50f, 150f, debugPaint)
         canvas.drawText("Camera: ${cameraImageWidth}x${cameraImageHeight}", 50f, 200f, debugPaint)
-        canvas.drawText("Rotation: ${deviceRotation}°", 50f, 250f, debugPaint)
+        canvas.drawText("Rotation: ${deviceRotation}° (not applied to mapper)", 50f, 250f, debugPaint)
 
         currentPose?.let { pose ->
             Timber.i("Drawing pose skeleton with ${pose.landmarks.size} landmarks")
+
+            // Debug: Display first landmark coordinates
+            if (pose.landmarks.isNotEmpty()) {
+                val first = pose.landmarks[0]
+                canvas.drawText("First landmark: (${String.format("%.3f", first.x)}, ${String.format("%.3f", first.y)})", 50f, 300f, debugPaint)
+            }
+
             drawPoseSkeleton(canvas, pose)
 
             // Draw landmark count
@@ -282,11 +303,14 @@ class PoseOverlayView @JvmOverloads constructor(
 
     /**
      * Update only the rotation without changing other parameters
+     * Note: We store the rotation but don't apply it to the mapper
+     * because MediaPipe already handles it
      */
     fun updateRotation(rotation: Int) {
         if (deviceRotation != rotation) {
             deviceRotation = rotation
-            coordinateMapper?.updateRotation(rotation, isFrontFacing)
+            // Don't apply rotation to mapper - MediaPipe already handled it
+            // coordinateMapper?.updateRotation(0, isFrontFacing)
             invalidate()
         }
     }
@@ -297,7 +321,8 @@ class PoseOverlayView @JvmOverloads constructor(
     fun updateCameraFacing(frontFacing: Boolean) {
         if (isFrontFacing != frontFacing) {
             isFrontFacing = frontFacing
-            coordinateMapper?.updateRotation(deviceRotation, frontFacing)
+            // Rebuild mapper with new facing direction but rotation=0
+            updateCoordinateMapper()
             invalidate()
         }
     }

@@ -90,7 +90,8 @@ class CameraPoseAnalyzer(
         val bitmap = convertImageProxyToBitmap(imageProxy)
         if (bitmap != null) {
             val timestampMs = System.currentTimeMillis()
-            poseRepository.detectAsync(bitmap, timestampMs)
+            val rotationDegrees = imageProxy.imageInfo.rotationDegrees
+            poseRepository.detectAsync(bitmap, timestampMs, rotationDegrees)
         } else {
             Timber.e("Failed to convert ImageProxy to Bitmap")
             listener?.onPoseDetectionError(

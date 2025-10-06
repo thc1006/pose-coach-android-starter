@@ -10,23 +10,45 @@ import timber.log.Timber
  * AudioConfiguration manages audio settings and configuration.
  * Separated from AudioStreamManager for better modularity (<150 lines).
  *
+ * IMPORTANT: Configuration values comply with Gemini Live API requirements.
+ * Reference: https://ai.google.dev/gemini-api/docs/live-guide
+ *
  * Features:
  * - Input/output audio configuration management
  * - Audio profile support (quality levels)
  * - Low latency mode configuration
  * - Buffer size calculations
  * - Android 15+ specific settings
+ *
+ * Audio Format Requirements (Official Spec):
+ * - Input: 16kHz, 16-bit PCM, mono, little-endian
+ * - Output: 24kHz (fixed by Live API)
+ * - MIME type: "audio/pcm;rate=16000"
  */
 class AudioConfiguration {
 
     companion object {
-        // Default input configuration (for Gemini Live API)
-        private const val DEFAULT_INPUT_SAMPLE_RATE = 16000
-        private const val DEFAULT_INPUT_CHANNEL_CONFIG = AudioFormat.CHANNEL_IN_MONO
-        private const val DEFAULT_INPUT_AUDIO_FORMAT = AudioFormat.ENCODING_PCM_16BIT
+        /**
+         * Default input configuration for Gemini Live API
+         *
+         * REQUIRED by Live API specification:
+         * - Sample Rate: 16kHz (16000 Hz)
+         * - Format: 16-bit PCM, little-endian
+         * - Channels: Mono (single channel)
+         *
+         * Reference: https://ai.google.dev/gemini-api/docs/live-guide#audio-format
+         */
+        private const val DEFAULT_INPUT_SAMPLE_RATE = 16000  // 16kHz required by Live API
+        private const val DEFAULT_INPUT_CHANNEL_CONFIG = AudioFormat.CHANNEL_IN_MONO  // Mono required
+        private const val DEFAULT_INPUT_AUDIO_FORMAT = AudioFormat.ENCODING_PCM_16BIT  // 16-bit PCM required
 
-        // Default output configuration (for playback)
-        private const val DEFAULT_OUTPUT_SAMPLE_RATE = 24000
+        /**
+         * Default output configuration for audio playback
+         *
+         * Live API outputs audio at 24kHz (fixed by the API)
+         * Reference: https://ai.google.dev/gemini-api/docs/live-guide#audio-format
+         */
+        private const val DEFAULT_OUTPUT_SAMPLE_RATE = 24000  // 24kHz output from Live API
         private const val DEFAULT_OUTPUT_CHANNEL_CONFIG = AudioFormat.CHANNEL_OUT_MONO
         private const val DEFAULT_OUTPUT_AUDIO_FORMAT = AudioFormat.ENCODING_PCM_16BIT
 

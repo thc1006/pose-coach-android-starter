@@ -53,6 +53,14 @@ class LiveApiMessageProcessor(
     private val errorsEncountered = AtomicLong(0)
 
     /**
+     * Emit an error message to subscribers
+     * Used by WebSocket client for connection errors
+     */
+    suspend fun emitError(errorMessage: String) {
+        _errors.emit(errorMessage)
+    }
+
+    /**
      * Process an incoming WebSocket message
      * Parses JSON and emits appropriate LiveApiResponse
      */

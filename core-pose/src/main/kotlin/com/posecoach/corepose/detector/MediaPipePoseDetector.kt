@@ -11,6 +11,7 @@ import com.google.mediapipe.tasks.vision.poselandmarker.PoseLandmarker
 import com.google.mediapipe.tasks.vision.poselandmarker.PoseLandmarkerResult
 import com.google.mediapipe.tasks.components.containers.NormalizedLandmark
 import com.google.mediapipe.tasks.components.containers.Landmark
+import com.google.mediapipe.tasks.vision.core.ImageProcessingOptions
 import com.posecoach.corepose.models.PoseLandmarkResult
 import com.posecoach.corepose.models.PoseDetectionError
 import com.posecoach.corepose.utils.PerformanceTracker
@@ -167,9 +168,9 @@ class MediaPipePoseDetector {
     }
 
     /**
-     * Process a single frame with optimized pipeline.
+     * Process a single frame with optimized pipeline and rotation support.
      */
-    suspend fun detectPoseAsync(bitmap: Bitmap, timestampMs: Long): Boolean {
+    suspend fun detectPoseAsync(bitmap: Bitmap, timestampMs: Long, rotationDegrees: Int = 0): Boolean {
         if (!isRunning.get() || poseLandmarker == null) {
             return false
         }
@@ -188,8 +189,13 @@ class MediaPipePoseDetector {
                     // Get or create MPImage from pool
                     val mpImage = createMPImageFromBitmap(bitmap)
 
-                    // Send to MediaPipe for processing
-                    poseLandmarker?.detectAsync(mpImage, timestampMs)
+                    // Create image processing options with rotation
+                    val imageProcessingOptions = ImageProcessingOptions.builder()
+                        .setRotationDegrees(rotationDegrees)
+                        .build()
+
+                    // Send to MediaPipe for processing with rotation info
+                    poseLandmarker?.detectAsync(mpImage, imageProcessingOptions, timestampMs)
 
                     // Return image to pool if pooling is enabled
                     if (currentConfig.enableObjectPooling) {
@@ -217,14 +223,21 @@ class MediaPipePoseDetector {
     }
 
     /**
-     * Process multiple frames in batch for better throughput.
+     * Process multiple frames in batch for better throughput with rotation support.
      */
-    suspend fun detectPoseBatch(frames: List<Pair<Bitmap, Long>>): List<Boolean> {
+    suspend fun detectPoseBatchWithRotation(frames: List<Triple<Bitmap, Long, Int>>): List<Boolean> {
         return withContext(detectionScope.coroutineContext) {
-            frames.map { (bitmap, timestamp) ->
-                async { detectPoseAsync(bitmap, timestamp) }
+            frames.map { (bitmap, timestamp, rotation) ->
+                async { detectPoseAsync(bitmap, timestamp, rotation) }
             }.awaitAll()
         }
+    }
+
+    /**
+     * Legacy batch method for backward compatibility.
+     */
+    suspend fun detectPoseBatch(frames: List<Pair<Bitmap, Long>>): List<Boolean> {
+        return detectPoseBatchWithRotation(frames.map { (bitmap, timestamp) -> Triple(bitmap, timestamp, 0) })
     }
 
     /**

@@ -52,6 +52,27 @@ class LiveApiWebSocketClient(
     val errors: SharedFlow<String> = messageProcessor.errors
 
     fun connect(config: LiveApiConfig = LiveApiConfig()) {
+        // Validate API key before connecting
+        if (apiKey.isEmpty()) {
+            val error = "Cannot connect: API key is empty. Please configure API key in local.properties"
+            Timber.e(error)
+            stateManager.setError(error)
+            launch {
+                messageProcessor.emitError(error)
+            }
+            return
+        }
+
+        if (!apiKey.startsWith("AIza") || apiKey.length < 35) {
+            val error = "Cannot connect: API key format is invalid (should start with 'AIza' and be at least 35 chars)"
+            Timber.e(error)
+            stateManager.setError(error)
+            launch {
+                messageProcessor.emitError(error)
+            }
+            return
+        }
+
         // Delegate connection initialization to connection manager
         connectionManager.initializeConnection()
 
@@ -61,6 +82,17 @@ class LiveApiWebSocketClient(
         lastMessageTimestamp.set(sessionStartTime)
 
         val url = "${ConnectionConfig.WEBSOCKET_URL}?key=$apiKey"
+        val obfuscatedUrl = "${ConnectionConfig.WEBSOCKET_URL}?key=${apiKey.take(6)}...${apiKey.takeLast(4)}"
+
+        Timber.d("━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━")
+        Timber.d("📡 Live API WebSocket Connection")
+        Timber.d("━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━")
+        Timber.d("🔗 URL: $obfuscatedUrl")
+        Timber.d("🔑 API Key present: ✓")
+        Timber.d("🔑 API Key length: ${apiKey.length}")
+        Timber.d("📝 Model: ${config.model}")
+        Timber.d("━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━")
+
         val request = Request.Builder()
             .url(url)
             .addHeader("User-Agent", "PoseCoach-Android/1.0")
@@ -73,11 +105,18 @@ class LiveApiWebSocketClient(
 
         webSocket = client.newWebSocket(request, createWebSocketListener(config))
 
-        Timber.d("WebSocket connection initiated to: $url")
+        Timber.d("⏳ WebSocket connection initiated, waiting for response...")
     }
 
     private fun createWebSocketListener(config: LiveApiConfig) = object : WebSocketListener() {
         override fun onOpen(webSocket: WebSocket, response: Response) {
+            Timber.d("━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━")
+            Timber.d("✅ WebSocket Connected Successfully!")
+            Timber.d("━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━")
+            Timber.d("📊 Response Code: ${response.code}")
+            Timber.d("📊 Protocol: ${response.protocol}")
+            Timber.d("━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━")
+
             // Delegate to connection manager
             connectionManager.onConnectionEstablished()
 
@@ -93,7 +132,7 @@ class LiveApiWebSocketClient(
             messagesReceived.incrementAndGet()
             lastMessageTimestamp.set(System.currentTimeMillis())
 
-            Timber.v("Received message (#${messagesReceived.get()}): ${text.take(200)}...")
+            Timber.v("📨 Received message (#${messagesReceived.get()}): ${text.take(200)}...")
 
             // Delegate message processing to message processor
             messageProcessor.processIncomingMessage(text)
@@ -101,14 +140,29 @@ class LiveApiWebSocketClient(
 
         override fun onMessage(webSocket: WebSocket, bytes: ByteString) {
             // Handle binary messages if needed
-            Timber.d("Received binary message: ${bytes.size} bytes")
+            Timber.d("📨 Received binary message: ${bytes.size} bytes")
         }
 
         override fun onClosing(webSocket: WebSocket, code: Int, reason: String) {
-            Timber.d("WebSocket closing: $code - $reason")
+            Timber.w("━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━")
+            Timber.w("⚠️ WebSocket closing...")
+            Timber.w("━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━")
+            Timber.w("📊 Close Code: $code")
+            Timber.w("📊 Reason: $reason")
+            Timber.w("━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━")
         }
 
         override fun onClosed(webSocket: WebSocket, code: Int, reason: String) {
+            Timber.i("━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━")
+            Timber.i("🔌 WebSocket Closed")
+            Timber.i("━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━")
+            Timber.i("📊 Close Code: $code")
+            Timber.i("📊 Reason: $reason")
+            Timber.i("📊 Session Duration: ${System.currentTimeMillis() - sessionStartTime}ms")
+            Timber.i("📊 Messages Sent: ${messagesSent.get()}")
+            Timber.i("📊 Messages Received: ${messagesReceived.get()}")
+            Timber.i("━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━")
+
             cancelPingJob()
             connectionManager.onConnectionClosed(code, reason)
         }
@@ -117,7 +171,53 @@ class LiveApiWebSocketClient(
             val errorMessage = "Connection failed: ${t.message}"
             val httpCode = response?.code
 
-            Timber.e(t, "WebSocket connection failed (HTTP: $httpCode)")
+            Timber.e("━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━")
+            Timber.e("❌ WebSocket Connection FAILED")
+            Timber.e("━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━")
+            Timber.e("📊 HTTP Code: $httpCode")
+            Timber.e("📊 Error: ${t.message}")
+            Timber.e("📊 Error Type: ${t.javaClass.simpleName}")
+
+            // Log response details if available
+            response?.let { resp ->
+                Timber.e("📊 Response Code: ${resp.code}")
+                Timber.e("📊 Response Message: ${resp.message}")
+                resp.body?.let { body ->
+                    try {
+                        val bodyString = body.string()
+                        Timber.e("📊 Response Body: $bodyString")
+                    } catch (e: Exception) {
+                        Timber.e("📊 Could not read response body: ${e.message}")
+                    }
+                }
+            }
+
+            // Common error interpretations
+            when {
+                httpCode == 401 || httpCode == 403 -> {
+                    Timber.e("🔑 Authentication Error: Invalid or expired API key")
+                    Timber.e("💡 Solution: Check your API key in local.properties")
+                }
+                httpCode == 429 -> {
+                    Timber.e("⏱️ Rate Limit Error: Too many requests")
+                    Timber.e("💡 Solution: Wait before retrying or check quota")
+                }
+                httpCode == 404 -> {
+                    Timber.e("🔍 Not Found Error: Invalid endpoint URL")
+                    Timber.e("💡 Solution: Check WebSocket URL configuration")
+                }
+                t is java.net.UnknownHostException -> {
+                    Timber.e("🌐 Network Error: Cannot resolve host")
+                    Timber.e("💡 Solution: Check internet connection")
+                }
+                t is java.net.SocketTimeoutException -> {
+                    Timber.e("⏰ Timeout Error: Connection timed out")
+                    Timber.e("💡 Solution: Check network stability")
+                }
+            }
+
+            Timber.e("━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━")
+            Timber.e(t, "Full stack trace:")
 
             // Cancel ongoing jobs
             cancelPingJob()
